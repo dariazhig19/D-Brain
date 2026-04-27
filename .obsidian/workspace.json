@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "fff.md",
+                "file": "!Atlas_System.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "fff"
+              "title": "!Atlas_System"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "fff.md",
+                "file": "!Atlas_System.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for fff"
+              "title": "Backlinks for !Atlas_System"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "fff.md",
+                "file": "!Atlas_System.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from fff"
+              "title": "Outgoing links from !Atlas_System"
             }
           },
           {
@@ -156,21 +156,31 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "fff.md",
+                "file": "!Atlas_System.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of fff"
+              "title": "Outline of !Atlas_System"
+            }
+          },
+          {
+            "id": "50b7ebf354e5d54f",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
             }
           }
-        ]
+        ],
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -184,9 +194,24 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ddb20bc583793999",
+  "active": "76ad32a750a6e578",
   "lastOpenFiles": [
     "fff.md",
-    "Untitled.base"
+    "Untitled.md",
+    "!Me.md",
+    "!Atlas_System.md",
+    "04_Archive",
+    "03_Assets/References",
+    "03_Assets/Visual_Outputs",
+    "03_Assets",
+    "02_Library/Prompts_Master",
+    "02_Library/Generative_Theory",
+    "02_Library/D_UX_UI_Design",
+    "02_Library/D_Revit_API",
+    "02_Library/D_Python_Core",
+    "02_Library",
+    "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/!Product_Vision.md",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md"
   ]
 }

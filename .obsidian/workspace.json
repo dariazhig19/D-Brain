@@ -48,12 +48,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
+                    "file": "00_Input/Untitled.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга"
+                  "title": "Untitled"
                 }
               }
             ],
@@ -101,7 +101,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Claude Code"
+                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
                 }
               }
             ]
@@ -240,13 +240,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
+                "file": "00_Input/Untitled.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга"
+              "title": "Outline of Untitled"
             }
           },
           {
@@ -279,17 +279,17 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "b3c1da83ca2046eb",
+  "active": "76ad32a750a6e578",
   "lastOpenFiles": [
-    "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
+    "!Atlas_System.md",
+    "!Me.md",
     "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
+    "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
     "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
-    "!Me.md",
-    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/!Product_Vision.md",
-    "Untitled.md",
+    "00_Input/Untitled.md",
     "fff.md",
     "04_Archive",
     "03_Assets/References",

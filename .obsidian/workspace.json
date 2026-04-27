@@ -48,12 +48,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
+                    "file": "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "Obsidian + Claude Code The Second Brain Setup That Actually Works"
+                  "title": "Any Model. Any App. Build Your AI OS to Work Everywhere"
                 }
               }
             ],
@@ -240,13 +240,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
+                "file": "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Obsidian + Claude Code The Second Brain Setup That Actually Works"
+              "title": "Outline of Any Model. Any App. Build Your AI OS to Work Everywhere"
             }
           },
           {
@@ -281,8 +281,9 @@
   },
   "active": "b3c1da83ca2046eb",
   "lastOpenFiles": [
-    "!Me.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
+    "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
+    "!Me.md",
     "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/!Product_Vision.md",

@@ -6,6 +6,7 @@
       {
         "id": "a4891dbbf250a639",
         "type": "tabs",
+        "dimension": 22.021660649819495,
         "children": [
           {
             "id": "ddb20bc583793999",
@@ -26,6 +27,7 @@
       {
         "id": "66c7ef7c7d71ffa8",
         "type": "tabs",
+        "dimension": 77.9783393501805,
         "children": [
           {
             "id": "17ba4be288c78e1b",
@@ -35,9 +37,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 2269.271209386282,
-                  "y": 1406.3143332581228,
-                  "zoom": -0.7010405490129219
+                  "x": 2047.6721996249644,
+                  "y": 1705.0072463047643,
+                  "zoom": -0.3677072156795886
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -177,13 +179,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "02_Library/Prompts_Master/Prompt History Step 1.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Overview"
+              "title": "Outline of Prompt History Step 1"
             }
           },
           {

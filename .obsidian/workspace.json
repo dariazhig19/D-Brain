@@ -4,91 +4,41 @@
     "type": "split",
     "children": [
       {
-        "id": "ec8476d252b8800b",
-        "type": "split",
+        "id": "a4891dbbf250a639",
+        "type": "tabs",
         "children": [
           {
-            "id": "a4891dbbf250a639",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "ddb20bc583793999",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "!Me.md",
-                    "mode": "source",
-                    "source": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "!Me"
+            "id": "ddb20bc583793999",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": -159.5,
+                  "y": 70.5,
+                  "zoom": -0.9962042281273824
                 }
               },
-              {
-                "id": "b3c1da83ca2046eb",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "00_Input/Untitled.md",
-                    "mode": "source",
-                    "source": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "Untitled"
-                }
-              }
-            ]
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
+            }
           },
           {
-            "id": "52a696ca9cbf807b",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "80aff27f7137da7f",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
-                }
-              }
-            ]
+            "id": "b3c1da83ca2046eb",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "00_Input/Untitled.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Untitled"
+            }
           }
-        ],
-        "direction": "horizontal"
+        ]
       }
     ],
     "direction": "vertical"
@@ -221,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "!Me.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of !Me"
+              "title": "Outline of Overview"
             }
           },
           {
@@ -262,8 +212,10 @@
   },
   "active": "ddb20bc583793999",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Notes/overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "!Me.md",
+    "01_Products/Layout_Gen_Design/Untitled",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/src/geometry.py",
     "01_Products/Layout_Gen_Design/src/main.py",
@@ -274,7 +226,6 @@
     "01_Products/Layout_Gen_Design/src",
     "01_Products/Layout_Gen_Design/Notes",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
-    "!Me.md",
     "00_Input/Untitled.md",
     "Pasted image 20260428131730.png",
     "Pasted image 20260428131736.png",
@@ -289,7 +240,6 @@
     "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
     "fff.md",
-    "04_Archive",
-    "03_Assets/References"
+    "04_Archive"
   ]
 }

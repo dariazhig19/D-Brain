@@ -90,7 +90,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ⠂ Translate Russian text in markdown files"
+                  "title": "Terminal: ✳ Translate Russian text in markdown files"
                 }
               }
             ]
@@ -271,6 +271,7 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "00_Input/I Spent 1,000 Hours on Claude Code. What You Need to Know About Vibe-Coding.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/Untitled.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",

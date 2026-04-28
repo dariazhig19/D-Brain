@@ -2,61 +2,41 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-def setup_page():
-    st.set_page_config(page_title="PowerPlan AI", page_icon="🚀", layout="wide")
-    st.title("🚀 PowerPlan AI: Layout Generation Dashboard")
-    st.markdown("---")
+# Настройка страницы
+st.set_page_config(page_title="PowerPlan AI", layout="wide")
 
-def draw_site(width: float, length: float):
-    """Draws the site boundary using Matplotlib."""
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    # Create a Rectangle patch (Site Boundary)
-    rect = patches.Rectangle(
-        (0, 0), width, length, 
-        linewidth=2, edgecolor='#1f77b4', facecolor='#e6f2ff'
-    )
-    ax.add_patch(rect)
-    
-    # Configure axes for better visualization
-    ax.set_xlim(-width * 0.1, width * 1.1)
-    ax.set_ylim(-length * 0.1, length * 1.1)
-    ax.set_aspect('equal')
-    ax.grid(True, linestyle='--', alpha=0.6)
-    
-    # Labels and title
-    ax.set_title("Site Boundary Preview", fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel("Width (m)", fontsize=12)
-    ax.set_ylabel("Length (m)", fontsize=12)
-    
-    return fig
+st.title("⚡ PowerPlan AI: Layout Generator")
+st.markdown("### Phase 1: Site Boundary & Primary Road Setback")
 
-def main():
-    setup_page()
-    
-    # Sidebar Controls
-    with st.sidebar:
-        st.header("⚙️ Site Setup")
-        st.write("Define the boundaries for the plot.")
-        
-        site_width = st.slider("Site Width (a)", min_value=50.0, max_value=1000.0, value=200.0, step=10.0)
-        site_length = st.slider("Site Length (b)", min_value=50.0, max_value=1000.0, value=300.0, step=10.0)
-        
-        st.info("💡 Adjust the sliders to match the site requirements.")
-    
-    # Main Content Area
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.subheader("Site Overview")
-        st.metric(label="Total Area", value=f"{site_width * site_length:,.0f} m²")
-        st.metric(label="Width (a)", value=f"{site_width} m")
-        st.metric(label="Length (b)", value=f"{site_length} m")
-    
-    with col2:
-        # Render Plot
-        fig = draw_site(site_width, site_length)
-        st.pyplot(fig)
+# --- UI CONTROLS (Слайдеры слева) ---
+st.sidebar.header("Site Dimensions (m)")
+site_width = st.sidebar.slider("Plot Width (A)", 100, 1000, 400, step=10)
+site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
-if __name__ == "__main__":
-    main()
+# --- CORE ENGINE (Отрисовка геометрии) ---
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# 1. Рисуем границу участка (Site Boundary)
+site_rect = patches.Rectangle((0, 0), site_width, site_length, 
+                              linewidth=2, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary')
+ax.add_patch(site_rect)
+
+# 2. Рисуем отступ для дороги (5m offset из правил Excel)
+setback = 5
+if site_width > 2*setback and site_length > 2*setback:
+    road_rect = patches.Rectangle((setback, setback), site_width - 2*setback, site_length - 2*setback, 
+                                  linewidth=1.5, edgecolor='red', linestyle='--', facecolor='none', 
+                                  label='Primary Road Setback (5m)')
+    ax.add_patch(road_rect)
+
+# --- Настройка вида графика ---
+ax.set_xlim(-50, site_width + 50)
+ax.set_ylim(-50, site_length + 50)
+ax.set_aspect('equal') # Чтобы квадраты не искажались
+ax.set_xlabel("Width (m)")
+ax.set_ylabel("Length (m)")
+ax.grid(True, linestyle=':', alpha=0.6)
+ax.legend(loc='upper right')
+
+# --- DISPLAY (Вывод в Streamlit) ---
+st.pyplot(fig)

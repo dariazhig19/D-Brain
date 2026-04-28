@@ -19,12 +19,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "Daily_Report_20260428.md",
+                    "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "Daily_Report_20260428"
+                  "title": "!Scoring_Logic"
                 }
               }
             ]
@@ -71,7 +71,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
+                  "title": "Terminal: Select ◇  Ready (D-Brain)"
                 }
               }
             ]
@@ -88,10 +88,14 @@
             "id": "17ba4be288c78e1b",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "Daily_Report_20260428.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Daily_Report_20260428"
             }
           }
         ]
@@ -267,17 +271,20 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "ddb20bc583793999",
+  "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
     "02_Library/Templates/Daily_Report_Template.md",
-    "02_Library/Templates",
-    "02_Library/Prompts_Master/Prompt History Step 1.md",
-    "Daily_Report_20260428.md",
-    "00_Input/2026-04-28.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "Project Name.md",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.base",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "02_Library/Prompts_Master/Prompt History Step 1.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "Daily_Report_20260428.md",
+    "!Atlas_System.md",
+    "00_Input/2026-04-28.md",
+    "02_Library/Templates",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
@@ -301,8 +308,6 @@
     "01_Products/Layout_Gen_Design/!Product_Vision.md",
     "Pasted image 20260428114750.png",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
-    "!Atlas_System.md",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.md",
     "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
     "fff.md"

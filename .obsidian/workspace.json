@@ -37,17 +37,14 @@
                 "id": "17ba4be288c78e1b",
                 "type": "leaf",
                 "state": {
-                  "type": "canvas",
+                  "type": "markdown",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                    "viewState": {
-                      "x": 2047.6721996249644,
-                      "y": 1754.5182768980098,
-                      "zoom": -1.0343738823462552
-                    }
+                    "file": "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-layout-dashboard",
-                  "title": "Overview"
+                  "icon": "lucide-file",
+                  "title": "Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ"
                 }
               }
             ]
@@ -93,7 +90,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ⠂ Claude Code"
+                  "title": "Terminal: ⠂ Translate Russian text in markdown files"
                 }
               }
             ]
@@ -232,12 +229,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ"
             }
           },
           {
@@ -271,8 +269,9 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "448760b9194acfb9",
+  "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "00_Input/Untitled.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
@@ -291,7 +290,6 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "!Me.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
-    "00_Input/Untitled.md",
     "Pasted image 20260428131730.png",
     "Pasted image 20260428131736.png",
     "01_Products/Layout_Gen_Design/!Product_Vision.md",

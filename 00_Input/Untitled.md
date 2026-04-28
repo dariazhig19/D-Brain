@@ -1,14 +1,14 @@
-| **Этап**           | **Где делаем**            | **Результат**                                            |
-| ------------------ | ------------------------- | -------------------------------------------------------- |
-| **1. НИОКР (R&D)** | **Obsidian**              | Вы отлаживаете «вайб» и логику 60 зданий.                |
-| **2. Прототип**    | **Python + Matplotlib**   | Вы показываете клиенту 6 вариантов с баллами.            |
-| **3. Интеграция**  | **Dynamo / Rhino.Inside** | Геометрия начинает "летать" в Revit.                     |
-| **4. Продукт**     | **Add-in (PyRevit / C#)** | Вы отдаете закрытый файл, который работает как Revit GD. |
+| **Stage**          | **Where we work**         | **Result**                                                   |
+| ------------------ | ------------------------- | ------------------------------------------------------------ |
+| **1. R&D**         | **Obsidian**              | You debug the "vibe" and logic of 60 buildings.              |
+| **2. Prototype**   | **Python + Matplotlib**   | You show the client 6 variants with scores.                  |
+| **3. Integration** | **Dynamo / Rhino.Inside** | Geometry starts "flying" in Revit.                           |
+| **4. Product**     | **Add-in (PyRevit / C#)** | You deliver a compiled file that works like Revit GD.        |
 
 
-| **Функция**      | **Revit Generative Design**   | **Ваша AI-программа**              |
-| ---------------- | ----------------------------- | ---------------------------------- |
-| **Масштаб**      | Плохо тянет 60+ объектов      | Легко тянет сотни и тысячи         |
-| **Логика**       | «Черный ящик» (генетика)      | Полностью ваша (прозрачная)        |
-| **Визуализация** | Внутри Revit (тяжело)         | В Obsidian/Matplotlib (мгновенно)  |
-| **AI-помощь**    | Почти невозможна внутри узлов | Идеальна для написания Python-кода |
+| **Function**      | **Revit Generative Design**    | **Your AI Program**                      |
+| ----------------- | ------------------------------ | ---------------------------------------- |
+| **Scale**         | Struggles with 60+ objects     | Easily handles hundreds and thousands    |
+| **Logic**         | "Black box" (genetics)         | Fully yours (transparent)                |
+| **Visualization** | Inside Revit (heavy)           | In Obsidian/Matplotlib (instant)         |
+| **AI Assistance** | Nearly impossible inside nodes | Perfect for writing Python code          |

@@ -269,6 +269,8 @@
   },
   "active": "ddb20bc583793999",
   "lastOpenFiles": [
+    "02_Library/Templates/Daily_Report_Template.md",
+    "02_Library/Templates",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
     "Daily_Report_20260428.md",
     "00_Input/2026-04-28.md",
@@ -290,7 +292,6 @@
     "venv/Scripts/activate",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/INSTALLER",
-    "venv/Scripts/pip3.14.exe",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
     "!Me.md",

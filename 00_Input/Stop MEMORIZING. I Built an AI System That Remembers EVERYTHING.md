@@ -146,3 +146,6 @@ tags:
 **15:53** · information like in Notebook LM — it will be immediately processed information that we can work with, in which we can maintain a huge database and knowledge base both for our agents (not just Claude Code, but Code for any purpose), and for ourselves — which is very easily editable, very easily assembled, doesn't require a huge number of tokens — we spent one million tokens on everything, which is not that much for a Claude subscription. And as a result, we get a universal model available for everything.
 
 **16:24** · Thank you very much for watching this video all the way through. Link to my private system is in the description. And the last video is available here from the on-screen hint. See you.
+
+
+<!-- [[Daily_Report_20260428]] -->

@@ -344,3 +344,6 @@ tags:
 **44:07** · Railway is basically a hosting where everything will be stored — both the database and your application — and for $20 there you get a huge number of advantages. So Railway is simply the cheapest and most convenient thing for deployment. If you need to do this for a client, use Timeweb.
 
 **44:24** · That's a Russian server, and there you'll simply be complying with Russian law. But we'll talk about all of this in separate lessons. So be sure to subscribe to this channel, follow the links, grab both the system — which will have additional lessons — and the materials from the video, and the prompt enhancer. And we'll see each other in the next videos. The last one is here from the on-screen hint. Bye.
+
+
+<!-- [[Daily_Report_20260428]] -->

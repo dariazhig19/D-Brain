@@ -14,7 +14,7 @@ site_width = st.sidebar.slider("Plot Width (A)", 100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 # --- CORE ENGINE (Отрисовка геометрии) ---
-fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(5, 8))
 
 # 1. Рисуем границу участка (Site Boundary)
 site_rect = patches.Rectangle((0, 0), site_width, site_length, 
@@ -33,10 +33,6 @@ if site_width > 2*setback and site_length > 2*setback:
 ax.set_xlim(-50, site_width + 50)
 ax.set_ylim(-50, site_length + 50)
 ax.set_aspect('equal') # Чтобы квадраты не искажались
-ax.set_xlabel("Width (m)")
-ax.set_ylabel("Length (m)")
-ax.grid(True, linestyle=':', alpha=0.6)
-ax.legend(loc='upper right')
 
 # --- DISPLAY (Вывод в Streamlit) ---
 st.pyplot(fig)

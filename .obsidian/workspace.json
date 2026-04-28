@@ -16,13 +16,14 @@
                 "id": "ddb20bc583793999",
                 "type": "leaf",
                 "state": {
-                  "type": "bases",
+                  "type": "markdown",
                   "state": {
-                    "file": "Untitled.base",
-                    "viewName": "Table"
+                    "file": "02_Library/Prompts_Master/Prompt History Step 1.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-table",
-                  "title": "Untitled"
+                  "icon": "lucide-file",
+                  "title": "Prompt History Step 1"
                 }
               }
             ]
@@ -68,7 +69,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
+                  "title": "Terminal: Windows PowerShell"
                 }
               }
             ]
@@ -224,12 +225,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "02_Library/Prompts_Master/Prompt History Step 1.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Prompt History Step 1"
             }
           },
           {
@@ -263,12 +265,13 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "7f0fc72d0e8b6e09",
+  "active": "ddb20bc583793999",
   "lastOpenFiles": [
+    "00_Input/2026-04-28.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "Untitled.base",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",

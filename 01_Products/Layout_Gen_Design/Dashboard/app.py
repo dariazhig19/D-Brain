@@ -2,37 +2,38 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-# Настройка страницы
+# Page configuration
 st.set_page_config(page_title="PowerPlan AI", layout="wide")
 
 st.title("⚡ PowerPlan AI: Layout Generator")
 st.markdown("### Phase 1: Site Boundary & Primary Road Setback")
 
-# --- UI CONTROLS (Слайдеры слева) ---
+# --- UI CONTROLS (Sliders on the left) ---
 st.sidebar.header("Site Dimensions (m)")
 site_width = st.sidebar.slider("Plot Width (A)", 100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
-# --- CORE ENGINE (Отрисовка геометрии) ---
-fig, ax = plt.subplots(figsize=(5, 8))
+# --- CORE ENGINE (Geometry rendering) ---
+# Width is 3x thinner than original (5 / 3 ≈ 1.67)
+fig, ax = plt.subplots(figsize=(5 / 3, 8))
 
-# 1. Рисуем границу участка (Site Boundary)
-site_rect = patches.Rectangle((0, 0), site_width, site_length, 
-                              linewidth=2, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary')
+# 1. Draw the site boundary
+site_rect = patches.Rectangle((0, 0), site_width, site_length,
+                               linewidth=2, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary')
 ax.add_patch(site_rect)
 
-# 2. Рисуем отступ для дороги (5m offset из правил Excel)
+# 2. Draw the road setback (5m offset from Excel rules)
 setback = 5
-if site_width > 2*setback and site_length > 2*setback:
-    road_rect = patches.Rectangle((setback, setback), site_width - 2*setback, site_length - 2*setback, 
-                                  linewidth=1.5, edgecolor='red', linestyle='--', facecolor='none', 
-                                  label='Primary Road Setback (5m)')
+if site_width > 2 * setback and site_length > 2 * setback:
+    road_rect = patches.Rectangle((setback, setback), site_width - 2 * setback, site_length - 2 * setback,
+                                   linewidth=1.5, edgecolor='red', linestyle='--', facecolor='none',
+                                   label='Primary Road Setback (5m)')
     ax.add_patch(road_rect)
 
-# --- Настройка вида графика ---
+# --- Plot view configuration ---
 ax.set_xlim(-50, site_width + 50)
 ax.set_ylim(-50, site_length + 50)
-ax.set_aspect('equal') # Чтобы квадраты не искажались
+ax.set_aspect('equal')  # Prevent shape distortion
 
-# --- DISPLAY (Вывод в Streamlit) ---
+# --- DISPLAY (Render in Streamlit) ---
 st.pyplot(fig)

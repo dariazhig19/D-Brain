@@ -15,9 +15,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": -397.19024121285537,
-                  "y": -746.2132715632081,
-                  "zoom": 0.0037957718726174816
+                  "x": 95.51173898516464,
+                  "y": 27.747733768094406,
+                  "zoom": -0.9962042281273824
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -210,8 +210,12 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "76ad32a750a6e578",
+  "active": "ddb20bc583793999",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Dashboard/App.py",
+    "01_Products/Layout_Gen_Design/Core/Rules.py",
+    "01_Products/Layout_Gen_Design/Core/Main.py",
+    "01_Products/Layout_Gen_Design/Core/Geometry.py",
     "01_Products/Layout_Gen_Design/Pipeline",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
@@ -223,8 +227,6 @@
     "01_Products/Layout_Gen_Design/Dashboard/app.py",
     "01_Products/Layout_Gen_Design/Dashboard",
     "01_Products/Layout_Gen_Design/Data",
-    "01_Products/Layout_Gen_Design/Core",
-    "01_Products/Layout_Gen_Design/Notes",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "00_Input/Untitled.md",
     "Pasted image 20260428131730.png",
@@ -239,7 +241,6 @@
     "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
     "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
-    "fff.md",
-    "04_Archive"
+    "fff.md"
   ]
 }

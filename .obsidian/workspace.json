@@ -11,17 +11,14 @@
             "id": "ddb20bc583793999",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 2351.189803360751,
-                  "y": 858.2024109126403,
-                  "zoom": -0.9962042281273824
-                }
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "!Product_Vision"
             }
           },
           {
@@ -171,13 +168,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Overview"
+              "title": "Outline of !Product_Vision"
             }
           },
           {
@@ -212,6 +209,9 @@
   },
   "active": "ddb20bc583793999",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Data/Plot plan requirement.xlsx",
     "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement_.xlsx",
     "01_Products/Layout_Gen_Design/Data/Plot plan requirement_.xlsx",
@@ -222,11 +222,7 @@
     "01_Products/Layout_Gen_Design/Core/Main.py",
     "01_Products/Layout_Gen_Design/Core/Geometry.py",
     "01_Products/Layout_Gen_Design/Pipeline",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "!Me.md",
-    "01_Products/Layout_Gen_Design/Core/geometry.py",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "00_Input/Untitled.md",
     "Pasted image 20260428131730.png",

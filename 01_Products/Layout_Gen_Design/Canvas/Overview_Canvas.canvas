@@ -1,7 +1,8 @@
 {
 	"nodes":[
-		{"id":"2bb0e95c7eb7a3c9","type":"text","text":"Overview_Canvas - \nvisual map of the whole project","x":-620,"y":-288,"width":250,"height":103},
-		{"id":"1c78395f154b597a","type":"file","file":"Pasted image 20260428114750.png","x":-620,"y":-160,"width":480,"height":178}
+		{"id":"b57d5caee7e921eb","type":"file","file":"Pasted image 20260428131736.png","x":-620,"y":-167,"width":857,"height":307},
+		{"id":"2bb0e95c7eb7a3c9","type":"text","text":"Overview_Canvas - \nvisual map of the whole project","x":-620,"y":-380,"width":250,"height":103},
+		{"id":"0f0031e9f4761233","type":"file","file":"Pasted image 20260428131730.png","x":-620,"y":180,"width":639,"height":293}
 	],
 	"edges":[]
 }

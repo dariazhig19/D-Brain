@@ -75,10 +75,10 @@
   },
   "defaultProfile": "win32IntegratedDefault",
   "terminalOptions": {
-    "documentOverride": null,
     "fontFamily": "Consolas",
     "fontSize": 14,
     "fontWeight": "normal",
-    "fontWeightBold": "bold"
+    "fontWeightBold": "bold",
+    "documentOverride": null
   }
 }

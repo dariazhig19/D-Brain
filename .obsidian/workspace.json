@@ -4,7 +4,7 @@
     "type": "split",
     "children": [
       {
-        "id": "c2489d3f083f0a87",
+        "id": "bfb52bd283d35152",
         "type": "split",
         "children": [
           {
@@ -59,25 +59,28 @@
                 "id": "391c74c0dca303de",
                 "type": "leaf",
                 "state": {
-                  "type": "markdown",
+                  "type": "canvas",
                   "state": {
-                    "file": "Untitled.md",
-                    "mode": "source",
-                    "source": false
+                    "file": "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
+                    "viewState": {
+                      "x": 0,
+                      "y": 0,
+                      "zoom": 0
+                    }
                   },
-                  "icon": "lucide-file",
-                  "title": "Untitled"
+                  "icon": "lucide-layout-dashboard",
+                  "title": "Overview_Canvas"
                 }
               }
             ],
             "currentTab": 3
           },
           {
-            "id": "588be850856d156a",
+            "id": "d7fb90d70a3da920",
             "type": "tabs",
             "children": [
               {
-                "id": "3c465567d03544e8",
+                "id": "e8f1a5fa5f50c3c1",
                 "type": "leaf",
                 "pinned": true,
                 "state": {
@@ -113,7 +116,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Claude Code"
+                  "title": "Terminal: ✳ Create layout_gen_design file structure"
                 }
               }
             ]
@@ -252,12 +255,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Overview_Canvas"
             }
           },
           {
@@ -290,19 +294,20 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "76ad32a750a6e578",
+  "active": "391c74c0dca303de",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/!Product_Vision.md",
+    "!Atlas_System.md",
+    "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.md",
     "00_Input/Untitled.md",
-    "01_Products/Layout_Gen_Design/Canvas/Untitled.canvas",
-    "!Atlas_System.md",
+    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "!Me.md",
     "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
     "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
     "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
-    "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/!Product_Vision.md",
     "fff.md",
     "04_Archive",
     "03_Assets/References",
@@ -313,7 +318,6 @@
     "02_Library/D_UX_UI_Design",
     "02_Library/D_Revit_API",
     "02_Library/D_Python_Core",
-    "02_Library",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md"
+    "02_Library"
   ]
 }

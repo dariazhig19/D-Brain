@@ -11,14 +11,17 @@
             "id": "ddb20bc583793999",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": -397.19024121285537,
+                  "y": -746.2132715632081,
+                  "zoom": 0.0037957718726174816
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Product_Vision"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -168,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of !Product_Vision"
+              "title": "Outline of Overview"
             }
           },
           {
@@ -207,13 +210,13 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "ddb20bc583793999",
+  "active": "76ad32a750a6e578",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "!Me.md",
-    "01_Products/Layout_Gen_Design/Untitled",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Core/geometry.py",
     "01_Products/Layout_Gen_Design/Core/main.py",
     "01_Products/Layout_Gen_Design/Core/rules.py",

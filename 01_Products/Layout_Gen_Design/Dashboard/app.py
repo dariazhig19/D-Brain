@@ -15,7 +15,7 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 # --- CORE ENGINE (Geometry rendering) ---
 # Width is 3x thinner than original (5 / 3 ≈ 1.67)
-fig, ax = plt.subplots(figsize=(5 / 3, 8))
+fig, ax = plt.subplots(figsize=(8, 8))
 
 # 1. Draw the site boundary
 site_rect = patches.Rectangle((0, 0), site_width, site_length,
@@ -31,8 +31,8 @@ if site_width > 2 * setback and site_length > 2 * setback:
     ax.add_patch(road_rect)
 
 # --- Plot view configuration ---
-ax.set_xlim(-50, site_width + 50)
-ax.set_ylim(-50, site_length + 50)
+ax.set_xlim(-10, site_width + 10)
+ax.set_ylim(-10, site_length + 10)
 ax.set_aspect('equal')  # Prevent shape distortion
 
 # --- DISPLAY (Render in Streamlit) ---

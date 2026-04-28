@@ -25,28 +25,81 @@
         ]
       },
       {
-        "id": "66c7ef7c7d71ffa8",
-        "type": "tabs",
+        "id": "574704319ae8275f",
+        "type": "split",
         "dimension": 77.9783393501805,
         "children": [
           {
-            "id": "17ba4be288c78e1b",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 2047.6721996249644,
-                  "y": 1754.5182768980098,
-                  "zoom": -1.0343738823462552
+            "id": "66c7ef7c7d71ffa8",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "17ba4be288c78e1b",
+                "type": "leaf",
+                "state": {
+                  "type": "canvas",
+                  "state": {
+                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                    "viewState": {
+                      "x": 2047.6721996249644,
+                      "y": 1754.5182768980098,
+                      "zoom": -1.0343738823462552
+                    }
+                  },
+                  "icon": "lucide-layout-dashboard",
+                  "title": "Overview"
                 }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
-            }
+              }
+            ]
+          },
+          {
+            "id": "8e1add93d9894c5d",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "448760b9194acfb9",
+                "type": "leaf",
+                "pinned": true,
+                "state": {
+                  "type": "terminal:terminal",
+                  "state": {
+                    "terminal:terminal": {
+                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
+                      "focus": false,
+                      "profile": {
+                        "args": [],
+                        "executable": "C:\\Windows\\System32\\cmd.exe",
+                        "followTheme": true,
+                        "name": "",
+                        "platforms": {
+                          "win32": true
+                        },
+                        "pythonExecutable": "python3",
+                        "restoreHistory": false,
+                        "rightClickAction": "copyPaste",
+                        "successExitCodes": [
+                          "0",
+                          "SIGINT",
+                          "SIGTERM"
+                        ],
+                        "terminalOptions": {
+                          "documentOverride": null
+                        },
+                        "type": "integrated",
+                        "useWin32Conhost": true
+                      },
+                      "serial": null
+                    }
+                  },
+                  "pinned": true,
+                  "icon": "terminal",
+                  "title": "Terminal: ⠂ Claude Code"
+                }
+              }
+            ]
           }
-        ]
+        ],
+        "direction": "horizontal"
       }
     ],
     "direction": "vertical"
@@ -179,13 +232,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Overview"
+              "title": "Outline"
             }
           },
           {
@@ -219,8 +271,9 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "17ba4be288c78e1b",
+  "active": "448760b9194acfb9",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
     "venv/Scripts/activate.bat",
@@ -231,11 +284,9 @@
     "venv/Lib/site-packages/pip-26.0.1.dist-info/INSTALLER",
     "venv/Scripts/pip3.14.exe",
     "venv/Scripts/pip3.exe",
-    "venv/Scripts/pip.exe",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "!Me.md",

@@ -179,13 +179,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "02_Library/Prompts_Master/Prompt History Step 1.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Prompt History Step 1"
+              "title": "Outline of Overview"
             }
           },
           {
@@ -221,20 +221,23 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "venv/Scripts/deactivate.bat",
+    "venv/Scripts/activate.bat",
+    "venv/Scripts/Activate.ps1",
+    "venv/Scripts/activate.fish",
+    "venv/Scripts/activate",
+    "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
+    "venv/Lib/site-packages/pip-26.0.1.dist-info/INSTALLER",
+    "venv/Scripts/pip3.14.exe",
+    "venv/Scripts/pip3.exe",
+    "venv/Scripts/pip.exe",
+    "venv/Lib/site-packages/pip/_vendor/urllib3/util/__pycache__/__init__.cpython-314.pyc",
+    "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Data/Plot plan requirement.xlsx",
-    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement_.xlsx",
-    "01_Products/Layout_Gen_Design/Data/Plot plan requirement_.xlsx",
-    "01_Products/Layout_Gen_Design/Data/Plot Plan 자동화-Requirement_.xlsx",
-    "Thumbs.db",
-    "01_Products/Layout_Gen_Design/Dashboard/App.py",
-    "01_Products/Layout_Gen_Design/Core/Rules.py",
-    "01_Products/Layout_Gen_Design/Core/Main.py",
-    "01_Products/Layout_Gen_Design/Core/Geometry.py",
-    "01_Products/Layout_Gen_Design/Pipeline",
     "!Me.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "00_Input/Untitled.md",

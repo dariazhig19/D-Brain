@@ -63,8 +63,8 @@
                   "state": {
                     "file": "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
                     "viewState": {
-                      "x": 0,
-                      "y": 0,
+                      "x": -104,
+                      "y": -96,
                       "zoom": 0
                     }
                   },
@@ -297,12 +297,13 @@
   "active": "391c74c0dca303de",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/!Product_Vision.md",
-    "!Atlas_System.md",
+    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
+    "Pasted image 20260428114750.png",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
+    "!Atlas_System.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.md",
     "00_Input/Untitled.md",
-    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "!Me.md",
     "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
     "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",

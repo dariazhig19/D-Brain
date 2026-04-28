@@ -15,9 +15,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 95.51173898516464,
-                  "y": 27.747733768094406,
-                  "zoom": -0.9962042281273824
+                  "x": 668.4440921431343,
+                  "y": -286.6957891148959,
+                  "zoom": -0.32953756146071583
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -210,7 +210,7 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "76ad32a750a6e578",
+  "active": "ddb20bc583793999",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Data/Plot plan requirement.xlsx",
     "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement_.xlsx",

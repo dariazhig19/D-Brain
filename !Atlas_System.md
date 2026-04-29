@@ -32,6 +32,7 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 1. **Trigger**: Every workday concludes with a `Daily_Report_YYYYMMDD.md` inside `05_Reports/Daily/`.
 2. **Context**: Summarize active changes in `01_Products` and new standards in `02_Library`.
 3. **Storage**: Reports are the "Memory" of the D-Brain — each links modified notes with their type and change summary.
+4. **Post-Report**: After writing the daily report, update every `!Context.md` file (files with "context" in the name — currently `Core/!Context.md` and `Dashboard/!Context.md`). Add a new row to the `📅 Daily Changes` table only if that folder's files were actually modified. If nothing changed in a folder, do not touch its context file.
 
 ## 📋 Daily Report Structure
 | Section | Purpose |

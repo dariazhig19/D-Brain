@@ -14,11 +14,13 @@ site_width = st.sidebar.slider("Plot Width (A)", 100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 # --- CORE ENGINE (Geometry rendering) ---
-# Dynamic figsize: keeps plot proportional to actual site dimensions
+# Height is fixed at 5" so the plot always fits on screen at 100% zoom.
+# Width scales with the site's aspect ratio.
 aspect_ratio = site_width / site_length
-fig_w = min(10, 10 * aspect_ratio)
-fig_h = min(10, 10 / aspect_ratio)
+fig_h = 5.0                          # max height in inches (~500px at 100 dpi)
+fig_w = fig_h * aspect_ratio         # width follows the real-world shape
 fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+plt.tight_layout(pad=1.5)
 
 # 1. Draw the site boundary
 site_rect = patches.Rectangle((0, 0), site_width, site_length,
@@ -39,4 +41,5 @@ ax.set_ylim(-10, site_length + 10)
 ax.set_aspect('equal', adjustable='box')  # Prevent distortion, resize box not canvas
 
 # --- DISPLAY (Render in Streamlit) ---
-st.pyplot(fig, use_container_width=True)
+# use_container_width=False: renders at native figsize so height never overflows
+st.pyplot(fig, use_container_width=False)

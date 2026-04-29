@@ -90,30 +90,32 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
+                "file": "05_Reports/Daily_Report_20260428.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "title": "Daily_Report_20260428"
             }
           },
           {
             "id": "924617c1b9768f24",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 785.503046458492,
+                  "y": 384.7920792079208,
+                  "zoom": -1.4316972958590275
+                }
               },
-              "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -286,22 +288,25 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "924617c1b9768f24",
+  "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "Untitled.md",
     "02_Library/Templates/Daily_Report_Template.md",
+    "Project Name.md",
     "05_Reports/Daily_Report_20260428.md",
+    "Neural Enlightenment.md",
+    "Eric Tech.md",
+    "Untitled.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "Layout_Gen_Design.md",
+    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
     "00_Input/Pasted image 20260428114750.png",
     "Untitled.base",
     "00_Input/Pasted image 20260428131736.png",
     "00_Input/Pasted image 20260428131730.png",
     "!Me.md",
     "!Atlas_System.md",
-    "Project Name.md",
     "05_Reports",
     "Daily_Report_20260428.md",
-    "02_Library/Prompts_Master/Prompt History Step 1.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/2026-04-28.md",
@@ -325,7 +330,6 @@
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "01_Products/Layout_Gen_Design/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
-    "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
-    "fff.md"
+    "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md"
   ]
 }

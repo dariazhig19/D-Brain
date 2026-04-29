@@ -5,6 +5,7 @@
 
 ## 🏗 Project Progress
 ### [[Project Name]]
+
 - [ ] 
 
 ## 🔗 Connected Notes (Modified Today)

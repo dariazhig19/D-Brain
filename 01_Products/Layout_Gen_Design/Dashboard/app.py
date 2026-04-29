@@ -62,7 +62,7 @@ plt.tight_layout()
 
 # --- DISPLAY — same container placement as streamlit_stock_app.py reference ---
 # use_container_width=False → image renders at exact FIG_W_PX × FIG_H_PX, never scales
-NUM_COLS = 2
+NUM_COLS = 1
 cols = st.columns(NUM_COLS)
 cell = cols[0].container(border=True)
 cell.write("")                                # top padding (matches reference line 325)

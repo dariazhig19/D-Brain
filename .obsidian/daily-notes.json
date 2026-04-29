@@ -1,3 +1,5 @@
 {
-  "folder": "00_Input"
+  "folder": "05_Reports/Daily",
+  "template": "02_Library/Templates/Daily_Report_Template",
+  "format": "Daily_Report_YYYYMMDD"
 }

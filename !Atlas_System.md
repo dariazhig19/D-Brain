@@ -42,14 +42,14 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 | Connected Notes | Table: `Note · Type · Change` — one row per modified file |
 
 ### Note Types (Connected Notes)
-| Type | Used For |
-|------|----------|
-| Vision | Product vision, roadmap, strategy docs |
-| Core | Python engine files (`Core/`) |
-| Dashboard | Python UI files (`Dashboard/`) |
-| Logic | Rules, scoring, algorithms |
-| Data | Excel, JSON, CSV data files |
-| Prompt | Prompt history and engineering notes |
-| Canvas | Obsidian canvas files |
-| Template | Vault templates |
-| Context | `!Context.md` folder reference files |
+| Type      | Used For                               |
+| --------- | -------------------------------------- |
+| Vision    | Product vision, roadmap, strategy docs |
+| Core      | Python engine files (`Core/`)          |
+| Dashboard | Python UI files (`Dashboard/`)         |
+| Logic     | Rules, scoring, algorithms             |
+| Data      | Excel, JSON, CSV data files            |
+| Prompt    | Prompt history and engineering notes   |
+| Canvas    | Obsidian canvas files                  |
+| Template  | Vault templates                        |
+| Context   | `!Context.md` folder reference files   |

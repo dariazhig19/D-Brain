@@ -13,14 +13,17 @@ st.sidebar.header("Site Dimensions (m)")
 site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
-# --- CORE ENGINE (Matplotlib image, same as original) ---
-# figsize=(10, 5): wide + short → rendered height = container_width × 0.5 → never overflows
-fig, ax = plt.subplots(figsize=(10, 5))
+# --- CORE ENGINE (Matplotlib image) ---
+# Fixed pixel size: figsize × dpi = exact pixels on screen
+# (8, 6) × 100 dpi = 800 × 600 px — never changes with browser scale
+FIG_W_PX, FIG_H_PX = 800, 600
+DPI = 100
+fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 
 # 1. Site boundary
 site_rect = patches.Rectangle(
     (0, 0), site_width, site_length,
-    linewidth=2, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary'
+    linewidth=0.8, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary'
 )
 ax.add_patch(site_rect)
 
@@ -29,7 +32,7 @@ setback = 5
 if site_width > 2 * setback and site_length > 2 * setback:
     road_rect = patches.Rectangle(
         (setback, setback), site_width - 2 * setback, site_length - 2 * setback,
-        linewidth=1.5, edgecolor='red', linestyle='--', facecolor='none',
+        linewidth=0.8, edgecolor='red', linestyle='--', facecolor='none',
         label='Primary Road Setback (5m)'
     )
     ax.add_patch(road_rect)
@@ -41,11 +44,10 @@ ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
 ax.legend(loc='upper right')
 plt.tight_layout()
 
-# --- DISPLAY — same placement pattern as streamlit_stock_app.py reference ---
-# stock app:  cell = cols[i].container(border=True) → cell.altair_chart(use_container_width=True)
-# here:       cell = cols[0].container(border=True) → cell.pyplot(use_container_width=True)
-NUM_COLS = 1
+# --- DISPLAY — same container placement as streamlit_stock_app.py reference ---
+# use_container_width=False → image renders at exact FIG_W_PX × FIG_H_PX, never scales
+NUM_COLS = 3
 cols = st.columns(NUM_COLS)
 cell = cols[0].container(border=True)
-cell.write("")                               # top padding (matches reference line 325)
-cell.pyplot(fig, use_container_width=True)   # fills cell width, height = width × 0.5
+cell.write("")                                # top padding (matches reference line 325)
+cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, ignores page zoom

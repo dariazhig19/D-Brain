@@ -111,7 +111,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Review and improve daily report template"
+                  "title": "Terminal: ⠂ Review and improve daily report template"
                 }
               }
             ],
@@ -129,14 +129,17 @@
             "id": "924617c1b9768f24",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 2446.979196578339,
+                  "y": 1664.1463167999486,
+                  "zoom": -0.43169729585902766
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Product_Vision"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           }
         ]
@@ -312,17 +315,26 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "76ad32a750a6e578",
+  "active": "924617c1b9768f24",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "05_Reports/Daily/Daily_Report_20260428.md",
-    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
-    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
-    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_1/Main Ideas.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_1/Phase 01 Output Example.png",
+    "02_Library/Obsidian and Vibe Coding/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
+    "00_Input/Pasted image 20260428131736.png.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "!Atlas_System.md",
+    "00_Input/Pasted image 20260428131736.png",
+    "00_Input/Pasted image 20260428114750.png",
+    "02_Library/Obsidian and Vibe Coding/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
+    "00_Input/2026-04-28.md",
+    "02_Library/Obsidian and Vibe Coding",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "05_Reports/Daily/Daily_Report_20260428.md",
+    "02_Library/Prompts_Master/Prompt_History_Phase 1.md",
+    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
     "02_Library/Templates/Daily_Report_Template.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
     "05_Reports/Daily/2026-04-29.md",
@@ -340,20 +352,11 @@
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Neural Enlightenment.md",
     "Eric Tech.md",
-    "Untitled.md",
-    "00_Input/Pasted image 20260428114750.png",
     "Untitled.base",
-    "00_Input/Pasted image 20260428131736.png",
-    "00_Input/Pasted image 20260428131730.png",
     "05_Reports",
-    "Daily_Report_20260428.md",
-    "00_Input/2026-04-28.md",
     "02_Library/Templates",
-    "00_Input/Untitled.md",
-    "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
-    "venv/Scripts/activate.bat",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

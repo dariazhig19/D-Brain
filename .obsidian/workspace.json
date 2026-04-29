@@ -90,12 +90,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
+                "file": "05_Reports/Daily_Report_20260428.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "title": "Daily_Report_20260428"
             }
           },
           {
@@ -290,8 +290,9 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "05_Reports/Daily_Report_20260428.md",
     "02_Library/Templates/Daily_Report_Template.md",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
+    "05_Reports/Daily_Report_20260428.md",
     "Layout_Gen_Design.md",
     "Project Name.md",
     "Neural Enlightenment.md",
@@ -307,7 +308,6 @@
     "!Atlas_System.md",
     "05_Reports",
     "Daily_Report_20260428.md",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/2026-04-28.md",
     "02_Library/Templates",

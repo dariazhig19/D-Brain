@@ -2,14 +2,13 @@
 date: {{date}}
 type: daily-report
 ---
-# 📅 Daily Report: {{date}}
+#  Daily Report: {{date}}
 
 ## 📝 Executive Summary
 
 - 
 
 ## 🏗 Project Progress
-### [[Project Name]]
 
 - [ ] 
 

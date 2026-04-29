@@ -32,13 +32,13 @@ tags: [daily-report, powerplan-ai]
 
 ## 🔗 Connected Notes (Modified Today)
 
-| Note | Type | Change |
-|------|------|--------|
-| [[!Atlas_System]] | Context | Full rewrite — added folder rules, Pipeline convention, note types |
-| [[!Core_Context]] | Context | Renamed from !Context.md; content updated |
-| [[!Dashboard_Context]] | Context | Renamed from !Context.md; content updated |
-| [[!Product_Vision]] | Vision | Updated phase status and roadmap |
-| [[Overview]] | Canvas | Updated to reflect current vault structure |
-| [[Prompt_History_Phase_01]] | Prompt | Renamed from Prompt_History_Step 1.md |
-| [[Daily_Report_Template]] | Template | Refined structure |
-| [[Main Ideas]] | Pipeline | Moved to !Prototype/ (correct location) |
+| Note                        | Type     | Change                                                             |
+| --------------------------- | -------- | ------------------------------------------------------------------ |
+| [[!Atlas_System]]           | Context  | Full rewrite — added folder rules, Pipeline convention, note types |
+| [[!Core_Context]]           | Context  | Renamed from !Context.md; content updated                          |
+| [[!Dashboard_Context]]      | Context  | Renamed from !Context.md; content updated                          |
+| [[!Product_Vision]]         | Vision   | Updated phase status and roadmap                                   |
+| [[Overview]]                | Canvas   | Updated to reflect current vault structure                         |
+| [[Prompt_History_Phase_01]] | Prompt   | Renamed m Prompt_History_Step 1.md                                 |
+| [[Daily_Report_Template]]   | Template | Refined structure                                                  |
+| [[Main Ideas]]              | Pipeline | Moved to !Prototype/ (correct location)                            |

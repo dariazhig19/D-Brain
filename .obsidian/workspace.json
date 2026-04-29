@@ -71,7 +71,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
+                  "title": "Terminal: ✦  Working… (D-Brain)"
                 }
               }
             ]
@@ -290,14 +290,14 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "Layout_Gen_Design.md",
+    "05_Reports/Daily_Report_20260428.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "Project Name.md",
-    "05_Reports/Daily_Report_20260428.md",
     "Neural Enlightenment.md",
     "Eric Tech.md",
     "Untitled.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "Layout_Gen_Design.md",
     "02_Library/Prompts_Master/Prompt_History_Step 1.md",
     "00_Input/Pasted image 20260428114750.png",
     "Untitled.base",

@@ -14,8 +14,11 @@ site_width = st.sidebar.slider("Plot Width (A)", 100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 # --- CORE ENGINE (Geometry rendering) ---
-# Width is 3x thinner than original (5 / 3 ≈ 1.67)
-fig, ax = plt.subplots(figsize=(10, 10))
+# Dynamic figsize: keeps plot proportional to actual site dimensions
+aspect_ratio = site_width / site_length
+fig_w = min(10, 10 * aspect_ratio)
+fig_h = min(10, 10 / aspect_ratio)
+fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
 # 1. Draw the site boundary
 site_rect = patches.Rectangle((0, 0), site_width, site_length,
@@ -33,7 +36,7 @@ if site_width > 2 * setback and site_length > 2 * setback:
 # --- Plot view configuration ---
 ax.set_xlim(-10, site_width + 10)
 ax.set_ylim(-10, site_length + 10)
-ax.set_aspect('equal')  # Prevent shape distortion
+ax.set_aspect('equal', adjustable='box')  # Prevent distortion, resize box not canvas
 
 # --- DISPLAY (Render in Streamlit) ---
-st.pyplot(fig)
+st.pyplot(fig, use_container_width=True)

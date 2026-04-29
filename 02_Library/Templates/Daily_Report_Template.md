@@ -17,5 +17,3 @@ type: daily-report
 ```dataview
 LIST FROM "" WHERE file.mday = this.file.day AND file.name != this.file.name
 ```
-
-<!-- #daily-report -->

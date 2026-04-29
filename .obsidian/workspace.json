@@ -11,7 +11,7 @@
           {
             "id": "a4891dbbf250a639",
             "type": "tabs",
-            "dimension": 85.63218390804597,
+            "dimension": 69.97126436781609,
             "children": [
               {
                 "id": "ddb20bc583793999",
@@ -32,7 +32,7 @@
           {
             "id": "7528555838bde321",
             "type": "tabs",
-            "dimension": 14.367816091954023,
+            "dimension": 30.028735632183906,
             "children": [
               {
                 "id": "7f0fc72d0e8b6e09",
@@ -71,10 +71,51 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
+                  "title": "Terminal: cmd"
+                }
+              },
+              {
+                "id": "5d9165f6bf909f0e",
+                "type": "leaf",
+                "pinned": true,
+                "state": {
+                  "type": "terminal:terminal",
+                  "state": {
+                    "terminal:terminal": {
+                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
+                      "focus": false,
+                      "profile": {
+                        "args": [],
+                        "executable": "C:\\Windows\\System32\\cmd.exe",
+                        "followTheme": true,
+                        "name": "",
+                        "platforms": {
+                          "win32": true
+                        },
+                        "pythonExecutable": "python3",
+                        "restoreHistory": false,
+                        "rightClickAction": "copyPaste",
+                        "successExitCodes": [
+                          "0",
+                          "SIGINT",
+                          "SIGTERM"
+                        ],
+                        "terminalOptions": {
+                          "documentOverride": null
+                        },
+                        "type": "integrated",
+                        "useWin32Conhost": true
+                      },
+                      "serial": null
+                    }
+                  },
+                  "pinned": true,
+                  "icon": "terminal",
+                  "title": "Terminal: Select ✳ Claude Code"
                 }
               }
-            ]
+            ],
+            "currentTab": 1
           }
         ],
         "direction": "horizontal"
@@ -90,12 +131,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "05_Reports/Daily_Report_20260428.md",
+                "file": "02_Library/Templates/Daily_Report_Template.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_20260428"
+              "title": "Daily_Report_Template"
             }
           },
           {
@@ -288,11 +329,11 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "17ba4be288c78e1b",
+  "active": "5d9165f6bf909f0e",
   "lastOpenFiles": [
     "02_Library/Templates/Daily_Report_Template.md",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "05_Reports/Daily_Report_20260428.md",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Layout_Gen_Design.md",
     "Project Name.md",
     "Neural Enlightenment.md",

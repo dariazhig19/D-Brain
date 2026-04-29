@@ -71,7 +71,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✦  Working… (D-Brain)"
+                  "title": "Terminal: ◇  Ready (D-Brain)"
                 }
               }
             ]
@@ -290,9 +290,9 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "Layout_Gen_Design.md",
-    "05_Reports/Daily_Report_20260428.md",
     "02_Library/Templates/Daily_Report_Template.md",
+    "05_Reports/Daily_Report_20260428.md",
+    "Layout_Gen_Design.md",
     "Project Name.md",
     "Neural Enlightenment.md",
     "Eric Tech.md",

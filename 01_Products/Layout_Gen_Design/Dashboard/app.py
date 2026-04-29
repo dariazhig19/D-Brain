@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import io, base64
 
 # Font: Malgun Gothic (pre-installed on Windows, supports Korean)
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -76,17 +77,32 @@ NUM_COLS = 4        # ← change this freely: number of columns for multi-plot g
 # Collect all plots — add more figs here as new phases are built
 plots = [fig]       # Phase 1: Site Boundary
 
+
+def render_centered(container, plot_fig, width_px):
+    """Render a matplotlib figure centered inside a Streamlit container."""
+    buf = io.BytesIO()
+    plot_fig.savefig(buf, format='png', bbox_inches='tight', dpi=DPI)
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.read()).decode()
+    container.markdown(
+        f'<div style="text-align:center">'
+        f'<img src="data:image/png;base64,{img_b64}" width="{width_px}"/>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+
 # Layout logic:
 #   1 plot  → centered 50% ( narrow | plot | narrow )
 #   2+ plots → NUM_COLS grid, like stock app individual charts
 if len(plots) == 1:
-    _, center_col, _ = st.columns([1, 2, 1])
+    _, center_col, _ = st.columns([2, 2, 2])
     cell = center_col.container(border=True)
     cell.write("")
-    cell.pyplot(plots[0], use_container_width=False)
+    render_centered(cell, plots[0], FIG_W_PX)
 else:
     cols = st.columns(NUM_COLS)
     for i, plot_fig in enumerate(plots):
         cell = cols[i % NUM_COLS].container(border=True)
         cell.write("")
-        cell.pyplot(plot_fig, use_container_width=False)
+        render_centered(cell, plot_fig, FIG_W_PX)

@@ -41,13 +41,23 @@ if site_width > 2 * setback and site_length > 2 * setback:
 ax.set_xlim(-10, site_width + 10)
 ax.set_ylim(-10, site_length + 10)
 ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
-ax.legend(loc='upper right')
+
+# Hide axis tick numbers (no x/y values shown)
+ax.set_xticks([])
+ax.set_yticks([])
+
+# Remove the matplotlib axes spine (the extra black frame around the plot)
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+# Legend placed outside below the plot
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.04),
+          ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 
 # --- DISPLAY — same container placement as streamlit_stock_app.py reference ---
 # use_container_width=False → image renders at exact FIG_W_PX × FIG_H_PX, never scales
-NUM_COLS = 3
+NUM_COLS = 2
 cols = st.columns(NUM_COLS)
 cell = cols[0].container(border=True)
-cell.write("")                                # top padding (matches reference line 325)
-cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, ignores page zoom
+cell.write("")                      

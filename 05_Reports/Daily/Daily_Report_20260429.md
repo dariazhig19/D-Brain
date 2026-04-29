@@ -1,9 +1,9 @@
 ---
-date: {{date}}
+date: 2026-04-29
 type: daily-report
 tags: [daily-report, powerplan-ai]
 ---
-#  Daily Report: {{date}}
+# 📅 Daily Report: 2026-04-29
 
 ## 📝 Executive Summary
 

@@ -111,7 +111,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Review and improve daily report template"
+                  "title": "Terminal: Select ✳ Review and improve daily report template"
                 }
               }
             ],
@@ -333,21 +333,26 @@
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "05_Reports/Daily_Report_20260428_old.md",
+    "05_Reports/Daily/Daily_Report_20260428.md",
+    "Layout_Gen_Design.md",
+    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
+    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
     "02_Library/Templates/Daily_Report_Template.md",
-    "!Atlas_System.md",
+    "Prompt History Step 1.md",
+    "05_Reports/Daily/Daily_Report_20260429.md",
+    "05_Reports/Daily",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "!Atlas_System.md",
     "Untitled.canvas",
     "App.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "!Me.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
-    "Layout_Gen_Design.md",
     "Project Name.md",
     "Neural Enlightenment.md",
     "Eric Tech.md",
     "Untitled.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
     "00_Input/Pasted image 20260428114750.png",
     "Untitled.base",
     "00_Input/Pasted image 20260428131736.png",
@@ -361,16 +366,11 @@
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
     "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
-    "00_Input/Хватит ЗАПОМИНАТЬ. Я построил ИИ-систему, которая помнит ВСЁ.md",
-    "00_Input/I Spent 1,000 Hours on Claude Code. What You Need to Know About Vibe-Coding.md",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
     "venv/Scripts/activate.bat",
     "venv/Scripts/Activate.ps1",
     "venv/Scripts/activate.fish",
-    "venv/Scripts/activate",
-    "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
-    "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

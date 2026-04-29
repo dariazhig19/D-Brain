@@ -26,6 +26,6 @@ Translates engineering constraints from `Plot plan requirement.xlsx` into Python
 
 ## 📅 Daily Changes
 
-| Date | File | Change |
-|------|------|--------|
-| [[Daily_Report_20260428_old]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |
+| Date                      | File                                 | Change                                                     |
+| ------------------------- | ------------------------------------ | ---------------------------------------------------------- |
+| [[Daily_Report_20260428]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |

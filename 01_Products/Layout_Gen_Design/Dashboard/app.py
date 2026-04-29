@@ -2,6 +2,11 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
+# Font: Malgun Gothic (pre-installed on Windows, supports Korean)
+plt.rcParams['font.family'] = 'Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign rendering with Korean fonts
+
+
 # Page configuration
 st.set_page_config(page_title="PowerPlan AI", layout="wide")
 

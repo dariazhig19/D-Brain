@@ -70,7 +70,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ⠂ Update today's daily report"
+                  "title": "Terminal: Select ✳ Update today's daily report"
                 }
               }
             ]
@@ -249,7 +249,7 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "76ad32a750a6e578",
+  "active": "924617c1b9768f24",
   "lastOpenFiles": [
     "05_Reports/Daily/Daily_Report_20260429.md",
     "05_Reports/Daily/Daily_Report_20260428.md",

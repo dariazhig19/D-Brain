@@ -15,7 +15,7 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 # --- CORE ENGINE (Geometry rendering) ---
 # Width is 3x thinner than original (5 / 3 ≈ 1.67)
-fig, ax = plt.subplots(figsize=(8, 8))
+fig, ax = plt.subplots(figsize=(10, 10))
 
 # 1. Draw the site boundary
 site_rect = patches.Rectangle((0, 0), site_width, site_length,

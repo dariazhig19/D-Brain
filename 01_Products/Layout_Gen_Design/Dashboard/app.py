@@ -6,7 +6,7 @@ import matplotlib.patches as patches
 st.set_page_config(page_title="PowerPlan AI", layout="wide")
 
 st.title("⚡ PowerPlan AI: Layout Generator")
-st.markdown("### Phase 1: Site Boundary & Primary Road Setback")
+st.markdown("### Phase_01: Site Boundary & Primary Road Setback")
 
 # --- UI CONTROLS (Sliders on the left) ---
 st.sidebar.header("Site Dimensions (m)")

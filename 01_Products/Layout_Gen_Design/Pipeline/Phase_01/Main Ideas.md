@@ -1,3 +1,5 @@
+## How?
+
 | **Stage**          | **Where we work**         | **Result**                                            |
 | ------------------ | ------------------------- | ----------------------------------------------------- |
 | **1. R&D**         | **Obsidian**              | You debug the "vibe" and logic of 60 buildings.       |
@@ -5,6 +7,7 @@
 | **3. Integration** | **Dynamo / Rhino.Inside** | Geometry starts "flying" in Revit.                    |
 | **4. Product**     | **Add-in (PyRevit / C#)** | You deliver a compiled file that works like Revit GD. |
 
+## Why?
 
 | **Function**      | **Revit Generative Design**    | **Your AI Program**                      |
 | ----------------- | ------------------------------ | ---------------------------------------- |

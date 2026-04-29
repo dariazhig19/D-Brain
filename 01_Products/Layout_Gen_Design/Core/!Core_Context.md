@@ -22,7 +22,7 @@ Translates engineering constraints from `Plot plan requirement.xlsx` into Python
 ## Key Design Principles
 - Core has zero Streamlit imports — it must be callable independently of the dashboard.
 - Scoring is additive: each rule contributes a penalty, lower total = better layout.
-- Phase 3 milestone: Rules.py functional with distance checks and visual RED alerts in dashboard.
+- Phase_03 milestone: Rules.py functional with distance checks and visual RED alerts in dashboard.
 
 ## 📅 Daily Changes
 

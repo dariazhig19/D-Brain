@@ -14,7 +14,7 @@ tags: [daily-report, powerplan-ai]
 ## 🏗 Project Progress
 
 - [x] Created interactive dashboard with Streamlit and Matplotlib for site boundary control.
-- [x] Documented Phase 1-5 development roadmap and project vision.
+- [x] Documented Phase_01–05 development roadmap and project vision.
 - [x] Initialized core engineering logic files (`Geometry.py`, `Rules.py`, `Main.py`).
 - [x] Integrated engineering requirement data for building placement rules.
 
@@ -33,5 +33,5 @@ tags: [daily-report, powerplan-ai]
 | [[Rules]] | Core | Initialized as empty stub |
 | [[Main]] | Core | Initialized as empty stub |
 | [[Plot plan requirement.xlsx]] | Data | Integrated engineering requirements for building placement rules |
-| [[Prompt_History_Phase 1]] | Prompt | Recorded prompt history for Phase 1 |
+| [[Prompt_History_Phase_01]] | Prompt | Recorded prompt history for Phase_01 |
 | [[Overview.canvas]] | Canvas | Created project overview canvas |

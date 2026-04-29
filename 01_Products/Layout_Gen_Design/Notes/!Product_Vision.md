@@ -24,31 +24,32 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 
 ## 📈 Development Roadmap (Phased Plan)
 
-### Phase 1: The Empty Plot (Current)
+### Phase_01: The Empty Plot (Current)
 
 - [ ] Initialize project structure: `Core/`, `Dashboard/`, `Data/`, `Notes/`.
 - [ ] Setup `Dashboard/App.py` using Streamlit.
 - [ ] Draw the site boundary (Rectangle) based on User Inputs.
 
-### Phase 2: The Three Giants
+### Phase_02: The Three Giants
 
 - [ ] Define 3 main groups: **Power Block**, **Cooling Tower**, **Admin Building**.
 - [ ] Render them as colored blocks inside the plot.
 - [ ] Add manual X/Y coordinate sliders to test the canvas limits.
 
-### Phase 3: Engineering Rules (The Logic)
+### Phase_03: Engineering Rules (The Logic)
 
 - [ ] Translate Excel rules into Python functions in `Core/Rules.py`.
 - [ ] Implement distance checks (Setbacks from boundaries and between buildings).
 - [ ] Visual Alerts: Turn blocks **RED** if they violate a rule.
-### Phase 4: Excel Integration (Scaling)
+
+### Phase_04: Excel Integration (Scaling)
 
 - [ ] Parse all 60+ items from `Plot plan requirement.xlsx`.
 - [ ] Create an automated sequence to place all buildings based on priority.
 
-### Phase 5: Generative Optimization
+### Phase_05: Generative Optimization
 
 - [ ] Implementation of a scoring engine to evaluate "The Best Placement".
 - [ ] Export final geometry to DXF/CAD format.
 
-## 📍 Current Status: **Phase 1**
+## 📍 Current Status: **Phase_01**

@@ -6,7 +6,7 @@
       {
         "id": "f6e2c1d346d83949",
         "type": "split",
-        "dimension": 35.604693140794225,
+        "dimension": 25.94765342960289,
         "children": [
           {
             "id": "a4891dbbf250a639",
@@ -123,23 +123,20 @@
       {
         "id": "66c7ef7c7d71ffa8",
         "type": "tabs",
-        "dimension": 64.39530685920577,
+        "dimension": 74.0523465703971,
         "children": [
           {
             "id": "17ba4be288c78e1b",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 1115.469274455142,
-                  "y": 1470.8747043097153,
-                  "zoom": -0.09836396252569435
-                }
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "!Product_Vision"
             }
           },
           {
@@ -334,6 +331,7 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Prompts_Master/Prompt_History_Step 1.md",
@@ -359,7 +357,6 @@
     "Neural Enlightenment.md",
     "Eric Tech.md",
     "Untitled.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "00_Input/Pasted image 20260428114750.png",
     "Untitled.base",
     "00_Input/Pasted image 20260428131736.png",
@@ -371,7 +368,6 @@
     "02_Library/Templates",
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
-    "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
     "venv/Scripts/activate.bat",

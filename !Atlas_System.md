@@ -125,16 +125,16 @@ Completed development cycles, deprecated versions, old prototypes.
 | Connected Notes | Table: `Note · Type · Change` — one row per modified file |
 
 ### Note Types (Connected Notes)
-| Type      | Used For                               |
-| --------- | -------------------------------------- |
+| Type      | Used For                                                      |
+| --------- | ------------------------------------------------------------- |
 | Vision    | Product vision, roadmap, strategy docs (`!Product_Vision.md`) |
-| Core      | Python engine files (`Core/`) |
-| Dashboard | Python UI files (`Dashboard/`) |
-| Logic     | Rules, scoring, algorithms (`!Scoring_Logic.md`) |
-| Data      | Excel, JSON, CSV data files (`Data/`) |
-| Prompt    | Prompt history and engineering notes (`Prompts_Master/`) |
-| Pipeline  | Phase notes and output images (`Pipeline/Phase_XX/`) |
-| Canvas    | Obsidian canvas files (`Overview.canvas`) |
-| Template  | Vault templates (`Templates/`) |
-| Context   | `!Context.md` folder reference files |
-| Research  | Learning materials in `02_Library/Obsidian&Vibe Coding/` |
+| Core      | Python engine files (`Core/`)                                 |
+| Dashboard | Python UI files (`Dashboard/`)                                |
+| Logic     | Rules, scoring, algorithms (`!Scoring_Logic.md`)              |
+| Data      | Excel, JSON, CSV data files (`Data/`)                         |
+| Prompt    | Prompt history and engineering notes (`Prompts_Master/`)      |
+| Pipeline  | Phase notes and output images (`Pipeline/Phase_XX/`)          |
+| Canvas    | Obsidian canvas files (`Overview.canvas`)                     |
+| Template  | Vault templates (`Templates/`)                                |
+| Context   | `!Context.md` folder reference files                          |
+| Research  | Learning materials in `02_Library/Obsidian&Vibe Coding/`      |

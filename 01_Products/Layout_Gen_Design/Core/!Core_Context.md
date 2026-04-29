@@ -29,3 +29,4 @@ Translates engineering constraints from `Plot plan requirement.xlsx` into Python
 | Date                      | File                                 | Change                                                     |
 | ------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | [[Daily_Report_20260428]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |
+| [[Daily_Report_20260429]] | `!Core_Context.md` | Renamed from !Context.md; updated to match new naming convention. |

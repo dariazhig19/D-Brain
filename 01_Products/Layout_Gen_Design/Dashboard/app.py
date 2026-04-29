@@ -13,6 +13,16 @@ st.set_page_config(page_title="PowerPlan AI", layout="wide")
 st.title("⚡ PowerPlan AI: Layout Generator")
 st.markdown("### Phase_01: Site Boundary & Primary Road Setback")
 
+# Center all st.pyplot figures inside their containers
+st.markdown("""
+<style>
+[data-testid="stPyplot"] > div {
+    display: flex;
+    justify-content: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # --- UI CONTROLS (Sliders on the left) ---
 st.sidebar.header("Site Dimensions (m)")
 site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
@@ -60,10 +70,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.04),
           ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 
-# --- DISPLAY — same container placement as streamlit_stock_app.py reference ---
-# use_container_width=False → image renders at exact FIG_W_PX × FIG_H_PX, never scales
-NUM_COLS = 1
-cols = st.columns(NUM_COLS)
-cell = cols[0].container(border=True)
-cell.write("")                                # top padding (matches reference line 325)
-cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, ignores page zoom
+# --- DISPLAY — centered inside a bordered container ---
+cell = st.container(border=True)
+cell.write("")                                # top padding
+cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, centered by CSS

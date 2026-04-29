@@ -4,38 +4,60 @@
     "type": "split",
     "children": [
       {
-        "id": "f6e2c1d346d83949",
-        "type": "split",
+        "id": "a4891dbbf250a639",
+        "type": "tabs",
         "dimension": 25.94765342960289,
         "children": [
           {
-            "id": "a4891dbbf250a639",
+            "id": "ddb20bc583793999",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "!Scoring_Logic"
+            }
+          }
+        ]
+      },
+      {
+        "id": "a1176af49a534438",
+        "type": "split",
+        "dimension": 74.0523465703971,
+        "children": [
+          {
+            "id": "66c7ef7c7d71ffa8",
             "type": "tabs",
-            "dimension": 69.97126436781609,
             "children": [
               {
-                "id": "ddb20bc583793999",
+                "id": "924617c1b9768f24",
                 "type": "leaf",
                 "state": {
-                  "type": "markdown",
+                  "type": "canvas",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-                    "mode": "source",
-                    "source": false
+                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                    "viewState": {
+                      "x": 2566.782835404827,
+                      "y": 1175.4120984870003,
+                      "zoom": -1.4481803272529514
+                    }
                   },
-                  "icon": "lucide-file",
-                  "title": "!Scoring_Logic"
+                  "icon": "lucide-layout-dashboard",
+                  "title": "Overview"
                 }
               }
             ]
           },
           {
-            "id": "7528555838bde321",
+            "id": "32b90d86f6cdfa56",
             "type": "tabs",
-            "dimension": 30.028735632183906,
             "children": [
               {
-                "id": "7f0fc72d0e8b6e09",
+                "id": "f2de76c03194f058",
                 "type": "leaf",
                 "pinned": true,
                 "state": {
@@ -71,75 +93,13 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: cmd"
-                }
-              },
-              {
-                "id": "5d9165f6bf909f0e",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: ✳ Review and improve daily report template"
+                  "title": "Terminal: ✳ Claude Code"
                 }
               }
-            ],
-            "currentTab": 1
+            ]
           }
         ],
         "direction": "horizontal"
-      },
-      {
-        "id": "66c7ef7c7d71ffa8",
-        "type": "tabs",
-        "dimension": 74.0523465703971,
-        "children": [
-          {
-            "id": "924617c1b9768f24",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Prompt_History_Phase_01"
-            }
-          }
-        ]
       }
     ],
     "direction": "vertical"
@@ -312,17 +272,18 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "924617c1b9768f24",
+  "active": "f2de76c03194f058",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
+    "01_Products/Layout_Gen_Design/Pipeline/!Prototype",
+    "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
     "!Atlas_System.md",
     "!Me.md",
-    "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Main Ideas.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01",
@@ -354,7 +315,6 @@
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.base",
     "05_Reports",
-    "02_Library/Templates",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

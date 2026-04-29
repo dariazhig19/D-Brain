@@ -60,4 +60,5 @@ plt.tight_layout()
 NUM_COLS = 2
 cols = st.columns(NUM_COLS)
 cell = cols[0].container(border=True)
-cell.write("")                      
+cell.write("")                                # top padding (matches reference line 325)
+cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, ignores page zoom

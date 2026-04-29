@@ -71,7 +71,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
+                  "title": "Terminal: ◇  Ready (D-Brain)"
                 }
               }
             ]
@@ -90,12 +90,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
+                "file": "05_Reports/Daily_Report_20260428.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "title": "Daily_Report_20260428"
             }
           }
         ]
@@ -273,15 +273,21 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "Daily_Report_20260428.md",
+    "00_Input/Pasted image 20260428114750.png",
+    "Untitled.base",
+    "Untitled.md",
+    "00_Input/Pasted image 20260428131736.png",
+    "00_Input/Pasted image 20260428131730.png",
     "!Me.md",
     "!Atlas_System.md",
-    "02_Library/Templates/Daily_Report_Template.md",
     "Project Name.md",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
-    "Untitled.base",
+    "05_Reports/Daily_Report_20260428.md",
+    "05_Reports",
+    "Daily_Report_20260428.md",
+    "02_Library/Templates/Daily_Report_Template.md",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/2026-04-28.md",
     "02_Library/Templates",
@@ -299,16 +305,11 @@
     "venv/Scripts/activate.fish",
     "venv/Scripts/activate",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
-    "venv/Lib/site-packages/pip-26.0.1.dist-info/INSTALLER",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
-    "Pasted image 20260428131730.png",
-    "Pasted image 20260428131736.png",
     "01_Products/Layout_Gen_Design/!Product_Vision.md",
-    "Pasted image 20260428114750.png",
     "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
-    "Untitled.md",
     "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md",
     "fff.md"
   ]

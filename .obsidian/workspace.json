@@ -4,57 +4,34 @@
     "type": "split",
     "children": [
       {
-        "id": "a4891dbbf250a639",
-        "type": "tabs",
-        "dimension": 25.94765342960289,
-        "children": [
-          {
-            "id": "ddb20bc583793999",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "!Scoring_Logic"
-            }
-          }
-        ]
-      },
-      {
-        "id": "a1176af49a534438",
+        "id": "cf4ec067e41486e4",
         "type": "split",
-        "dimension": 74.0523465703971,
         "children": [
           {
             "id": "66c7ef7c7d71ffa8",
             "type": "tabs",
+            "dimension": 74.35344827586206,
             "children": [
               {
                 "id": "924617c1b9768f24",
                 "type": "leaf",
                 "state": {
-                  "type": "canvas",
+                  "type": "markdown",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                    "viewState": {
-                      "x": 2566.782835404827,
-                      "y": 1175.4120984870003,
-                      "zoom": -1.4481803272529514
-                    }
+                    "file": "!Atlas_System.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-layout-dashboard",
-                  "title": "Overview"
+                  "icon": "lucide-file",
+                  "title": "!Atlas_System"
                 }
               }
             ]
           },
           {
-            "id": "32b90d86f6cdfa56",
+            "id": "be5346da8bb1b12f",
             "type": "tabs",
+            "dimension": 25.646551724137932,
             "children": [
               {
                 "id": "f2de76c03194f058",
@@ -93,7 +70,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Claude Code"
+                  "title": "Terminal: ✳ Update Atlas with product 01 pipeline"
                 }
               }
             ]
@@ -272,17 +249,18 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "f2de76c03194f058",
+  "active": "76ad32a750a6e578",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "!Atlas_System.md",
+    "02_Library/Templates/Daily_Report_Template.md",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype",
     "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
-    "!Atlas_System.md",
     "!Me.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02",
@@ -299,7 +277,6 @@
     "05_Reports/Daily/Daily_Report_20260428.md",
     "02_Library/Prompts_Master/Prompt_History_Phase 1.md",
     "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
-    "02_Library/Templates/Daily_Report_Template.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
     "05_Reports/Daily/2026-04-29.md",
     "05_Reports/Daily/29pmi4/29/20262026_R3port_20260429.md",

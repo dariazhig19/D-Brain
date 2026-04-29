@@ -7,7 +7,7 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 
 ## 🛠 Tech Stack (Vibe Coding)
 
-- **Architect (Organization):** Obsidian (Notes, Canvas, Atlas)
+- **Architect (Organization):** Obsidian
 - **Engine (IDE):** VS Code + Antigravity extension
 - **Draftsman (Visualization):** Matplotlib (Python library)
 - **Interface (Dashboard):** Streamlit (Web UI)

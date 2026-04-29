@@ -15,9 +15,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 3143.4170270683453,
-                  "y": -207.42157804843612,
-                  "zoom": 0.4288769196735202
+                  "x": 3088.1467079530626,
+                  "y": 665.4655435136897,
+                  "zoom": -0.45867903904751967
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -199,9 +199,11 @@
   },
   "active": "924617c1b9768f24",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "00_Input/streamlit_stock_app.py",
     "Untitled.base",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
@@ -210,7 +212,6 @@
     "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype",
     "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
     "!Me.md",
@@ -240,7 +241,6 @@
     "05_Reports/Daily",
     "App.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
-    "05_Reports",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

@@ -8,7 +8,8 @@
 		{"id":"ceae6e826d95e20e","type":"file","file":"02_Library/Prompts_Master/Prompt_History_Phase_01.md","x":1600,"y":1560,"width":1055,"height":800},
 		{"id":"f233baec8c93a369","type":"text","text":"# Open Steamlit page\n\n### Quick Start Guide (Use Command Prompt)\n\n**Step 1: Open Command Prompt (cmd)**\n\nIn the VS Code terminal panel, click the downward arrow `v` next to the `+` button and select **Command Prompt**.\n\n**Step 2: Navigate to your project folder**\n\nDOS\n\n```\ncd 01_Products\\Layout_Gen_Design\n```\n\n**Step 3: Activate the virtual environment**\n\nDOS\n\n```\n..\\..\\.venv\\Scripts\\activate.bat\n```\n\n_(Make sure `(.venv)` appears on the left)._\n\n**Step 4: Run the application**\n\nDOS\n\n```\nstreamlit run Dashboard/App.py\n```","x":3160,"y":843,"width":928,"height":717},
 		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png","x":2760,"y":260,"width":639,"height":293},
-		{"id":"e05dc9ad5733ca89","type":"text","text":"# Phase_01","x":2003,"y":16,"width":250,"height":60,"color":"4"}
+		{"id":"e05dc9ad5733ca89","type":"text","text":"# Phase_01","x":2003,"y":16,"width":250,"height":60,"color":"4"},
+		{"id":"51c804810c918d6e","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png","x":3520,"y":260,"width":399,"height":204}
 	],
 	"edges":[
 		{"id":"7dbb395ec9a5c0c0","fromNode":"14369d86ae2ca3cb","fromSide":"right","toNode":"ceae6e826d95e20e","toSide":"left"},

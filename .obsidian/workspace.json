@@ -71,7 +71,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: Select ◇  Ready (D-Brain)"
+                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
                 }
               }
             ]
@@ -90,12 +90,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Daily_Report_20260428.md",
+                "file": "02_Library/Templates/Daily_Report_Template.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_20260428"
+              "title": "Daily_Report_Template"
             }
           }
         ]
@@ -231,13 +231,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Daily_Report_20260428.md",
+                "file": "02_Library/Templates/Daily_Report_Template.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Daily_Report_20260428"
+              "title": "Outline of Daily_Report_Template"
             }
           },
           {
@@ -273,17 +273,18 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "Daily_Report_20260428.md",
+    "!Me.md",
+    "!Atlas_System.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "Project Name.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Untitled.base",
     "02_Library/Prompts_Master/Prompt History Step 1.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "Daily_Report_20260428.md",
-    "!Atlas_System.md",
     "00_Input/2026-04-28.md",
     "02_Library/Templates",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
@@ -301,7 +302,6 @@
     "venv/Lib/site-packages/pip-26.0.1.dist-info/INSTALLER",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
-    "!Me.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
     "Pasted image 20260428131730.png",
     "Pasted image 20260428131736.png",

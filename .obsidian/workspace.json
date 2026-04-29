@@ -16,14 +16,17 @@
                 "id": "924617c1b9768f24",
                 "type": "leaf",
                 "state": {
-                  "type": "markdown",
+                  "type": "canvas",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-                    "mode": "source",
-                    "source": false
+                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                    "viewState": {
+                      "x": 2163.227894460587,
+                      "y": 1846.4098677609625,
+                      "zoom": -0.5711230803264797
+                    }
                   },
-                  "icon": "lucide-file",
-                  "title": "!Core_Context"
+                  "icon": "lucide-layout-dashboard",
+                  "title": "Overview"
                 }
               }
             ]
@@ -251,8 +254,8 @@
   },
   "active": "924617c1b9768f24",
   "lastOpenFiles": [
-    "05_Reports/Daily/Daily_Report_20260429.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "05_Reports/Daily/Daily_Report_20260429.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "02_Library/Templates/Daily_Report_Template.md",

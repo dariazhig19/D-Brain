@@ -75,4 +75,4 @@ tags: [daily-report, powerplan-ai]
 | [[Prompt_History_Phase_01]] | Prompt   | Renamed m Prompt_History_Step 1.md                                 |
 | [[Daily_Report_Template]]   | Template | Refined structure                                                  |
 | [[Main Ideas]]              | Pipeline | Moved to !Prototype/ (correct location)                            |
-| [[Dashboard/app]]           | Dev      | Phase_01 dashboard overhaul — Korean font, pixel rendering, layout |
+| [[App]]                     | Dashboard | Overhauled Phase_01 — Korean font, fixed pixel rendering, centered layout, multi-column grid |

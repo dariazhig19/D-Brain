@@ -19,6 +19,6 @@ tags: [daily-report, powerplan-ai]
 
 ## 🔗 Connected Notes (Modified Today)
 
-| Note | Change |
-|------|--------|
-| [[]] |  |
+| Note | Type | Change |
+|------|------|--------|
+| [[]] |  |  |

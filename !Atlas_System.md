@@ -26,8 +26,30 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 - **03_Assets**: Visual outputs and data.
 - **04_Archive**: Historical versions and completed cycles.
 - **05_Reports**: Daily logs and executive summaries.
+  - **05_Reports/Daily**: All daily reports stored as `Daily_Report_YYYYMMDD.md`.
 
 ## 📊 Reporting Logic
-1. **Trigger**: Every workday concludes with a `Daily_Report_YYYYMMDD.md`.
+1. **Trigger**: Every workday concludes with a `Daily_Report_YYYYMMDD.md` inside `05_Reports/Daily/`.
 2. **Context**: Summarize active changes in `01_Products` and new standards in `02_Library`.
-3. **Storage**: All reports are archived in `05_Reports` to serve as the "Memory" of the D-Brain.
+3. **Storage**: Reports are the "Memory" of the D-Brain — each links modified notes with their type and change summary.
+
+## 📋 Daily Report Structure
+| Section | Purpose |
+|---------|---------|
+| Executive Summary | 2–3 bullet overview of the day |
+| Project Progress | Flat checklist — no project heading links |
+| Issues & Blockers | Anything that slowed or blocked work |
+| Connected Notes | Table: `Note · Type · Change` — one row per modified file |
+
+### Note Types (Connected Notes)
+| Type | Used For |
+|------|----------|
+| Vision | Product vision, roadmap, strategy docs |
+| Core | Python engine files (`Core/`) |
+| Dashboard | Python UI files (`Dashboard/`) |
+| Logic | Rules, scoring, algorithms |
+| Data | Excel, JSON, CSV data files |
+| Prompt | Prompt history and engineering notes |
+| Canvas | Obsidian canvas files |
+| Template | Vault templates |
+| Context | `!Context.md` folder reference files |

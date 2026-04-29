@@ -4,82 +4,27 @@
     "type": "split",
     "children": [
       {
-        "id": "cf4ec067e41486e4",
-        "type": "split",
+        "id": "66c7ef7c7d71ffa8",
+        "type": "tabs",
         "children": [
           {
-            "id": "66c7ef7c7d71ffa8",
-            "type": "tabs",
-            "dimension": 74.35344827586206,
-            "children": [
-              {
-                "id": "924617c1b9768f24",
-                "type": "leaf",
-                "state": {
-                  "type": "canvas",
-                  "state": {
-                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                    "viewState": {
-                      "x": 2855.6107982942553,
-                      "y": 1044.947269371242,
-                      "zoom": -0.904456413659813
-                    }
-                  },
-                  "icon": "lucide-layout-dashboard",
-                  "title": "Overview"
+            "id": "924617c1b9768f24",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 2826.149753881958,
+                  "y": 1599.045134914533,
+                  "zoom": -0.904456413659813
                 }
-              }
-            ]
-          },
-          {
-            "id": "be5346da8bb1b12f",
-            "type": "tabs",
-            "dimension": 25.646551724137932,
-            "children": [
-              {
-                "id": "f2de76c03194f058",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
-                }
-              }
-            ]
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
+            }
           }
-        ],
-        "direction": "horizontal"
+        ]
       }
     ],
     "direction": "vertical"
@@ -232,12 +177,11 @@
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 682.5,
-    "collapsed": true
+    "width": 682.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -249,18 +193,20 @@
       "command-palette:Open command palette": false,
       "bases:Create new base": false,
       "obsidian-git:Open Git source control": false,
-      "terminal:Open terminal": false
+      "terminal:Open terminal": false,
+      "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
   "active": "924617c1b9768f24",
   "lastOpenFiles": [
+    "Untitled.base",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "!Atlas_System.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
@@ -293,7 +239,6 @@
     "05_Reports/Daily",
     "App.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
-    "Untitled.base",
     "05_Reports",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]

@@ -129,14 +129,17 @@
             "id": "17ba4be288c78e1b",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "05_Reports/Daily/2026-04-29.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 1017.5,
+                  "y": 490,
+                  "zoom": -1.4316972958590275
+                }
               },
-              "icon": "lucide-file",
-              "title": "2026-04-29"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -331,19 +334,22 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "05_Reports/Daily/Daily_Report_20260428.md",
-    "05_Reports/Daily/2026-04-29.md",
-    "!Atlas_System.md",
-    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
-    "05_Reports/Daily/Daily_Report_20260429.md",
-    "02_Library/Templates/Daily_Report_Template.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
+    "02_Library/Templates/Daily_Report_Template.md",
+    "05_Reports/Daily/Daily_Report_20260428.md",
+    "05_Reports/Daily/Daily_Report_20260429.md",
+    "05_Reports/Daily/2026-04-29.md",
+    "05_Reports/Daily/29pmi4/29/20262026_R3port_20260429.md",
+    "05_Reports/Daily/29pmi4/29",
+    "05_Reports/Daily/29pmi4",
+    "!Atlas_System.md",
     "Layout_Gen_Design.md",
     "Project Name.md",
     "Prompt History Step 1.md",
     "Untitled.canvas",
     "05_Reports/Daily_Report_20260428_old.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
     "05_Reports/Daily",
     "App.md",
@@ -366,12 +372,9 @@
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
-    "00_Input/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
     "01_Products/Layout_Gen_Design/Dashboard/Settings",
     "venv/Scripts/deactivate.bat",
     "venv/Scripts/activate.bat",
-    "venv/Scripts/Activate.ps1",
-    "venv/Scripts/activate.fish",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

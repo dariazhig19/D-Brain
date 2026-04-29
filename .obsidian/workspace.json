@@ -126,7 +126,7 @@
         "dimension": 74.0523465703971,
         "children": [
           {
-            "id": "17ba4be288c78e1b",
+            "id": "924617c1b9768f24",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -137,23 +137,6 @@
               },
               "icon": "lucide-file",
               "title": "!Product_Vision"
-            }
-          },
-          {
-            "id": "924617c1b9768f24",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 785.503046458492,
-                  "y": 384.7920792079208,
-                  "zoom": -1.4316972958590275
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
             }
           }
         ]
@@ -329,29 +312,30 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "17ba4be288c78e1b",
+  "active": "76ad32a750a6e578",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
-    "02_Library/Templates/Daily_Report_Template.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "05_Reports/Daily/Daily_Report_20260428.md",
+    "02_Library/Prompts_Master/Prompt_History_Step 1.md",
+    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
+    "!Atlas_System.md",
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "02_Library/Templates/Daily_Report_Template.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
     "05_Reports/Daily/2026-04-29.md",
     "05_Reports/Daily/29pmi4/29/20262026_R3port_20260429.md",
     "05_Reports/Daily/29pmi4/29",
     "05_Reports/Daily/29pmi4",
-    "!Atlas_System.md",
     "Layout_Gen_Design.md",
     "Project Name.md",
     "Prompt History Step 1.md",
     "Untitled.canvas",
     "05_Reports/Daily_Report_20260428_old.md",
-    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
     "05_Reports/Daily",
     "App.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "!Me.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Neural Enlightenment.md",
@@ -363,7 +347,6 @@
     "00_Input/Pasted image 20260428131730.png",
     "05_Reports",
     "Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/2026-04-28.md",
     "02_Library/Templates",
     "00_Input/Untitled.md",

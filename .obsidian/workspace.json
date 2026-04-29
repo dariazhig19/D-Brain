@@ -131,12 +131,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
+                "file": "01_Products/Layout_Gen_Design/Core/!Context.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "title": "!Context"
             }
           },
           {
@@ -209,8 +209,7 @@
               "title": "Bookmarks"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -330,13 +329,14 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "c43040cdc2893019",
+  "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
+    "Untitled.canvas",
+    "02_Library/Templates/Daily_Report_Template.md",
     "05_Reports/Daily_Report_20260428.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Context.md",
     "01_Products/Layout_Gen_Design/Core/!Context.md",
     "App.md",
-    "02_Library/Templates/Daily_Report_Template.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "!Me.md",
     "!Atlas_System.md",
@@ -371,7 +371,6 @@
     "venv/Scripts/activate",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
-    "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
     "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

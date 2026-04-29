@@ -1,7 +1,7 @@
 
 
 
-### Phase_01 — Environment Setup
+### Phase_01: The Empty Plot.
 #### Step_01: Make Dashboard
 
 "Create a **Streamlit** dashboard application titled '**PowerPlan AI: Layout Generator**'.

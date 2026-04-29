@@ -22,6 +22,7 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 
 ## 🗺️ System Map
 - **01_Products**: Active development of commercial Add-ins.
+  - **Pipeline/**: Step-by-step pipeline documentation. Each phase has its own subfolder (e.g., `Phase_01/`) containing a notes file (.md) and an output image (.png) for that phase. `!Prototype/` holds early-stage ideas.
 - **02_Library**: Distilled knowledge base (The "Karpathy" Method).
 - **03_Assets**: Visual outputs and data.
 - **04_Archive**: Historical versions and completed cycles.
@@ -51,6 +52,7 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 | Logic     | Rules, scoring, algorithms             |
 | Data      | Excel, JSON, CSV data files            |
 | Prompt    | Prompt history and engineering notes   |
+| Pipeline  | Phase-by-phase notes and output images (`Pipeline/Phase_XX/`) |
 | Canvas    | Obsidian canvas files                  |
 | Template  | Vault templates                        |
 | Context   | `!Context.md` folder reference files   |

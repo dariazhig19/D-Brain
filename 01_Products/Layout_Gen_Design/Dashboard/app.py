@@ -31,7 +31,7 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 # --- CORE ENGINE (Matplotlib image) ---
 # Fixed pixel size: figsize × dpi = exact pixels on screen
 # (8, 6) × 100 dpi = 800 × 600 px — never changes with browser scale
-FIG_W_PX, FIG_H_PX = 800, 600
+FIG_W_PX, FIG_H_PX = 500, 300
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 
@@ -70,7 +70,23 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.04),
           ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 
-# --- DISPLAY — centered inside a bordered container ---
-cell = st.container(border=True)
-cell.write("")                                # top padding
-cell.pyplot(fig, use_container_width=False)   # fixed 800×600 px, centered by CSS
+# --- DISPLAY CONFIG ---
+NUM_COLS = 4        # ← change this freely: number of columns for multi-plot grid
+
+# Collect all plots — add more figs here as new phases are built
+plots = [fig]       # Phase 1: Site Boundary
+
+# Layout logic:
+#   1 plot  → centered 50% ( narrow | plot | narrow )
+#   2+ plots → NUM_COLS grid, like stock app individual charts
+if len(plots) == 1:
+    _, center_col, _ = st.columns([1, 2, 1])
+    cell = center_col.container(border=True)
+    cell.write("")
+    cell.pyplot(plots[0], use_container_width=False)
+else:
+    cols = st.columns(NUM_COLS)
+    for i, plot_fig in enumerate(plots):
+        cell = cols[i % NUM_COLS].container(border=True)
+        cell.write("")
+        cell.pyplot(plot_fig, use_container_width=False)

@@ -131,12 +131,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
+                "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Daily_Report_Template"
+              "title": "!Dashboard_Context"
             }
           },
           {
@@ -331,15 +331,15 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "05_Reports/Daily_Report_20260428.md",
-    "02_Library/Templates/Daily_Report_Template.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "05_Reports/Daily_Report_20260428_old.md",
+    "02_Library/Templates/Daily_Report_Template.md",
+    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "Untitled.canvas",
     "App.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "!Me.md",
-    "!Atlas_System.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Layout_Gen_Design.md",
     "Project Name.md",

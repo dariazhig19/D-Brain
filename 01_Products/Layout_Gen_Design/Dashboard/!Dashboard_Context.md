@@ -29,4 +29,4 @@ Main Streamlit application. Currently implements **Phase 1**:
 
 | Date | File | Change |
 |------|------|--------|
-| [[Daily_Report_20260428]] | `App.py` | Created Phase 1 Streamlit app — site boundary rectangle + 5m road setback dashed overlay, sidebar sliders for width/length. |
+| [[Daily_Report_20260428_old]] | `App.py` | Created Phase 1 Streamlit app — site boundary rectangle + 5m road setback dashed overlay, sidebar sliders for width/length. |

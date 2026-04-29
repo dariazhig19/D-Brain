@@ -32,7 +32,7 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 # --- CORE ENGINE (Matplotlib image) ---
 # Fixed pixel size: figsize × dpi = exact pixels on screen
 # (8, 6) × 100 dpi = 800 × 600 px — never changes with browser scale
-FIG_W_PX, FIG_H_PX = 800, 600
+FIG_W_PX, FIG_H_PX = 500, 300
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 
@@ -72,7 +72,7 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.04),
 plt.tight_layout()
 
 # --- DISPLAY CONFIG ---
-NUM_COLS = 3       # ← change this freely: number of columns for multi-plot grid
+NUM_COLS = 4       # ← change this freely: number of columns for multi-plot grid
 
 # Collect all plots — add more figs here as new phases are built
 plots = [fig, fig]       # Phase 1: Site Boundary

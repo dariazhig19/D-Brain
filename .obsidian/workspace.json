@@ -111,7 +111,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ✳ Review and improve daily report template"
+                  "title": "Terminal: ⠂ Review and improve daily report template"
                 }
               }
             ],
@@ -131,12 +131,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Core/!Context.md",
+                "file": "05_Reports/Daily_Report_20260428.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "!Context"
+              "title": "Daily_Report_20260428"
             }
           },
           {
@@ -331,11 +331,11 @@
   },
   "active": "17ba4be288c78e1b",
   "lastOpenFiles": [
-    "Untitled.canvas",
     "02_Library/Templates/Daily_Report_Template.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "Untitled.canvas",
     "05_Reports/Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Context.md",
-    "01_Products/Layout_Gen_Design/Core/!Context.md",
     "App.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "!Me.md",

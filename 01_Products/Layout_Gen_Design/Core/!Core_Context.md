@@ -23,3 +23,9 @@ Translates engineering constraints from `Plot plan requirement.xlsx` into Python
 - Core has zero Streamlit imports — it must be callable independently of the dashboard.
 - Scoring is additive: each rule contributes a penalty, lower total = better layout.
 - Phase 3 milestone: Rules.py functional with distance checks and visual RED alerts in dashboard.
+
+## 📅 Daily Changes
+
+| Date | File | Change |
+|------|------|--------|
+| [[Daily_Report_20260428]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |

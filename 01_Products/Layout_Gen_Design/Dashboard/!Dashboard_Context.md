@@ -24,3 +24,9 @@ Main Streamlit application. Currently implements **Phase 1**:
 - Dashboard calls Core functions only — no geometry/rules logic lives in App.py.
 - Each sidebar control section is clearly commented (`# --- UI CONTROLS ---`, `# --- CORE ENGINE ---`, `# --- DISPLAY ---`).
 - `st.set_page_config` must be the first Streamlit call in the file.
+
+## 📅 Daily Changes
+
+| Date | File | Change |
+|------|------|--------|
+| [[Daily_Report_20260428]] | `App.py` | Created Phase 1 Streamlit app — site boundary rectangle + 5m road setback dashed overlay, sidebar sliders for width/length. |

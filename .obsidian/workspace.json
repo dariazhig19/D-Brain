@@ -111,7 +111,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: Select ✳ Claude Code"
+                  "title": "Terminal: ✳ Review and improve daily report template"
                 }
               }
             ],
@@ -209,7 +209,8 @@
               "title": "Bookmarks"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -329,10 +330,16 @@
       "terminal:Open terminal": false
     }
   },
-  "active": "5d9165f6bf909f0e",
+  "active": "c43040cdc2893019",
   "lastOpenFiles": [
-    "02_Library/Templates/Daily_Report_Template.md",
     "05_Reports/Daily_Report_20260428.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Context.md",
+    "01_Products/Layout_Gen_Design/Core/!Context.md",
+    "App.md",
+    "02_Library/Templates/Daily_Report_Template.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "!Me.md",
+    "!Atlas_System.md",
     "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
     "Layout_Gen_Design.md",
     "Project Name.md",
@@ -345,14 +352,11 @@
     "Untitled.base",
     "00_Input/Pasted image 20260428131736.png",
     "00_Input/Pasted image 20260428131730.png",
-    "!Me.md",
-    "!Atlas_System.md",
     "05_Reports",
     "Daily_Report_20260428.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "00_Input/2026-04-28.md",
     "02_Library/Templates",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "00_Input/Untitled.md",
     "00_Input/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/Obsidian + Claude Code The Second Brain Setup That Actually Works.md",
@@ -368,9 +372,6 @@
     "venv/Lib/site-packages/pip-26.0.1.dist-info/REQUESTED",
     "venv/Lib/site-packages/pip-26.0.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
     "venv/Lib/site-packages/pip/_vendor/idna/LICENSE.md",
-    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas",
-    "01_Products/Layout_Gen_Design/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/!Scoring_Logic.md",
-    "00_Input/Я потратил на Claude Code 1 000 часов. Вот что нужно знать для вайб-кодинга.md"
+    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
   ]
 }

@@ -1,6 +1,7 @@
 ---
 date: {{date}}
 type: daily-report
+tags: [daily-report, powerplan-ai]
 ---
 #  Daily Report: {{date}}
 
@@ -12,8 +13,12 @@ type: daily-report
 
 - [ ] 
 
+## ⚠️ Issues & Blockers
+
+- 
+
 ## 🔗 Connected Notes (Modified Today)
 
 ```dataview
-LIST FROM "" WHERE file.mday = this.file.day AND file.name != this.file.name
+LIST FROM "" WHERE dateformat(file.mday, "yyyy-MM-dd") = dateformat(this.file.day, "yyyy-MM-dd") AND file.name != this.file.name
 ```

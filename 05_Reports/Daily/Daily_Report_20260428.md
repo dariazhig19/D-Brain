@@ -24,14 +24,14 @@ tags: [daily-report, powerplan-ai]
 
 ## 🔗 Connected Notes (Modified Today)
 
-| Note | Type | Change |
-| ---- | ---- | ------ |
-| [[!Product_Vision]] | Vision | Documented Phase 1–5 development roadmap and project vision |
-| [[!Scoring_Logic]] | Logic | Created scoring logic structure |
-| [[App]] | Dashboard | Built Phase 1 Streamlit app — site boundary + 5m road setback |
-| [[Geometry]] | Core | Initialized as empty stub |
-| [[Rules]] | Core | Initialized as empty stub |
-| [[Main]] | Core | Initialized as empty stub |
-| [[Plot plan requirement.xlsx]] | Data | Integrated engineering requirements for building placement rules |
-| [[Prompt_History_Phase_01]] | Prompt | Recorded prompt history for Phase_01 |
-| [[Overview.canvas]] | Canvas | Created project overview canvas |
+| Note                           | Type      | Change                                                           |
+| ------------------------------ | --------- | ---------------------------------------------------------------- |
+| [[!Product_Vision]]            | Vision    | Documented Phase 1–5 development roadmap and project vision      |
+| [[!Scoring_Logic]]             | Logic     | Created scoring logic structure                                  |
+| [[App]]                        | Dashboard | Built Phase 1 Streamlit app — site boundary + 5m road setback    |
+| [[Geometry]]                   | Core      | Initialized as empty stub                                        |
+| [[Rules]]                      | Core      | Initialized as empty stub                                        |
+| [[Main]]                       | Core      | Initialized as empty stub                                        |
+| [[Plot plan requirement.xlsx]] | Data      | Integrated engineering requirements for building placement rules |
+| [[Prompt_History_Phase_01]]    | Prompt    | Recorded prompt history for Phase_01                             |
+| [[Overview.canvas]]            | Canvas    | Created project overview canvas                                  |

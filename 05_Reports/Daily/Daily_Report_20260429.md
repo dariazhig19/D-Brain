@@ -10,6 +10,9 @@ tags: [daily-report, powerplan-ai]
 - Overhauled vault structure: renamed folders, fixed naming conventions, and cleaned root-level clutter
 - Rebuilt `!Atlas_System.md` into a full knowledge map with per-folder rules, Pipeline phase convention, and note type definitions
 - Refined all context files and product notes to match the new structure
+- Overhauled `app.py` Phase_01 dashboard: Korean font, fixed pixel rendering, centered base64 layout, multi-column grid display system
+- Added 4 reference articles to `02_Library/Obsidian&Vibe Coding/` covering vibe coding and second-brain workflows
+- Installed 2 new Obsidian plugins: `obsidian-local-images-plus`, `text-extractor`
 
 ## 🏗 Project Progress
 
@@ -25,6 +28,36 @@ tags: [daily-report, powerplan-ai]
 - [x] Updated `!Product_Vision.md` with current phase status
 - [x] Updated `Overview.canvas`
 - [x] Refined `Daily_Report_Template.md`
+
+## 💻 Dev Work
+
+### `app.py` — Phase_01 Dashboard Overhaul
+- Added Korean font support (`Malgun Gothic` + `axes.unicode_minus = False`)
+- Fixed pixel-size figures: `500×300 px` at 100 dpi (no browser-scale distortion)
+- Replaced `st.pyplot()` with base64 HTML `<img>` rendering for precise centering
+- Added `render_centered()` helper — renders any matplotlib fig centered inside a container
+- Added multi-column grid layout: `NUM_COLS = 4` for future multi-plot view
+- Cleaned up plot: hidden axes ticks, removed spine frame, legend moved below plot
+- Added `io`, `base64` imports
+
+### `00_Input/streamlit_stock_app.py`
+- Added Streamlit stock peer analysis app as reference/layout inspiration
+
+## 📚 Library Added
+
+| Article | Folder |
+| ------- | ------ |
+| Any Model. Any App. Build Your AI OS to Work Everywhere | 02_Library/Obsidian&Vibe Coding |
+| I Spent 1,000 Hours on Claude Code. What You Need to Know About Vibe-Coding | 02_Library/Obsidian&Vibe Coding |
+| Obsidian + Claude Code The Second Brain Setup That Actually Works | 02_Library/Obsidian&Vibe Coding |
+| Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING | 02_Library/Obsidian&Vibe Coding |
+
+## 🔌 Plugins Installed
+
+| Plugin | Purpose |
+| ------ | ------- |
+| obsidian-local-images-plus | Save web images locally inside vault |
+| text-extractor | Extract text from PDFs / images for search |
 
 ## ⚠️ Issues & Blockers
 
@@ -42,3 +75,4 @@ tags: [daily-report, powerplan-ai]
 | [[Prompt_History_Phase_01]] | Prompt   | Renamed m Prompt_History_Step 1.md                                 |
 | [[Daily_Report_Template]]   | Template | Refined structure                                                  |
 | [[Main Ideas]]              | Pipeline | Moved to !Prototype/ (correct location)                            |
+| [[app]]                     | Dev      | Phase_01 dashboard overhaul — Korean font, pixel rendering, layout |

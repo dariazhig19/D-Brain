@@ -4,27 +4,79 @@
     "type": "split",
     "children": [
       {
-        "id": "66c7ef7c7d71ffa8",
-        "type": "tabs",
+        "id": "99326be1d2767263",
+        "type": "split",
         "children": [
           {
-            "id": "924617c1b9768f24",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 3088.1467079530626,
-                  "y": 665.4655435136897,
-                  "zoom": -0.45867903904751967
+            "id": "66c7ef7c7d71ffa8",
+            "type": "tabs",
+            "dimension": 78.23275862068965,
+            "children": [
+              {
+                "id": "924617c1b9768f24",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "05_Reports/Daily/Daily_Report_20260429.md",
+                    "mode": "source",
+                    "source": false
+                  },
+                  "icon": "lucide-file",
+                  "title": "Daily_Report_20260429"
                 }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
-            }
+              }
+            ]
+          },
+          {
+            "id": "8e531fabe309a58a",
+            "type": "tabs",
+            "dimension": 21.767241379310345,
+            "children": [
+              {
+                "id": "f02fec6b9008bb47",
+                "type": "leaf",
+                "pinned": true,
+                "state": {
+                  "type": "terminal:terminal",
+                  "state": {
+                    "terminal:terminal": {
+                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
+                      "focus": false,
+                      "profile": {
+                        "args": [],
+                        "executable": "C:\\Windows\\System32\\cmd.exe",
+                        "followTheme": true,
+                        "name": "",
+                        "platforms": {
+                          "win32": true
+                        },
+                        "pythonExecutable": "python3",
+                        "restoreHistory": false,
+                        "rightClickAction": "copyPaste",
+                        "successExitCodes": [
+                          "0",
+                          "SIGINT",
+                          "SIGTERM"
+                        ],
+                        "terminalOptions": {
+                          "documentOverride": null
+                        },
+                        "type": "integrated",
+                        "useWin32Conhost": true
+                      },
+                      "serial": null
+                    }
+                  },
+                  "pinned": true,
+                  "icon": "terminal",
+                  "title": "Terminal: ✳ Update today's daily report"
+                }
+              }
+            ]
           }
-        ]
+        ],
+        "direction": "horizontal"
       }
     ],
     "direction": "vertical"
@@ -199,14 +251,15 @@
   },
   "active": "924617c1b9768f24",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "00_Input/streamlit_stock_app.py",
-    "Untitled.base",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "05_Reports/Daily/Daily_Report_20260429.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "05_Reports/Daily/Daily_Report_20260428.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
+    "00_Input/streamlit_stock_app.py",
+    "Untitled.base",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "!Atlas_System.md",
@@ -226,7 +279,6 @@
     "02_Library/Obsidian&Vibe Coding/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
     "00_Input/2026-04-28.md",
     "02_Library/Obsidian&Vibe Coding",
-    "05_Reports/Daily/Daily_Report_20260428.md",
     "02_Library/Prompts_Master/Prompt_History_Phase 1.md",
     "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
     "05_Reports/Daily/2026-04-29.md",

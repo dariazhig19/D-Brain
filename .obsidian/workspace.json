@@ -37,10 +37,17 @@
                 "id": "6c3cd3d8e97f087b",
                 "type": "leaf",
                 "state": {
-                  "type": "graph",
-                  "state": {},
-                  "icon": "lucide-git-fork",
-                  "title": "Graph view"
+                  "type": "canvas",
+                  "state": {
+                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                    "viewState": {
+                      "x": 2199.977146380632,
+                      "y": 1851.747603203642,
+                      "zoom": -0.3491583004950162
+                    }
+                  },
+                  "icon": "lucide-layout-dashboard",
+                  "title": "Overview"
                 }
               }
             ]
@@ -208,8 +215,9 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "6c3cd3d8e97f087b",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
@@ -235,7 +243,6 @@
     "GEMINI.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "Untitled.md",
-    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",

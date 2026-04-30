@@ -10,7 +10,7 @@
 		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png","x":2760,"y":260,"width":639,"height":293},
 		{"id":"e05dc9ad5733ca89","type":"text","text":"# Phase_01","x":2003,"y":16,"width":250,"height":60,"color":"4"},
 		{"id":"51c804810c918d6e","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png","x":3520,"y":260,"width":399,"height":204},
-		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3980,"y":260,"width":400,"height":165}
+		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3960,"y":260,"width":495,"height":204}
 	],
 	"edges":[
 		{"id":"7dbb395ec9a5c0c0","fromNode":"14369d86ae2ca3cb","fromSide":"right","toNode":"ceae6e826d95e20e","toSide":"left"},

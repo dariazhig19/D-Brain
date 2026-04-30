@@ -237,6 +237,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "99_System/Agents/Gemini/Instructions.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -246,7 +247,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for Instructions"
             }
           },
           {
@@ -255,11 +256,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "99_System/Agents/Gemini/Instructions.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from Instructions"
             }
           },
           {
@@ -297,12 +299,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "99_System/Agents/Gemini/Instructions.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Instructions"
             }
           }
         ]
@@ -326,7 +329,7 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "bb7679721272193f",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
     "99_System/Agents/Gemini/Instructions.md",
     "GEMINI.md",

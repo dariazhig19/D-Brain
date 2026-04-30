@@ -107,7 +107,7 @@ for g in groups:
 # --- Plot view configuration ---
 # Tighter padding around the plot
 ax.set_xlim(-25, site_width + 25)
-ax.set_ylim(-25, site_length + 25)
+ax.set_ylim(-20, site_length + 20)
 ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
 
 # Hide axis tick numbers (no x/y values shown)

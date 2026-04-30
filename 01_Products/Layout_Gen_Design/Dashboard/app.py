@@ -63,8 +63,8 @@ adm_x = st.sidebar.slider("Admin X Pos", 0, max(0, site_width - adm_w), adm_def_
 adm_y = st.sidebar.slider("Admin Y Pos", 0, max(0, site_length - adm_h), adm_def_y, step=5)
 
 # --- CORE ENGINE (Matplotlib image) ---
-# Fixed pixel size: figsize × dpi = exact pixels on screen
-FIG_W_PX, FIG_H_PX = 500, 300
+# High resolution rendering
+FIG_W_PX, FIG_H_PX = 800, 500
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 
@@ -105,9 +105,9 @@ for g in groups:
     draw_group(ax, g)
 
 # --- Plot view configuration ---
-# Give enough padding so the wind text doesn't stretch the bounding box
-ax.set_xlim(-40, site_width + 40)
-ax.set_ylim(-40, site_length + 40)
+# Tighter padding around the plot
+ax.set_xlim(-25, site_width + 25)
+ax.set_ylim(-25, site_length + 25)
 ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
 
 # Hide axis tick numbers (no x/y values shown)
@@ -130,15 +130,15 @@ NUM_COLS = 3      # ← change this freely: number of columns for multi-plot gri
 plots = [fig, fig, fig]       # Phase 1: Site Boundary
 
 
-def render_centered(container, plot_fig, width_px):
-    """Render a matplotlib figure centered inside a Streamlit container."""
+def render_centered(container, plot_fig):
+    """Render a matplotlib figure centered inside a Streamlit container responsively."""
     buf = io.BytesIO()
     plot_fig.savefig(buf, format='png', bbox_inches='tight', dpi=DPI)
     buf.seek(0)
     img_b64 = base64.b64encode(buf.read()).decode()
     container.markdown(
         f'<div style="text-align:center">'
-        f'<img src="data:image/png;base64,{img_b64}" width="{width_px}"/>'
+        f'<img src="data:image/png;base64,{img_b64}" style="max-width: 100%; height: auto;"/>'
         f'</div>',
         unsafe_allow_html=True
     )
@@ -148,13 +148,13 @@ def render_centered(container, plot_fig, width_px):
 #   1 plot  → centered 50% ( narrow | plot | narrow )
 #   2+ plots → NUM_COLS grid, like stock app individual charts
 if len(plots) == 1:
-    _, center_col, _ = st.columns([2, 2, 2])
+    _, center_col, _ = st.columns([1, 4, 1])  # Make center column much wider
     cell = center_col.container(border=True)
     cell.write("")
-    render_centered(cell, plots[0], FIG_W_PX)
+    render_centered(cell, plots[0])
 else:
     cols = st.columns(NUM_COLS)
     for i, plot_fig in enumerate(plots):
         cell = cols[i % NUM_COLS].container(border=True)
         cell.write("")
-        render_centered(cell, plot_fig, FIG_W_PX)
+        render_centered(cell, plot_fig)

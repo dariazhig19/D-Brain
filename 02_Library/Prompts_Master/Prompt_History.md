@@ -17,3 +17,6 @@
     - **Road Setback**: Implement a logic to draw a red dashed line rectangle representing a 5m internal setback from all sides of the boundary.
     - **Scaling**: Ensure the plot maintains an 'equal' aspect ratio and includes a small margin (padding) around the site boundary so it's not touching the edges of the plot.
 5. **Style**: Use clean, professional English comments and labels throughout the code."
+
+
+### Phase_02: The Empty Plot.

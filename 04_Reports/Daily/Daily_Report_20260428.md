@@ -33,5 +33,5 @@ tags: [daily-report, powerplan-ai]
 | [[Rules]]                      | Core      | Initialized as empty stub                                        |
 | [[Main]]                       | Core      | Initialized as empty stub                                        |
 | [[Plot plan requirement.xlsx]] | Data      | Integrated engineering requirements for building placement rules |
-| [[Prompt_History_Phase_01]]    | Prompt    | Recorded prompt history for Phase_01                             |
+| [[Prompt_History]]    | Prompt    | Recorded prompt history for Phase_01                             |
 | [[Overview.canvas]]            | Canvas    | Created project overview canvas                                  |

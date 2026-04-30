@@ -37,17 +37,14 @@
                 "id": "6c3cd3d8e97f087b",
                 "type": "leaf",
                 "state": {
-                  "type": "canvas",
+                  "type": "markdown",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                    "viewState": {
-                      "x": 2692.7741840386757,
-                      "y": 2869.2328790758925,
-                      "zoom": -1.0418201756946275
-                    }
+                    "file": "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-layout-dashboard",
-                  "title": "Overview"
+                  "icon": "lucide-file",
+                  "title": "!Core_Context"
                 }
               }
             ]
@@ -215,13 +212,15 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "6c3cd3d8e97f087b",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "00_Input/implementation_plan.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",

@@ -2,9 +2,9 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import io, base64
 
-# Font: Malgun Gothic (pre-installed on Windows, supports Korean)
+# Font: Malgun Gothic (pre-installed on Windows)
 plt.rcParams['font.family'] = 'Malgun Gothic'
-plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign rendering with Korean fonts
+plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign rendering
 
 
 # Page configuration

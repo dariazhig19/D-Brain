@@ -22,7 +22,7 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 - **Criteria**: If the content is a reusable principle, a Revit API cheat sheet, a core Python geometric function, or a refined AI prompt.
 - **Goal**: Distill the "draft" into a clean, reusable engineering standard.
 
-### 3. To 05_Reports (Execution Tracking)
+### 3. To 04_Reports (Execution Tracking)
 - **Criteria**: End-of-day summaries, progress tracking, and strategic overviews.
 - **Goal**: Maintain a historical log of decisions and development velocity.
 
@@ -95,24 +95,33 @@ Stores generated and reference materials that support products but are not produ
 
 ---
 
-### 📁 04_Archive — Historical Versions
-Completed development cycles, deprecated versions, old prototypes.
-- No active editing. Files land here when a phase or product version is retired.
-
----
-
-### 📁 05_Reports — Execution Tracking
+### 📁 04_Reports — Execution Tracking
 | Subfolder | Purpose | What Goes Here |
 |-----------|---------|----------------|
 | `Daily/` | Daily reports | `Daily_Report_YYYYMMDD.md` — one file per workday. |
 
 ---
 
+### 📁 99_System — D-Brain OS
+The underlying logic, automation, and historical storage of the system.
+
+| Subfolder | Purpose | What Goes Here |
+|-----------|---------|----------------|
+| `Agents/` | AI Configuration | System instructions, custom skills, and agent-specific settings. |
+| `Archive/` | Historical Versions | Completed development cycles, deprecated versions, old prototypes. No active editing. |
+
+#### Agent Skills (Automation)
+Custom skills in `99_System/Agents/Skills/` extend the system's capabilities.
+- **Naming Rule**: Skill folder names must always start with a **Capital Letter** (e.g., `Update_Context_Files_Daily`).
+- **Core Automation**: `Update_Context_Files_Daily` — automatically syncs Daily Reports with product `!Context.md` files.
+
+---
+
 ## 📊 Reporting Logic
-1. **Trigger**: Every workday concludes with a `Daily_Report_YYYYMMDD.md` inside `05_Reports/Daily/`.
+1. **Trigger**: Every workday concludes with a `Daily_Report_YYYYMMDD.md` inside `04_Reports/Daily/`.
 2. **Context**: Summarize active changes in `01_Products` and new standards in `02_Library`.
 3. **Storage**: Reports are the "Memory" of the D-Brain — each links modified notes with their type and change summary.
-4. **Post-Report**: After writing the daily report, update every `!Context.md` file (files with "context" in the name — currently `Core/!Core_Context.md` and `Dashboard/!Dashboard_Context.md`). Add a new row to the `📅 Daily Changes` table only if that folder's files were actually modified. If nothing changed in a folder, do not touch its context file.
+4. **Post-Report**: After writing the daily report, execute the `Update_Context_Files_Daily` skill to synchronize `!Core_Context.md` and `!Dashboard_Context.md` files. Add a new row to the `📅 Daily Changes` table only if that folder's files were actually modified.
 
 ---
 
@@ -138,3 +147,4 @@ Completed development cycles, deprecated versions, old prototypes.
 | Template  | Vault templates (`Templates/`)                                |
 | Context   | `!Context.md` folder reference files                          |
 | Research  | Learning materials in `02_Library/Obsidian&Vibe Coding/`      |
+| Skill     | Custom agent skills in `99_System/Agents/Skills/`             |

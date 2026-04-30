@@ -17,12 +17,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "99_System/Agents/Gemini/Instructions.md",
+                    "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "Instructions"
+                  "title": "SKILL"
                 }
               }
             ]
@@ -237,7 +237,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "99_System/Agents/Gemini/Instructions.md",
+                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -247,7 +247,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Instructions"
+              "title": "Backlinks for SKILL"
             }
           },
           {
@@ -256,12 +256,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "99_System/Agents/Gemini/Instructions.md",
+                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Instructions"
+              "title": "Outgoing links from SKILL"
             }
           },
           {
@@ -299,13 +299,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "99_System/Agents/Gemini/Instructions.md",
+                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Instructions"
+              "title": "Outline of SKILL"
             }
           }
         ]
@@ -329,23 +329,27 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
     "99_System/Agents/Gemini/Instructions.md",
+    "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
+    "99_System/Agents/Skills/atlas-vibe-master/scripts/example_script.cjs",
+    "99_System/Agents/Skills/atlas-vibe-master/assets/example_asset.txt",
+    "99_System/Agents/Skills/atlas-vibe-master/scripts",
+    "99_System/Agents/Skills/atlas-vibe-master/references",
+    "99_System/Agents/Skills/atlas-vibe-master/assets",
+    "99_System/Agents/Skills/atlas-vibe-master",
     "GEMINI.md",
     "99_System/Agents/Claude",
     "99_System/Agents/New folder",
     "-p",
     "99_System/Agents/Gemini",
     "!Atlas_System.md",
-    "Untitled.base",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "Untitled.md",
-    "99_System/Agents/Skills",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "99_System/Agents",
-    "99_System",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Templates/Daily_Report_Template.md",

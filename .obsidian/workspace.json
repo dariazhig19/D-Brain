@@ -1,96 +1,37 @@
 {
   "main": {
-    "id": "e36b2d89ad0254d4",
+    "id": "822114d4ab0c1c07",
     "type": "split",
     "children": [
       {
-        "id": "99326be1d2767263",
-        "type": "split",
+        "id": "deb8b1821b64bab8",
+        "type": "tabs",
         "children": [
           {
-            "id": "66c7ef7c7d71ffa8",
-            "type": "tabs",
-            "dimension": 78.23275862068965,
-            "children": [
-              {
-                "id": "924617c1b9768f24",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-                    "mode": "source",
-                    "source": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "!Dashboard_Context"
-                }
-              }
-            ]
-          },
-          {
-            "id": "8e531fabe309a58a",
-            "type": "tabs",
-            "dimension": 21.767241379310345,
-            "children": [
-              {
-                "id": "f02fec6b9008bb47",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: Select ✳ Update today's daily report"
-                }
-              }
-            ]
+            "id": "3d069e6e1ed81850",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
           }
-        ],
-        "direction": "horizontal"
+        ]
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "11b17c8cc42691de",
+    "id": "874b2bb03ca0a887",
     "type": "split",
     "children": [
       {
-        "id": "e11da8c05563e513",
+        "id": "64530c86efa858df",
         "type": "tabs",
         "children": [
           {
-            "id": "76ad32a750a6e578",
+            "id": "97507ae756d1fe13",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -103,7 +44,7 @@
             }
           },
           {
-            "id": "c43040cdc2893019",
+            "id": "f0610610cff4f9b6",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -120,7 +61,7 @@
             }
           },
           {
-            "id": "d067732b59000689",
+            "id": "ba040f201cecb61e",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -136,15 +77,15 @@
     "width": 300
   },
   "right": {
-    "id": "47f6c86569e519dc",
+    "id": "be329afc9797c7b1",
     "type": "split",
     "children": [
       {
-        "id": "24ad2c54c1c28398",
+        "id": "2f61d196ee321b22",
         "type": "tabs",
         "children": [
           {
-            "id": "8d648a4d368780e4",
+            "id": "e5504c0efb6af567",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -162,7 +103,7 @@
             }
           },
           {
-            "id": "32507d98afceedb0",
+            "id": "a005771d83c8ac36",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -175,7 +116,7 @@
             }
           },
           {
-            "id": "05f7b9ab78f08e95",
+            "id": "27e4cd6fffd584f2",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -190,7 +131,7 @@
             }
           },
           {
-            "id": "02ae33e2a9663c4c",
+            "id": "1317e49c0674b52e",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -204,36 +145,25 @@
             }
           },
           {
-            "id": "e438a759657079ee",
+            "id": "9a0f4f82353d8282",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "02_Library/Templates/Daily_Report_Template.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Daily_Report_Template"
-            }
-          },
-          {
-            "id": "50b7ebf354e5d54f",
-            "type": "leaf",
-            "state": {
-              "type": "git-view",
-              "state": {},
-              "icon": "git-pull-request",
-              "title": "Source Control"
+              "title": "Outline"
             }
           }
-        ],
-        "currentTab": 5
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 682.5
+    "width": 300,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -249,51 +179,6 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "924617c1b9768f24",
-  "lastOpenFiles": [
-    "05_Reports/Daily/Daily_Report_20260429.md",
-    "05_Reports/Daily/Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-    "app.md",
-    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
-    "00_Input/streamlit_stock_app.py",
-    "Untitled.base",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "02_Library/Templates/Daily_Report_Template.md",
-    "!Atlas_System.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
-    "01_Products/Layout_Gen_Design/Pipeline/!Prototype",
-    "02_Library/Prompts_Master/Prompt_History_Phase_01.md",
-    "!Me.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_02",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_1/Main Ideas.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_1/Phase 01 Output Example.png",
-    "02_Library/Obsidian&Vibe Coding/Any Model. Any App. Build Your AI OS to Work Everywhere.md",
-    "00_Input/Pasted image 20260428131736.png.md",
-    "00_Input/Pasted image 20260428131736.png",
-    "00_Input/Pasted image 20260428114750.png",
-    "02_Library/Obsidian&Vibe Coding/Stop MEMORIZING. I Built an AI System That Remembers EVERYTHING.md",
-    "00_Input/2026-04-28.md",
-    "02_Library/Obsidian&Vibe Coding",
-    "02_Library/Prompts_Master/Prompt_History_Phase 1.md",
-    "01_Products/Layout_Gen_Design/Data/~$Plot plan requirement.xlsx",
-    "05_Reports/Daily/2026-04-29.md",
-    "05_Reports/Daily/29pmi4/29/20262026_R3port_20260429.md",
-    "05_Reports/Daily/29pmi4/29",
-    "05_Reports/Daily/29pmi4",
-    "Layout_Gen_Design.md",
-    "Project Name.md",
-    "Prompt History Step 1.md",
-    "Untitled.canvas",
-    "05_Reports/Daily_Report_20260428_old.md",
-    "05_Reports/Daily",
-    "App.md",
-    "01_Products/Dynamo_to_Add-in_Factory/!Conversion_Roadmap.md",
-    "01_Products/Layout_Gen_Design/Canvas/Overview_Canvas.canvas"
-  ]
+  "active": "3d069e6e1ed81850",
+  "lastOpenFiles": []
 }

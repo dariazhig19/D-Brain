@@ -11,17 +11,14 @@
             "id": "3d069e6e1ed81850",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 3382.6599869316283,
-                  "y": 1227.4874828115965,
-                  "zoom": -1.4419819944110834
-                }
+                "file": "!Atlas_System.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "!Atlas_System"
             }
           },
           {
@@ -202,24 +199,25 @@
   },
   "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "04_Reports/Daily/Daily_Report_20260430.md",
+    "02_Library/Templates/Daily_Report_Template.md",
+    "02_Library/Prompts_Master/Prompt_History.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "02_Library/Prompts_Master/Prompt_History.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03",
-    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "00_Input/implementation_plan.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Dashboard/__init__.py",
     "01_Products/Layout_Gen_Design/Core/__init__.py",
@@ -236,7 +234,6 @@
     "99_System/Agents/Skills/atlas-vibe-master/scripts/example_script.cjs",
     "GEMINI.md",
     "Untitled.md",
-    "02_Library/Templates/Daily_Report_Template.md",
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",
     "02_Library/Obsidian&Vibe Coding/Vibe-Coding.md",

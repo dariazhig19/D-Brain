@@ -20,7 +20,11 @@ Handles all spatial/geometric operations: drawing site boundaries, placing build
 Translates engineering constraints from `Plot plan requirement.xlsx` into Python validation functions. Each rule returns a pass/fail + penalty score. Examples: minimum setback from site boundary (5m primary road), minimum distance between Power Block and Admin Building (50m). **Status: stub — not yet implemented.**
 
 ### `Groups.py`
-Defines the main building groups (Power Block, Cooling Tower, Admin) as data structures with dimensions and relative positions. Includes logic for rendering these groups using coordinate lines. **Status: implemented (Phase 2).**
+Defines the main building groups (Power Block, Cooling Tower, Admin) as data structures with dimensions, color codes, and positions.
+**Phase_02 Implementations (The Three Giants):**
+- Refactored `get_groups` to accept absolute `x` and `y` coordinates instead of relative offsets, allowing the Dashboard to directly control exact placement and bounds.
+- Added default positioning logic (e.g., Power Block centered, Admin bottom-left).
+- `draw_group(ax, group)` strictly uses `ax.plot` and `ax.fill` (explicit coordinate lists) instead of Matplotlib patches, keeping the geometry system future-ready for DXF/CAD line export.
 
 ## Key Design Principles
 - Core has zero Streamlit imports — it must be callable independently of the dashboard.

@@ -22,7 +22,14 @@ Main Streamlit application. Currently implements **Phase_01**:
 - Hidden axes ticks and spine frame; legend placed below plot.
 - Page title: "PowerPlan AI: Layout Generator", layout: wide.
 
-**Next Phase_02 additions here:** render Power Block, Cooling Tower, Admin Building as colored blocks with X/Y sliders.
+**Phase_02 Implementations (The Three Giants):**
+- Imports the 3 building groups from `Core.Groups`.
+- Replaced offset sliders with absolute bounded X/Y coordinate sliders for each group.
+- Bounded sliders guarantee buildings cannot be dragged outside the plot (`min_value=0`, `max_value=site_width - building_width`).
+- Added "Wind Direction" selectbox to "Site Information" and rendered a visual text indicator on the Matplotlib plot.
+- Updated rendering engine for responsiveness (`width: 100%`) and higher resolution (`800x600`).
+- Moved Matplotlib Legend completely inside the axes bounds (`loc='lower center'`) with expanded `ylim` padding (`-40`) to fix clipping issues with `tight_layout()`.
+- Added `importlib.reload(Core.Groups)` to ensure hot-reloading works properly without Streamlit cache `TypeError`s.
 
 ## Key Design Principles
 - Dashboard calls Core functions only — no geometry/rules logic lives in App.py.

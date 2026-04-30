@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 
-def get_groups(site_width, site_length, pb_dx=0, pb_dy=0, ct_dx=0, ct_dy=0, adm_dx=0, adm_dy=0):
+def get_groups(site_width, site_length, pb_x=None, pb_y=None, ct_x=None, ct_y=None, adm_x=None, adm_y=None):
     """
     Define the 3 main building groups with their dimensions and default positions.
-    Positions are calculated based on site dimensions and optional manual offsets.
+    Positions are calculated based on site dimensions, or use explicitly provided absolute coordinates.
     """
     # Footprint dimensions (estimated in meters)
     pw_w, pw_h = 120, 80   # Power Block footprint
@@ -13,24 +13,24 @@ def get_groups(site_width, site_length, pb_dx=0, pb_dy=0, ct_dx=0, ct_dy=0, adm_
     return [
         {   # Power Block — centered on site
             "name": "Power Block",
-            "x": (site_width - pw_w) / 2 + pb_dx,
-            "y": (site_length - pw_h) / 2 + pb_dy,
+            "x": pb_x if pb_x is not None else (site_width - pw_w) / 2,
+            "y": pb_y if pb_y is not None else (site_length - pw_h) / 2,
             "width": pw_w, 
             "height": pw_h,
             "color": "#4a90d9",
         },
         {   # Cooling Tower — right edge, vertically centered
             "name": "Cooling Tower",
-            "x": site_width - ct_w - 10 + ct_dx,
-            "y": (site_length - ct_h) / 2 + ct_dy,
+            "x": ct_x if ct_x is not None else site_width - ct_w - 10,
+            "y": ct_y if ct_y is not None else (site_length - ct_h) / 2,
             "width": ct_w, 
             "height": ct_h,
             "color": "#7ed6a0",
         },
         {   # Admin Building — lower-left
             "name": "Admin Building",
-            "x": 20 + adm_dx,
-            "y": 20 + adm_dy,
+            "x": adm_x if adm_x is not None else 20,
+            "y": adm_y if adm_y is not None else 20,
             "width": adm_w, 
             "height": adm_h,
             "color": "#f5a623",

@@ -34,19 +34,28 @@ site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
 st.sidebar.divider()
-st.sidebar.header("Manual Group Offsets (m)")
+st.sidebar.header("Manual Group Positions (m)")
 
 st.sidebar.subheader("Power Block")
-pb_dx = st.sidebar.slider("PB X Offset", -200, 200, 0, step=5)
-pb_dy = st.sidebar.slider("PB Y Offset", -200, 200, 0, step=5)
+pb_w, pb_h = 120, 80
+pb_def_x = max(0, min(site_width - pb_w, int((site_width - pb_w) / 2)))
+pb_def_y = max(0, min(site_length - pb_h, int((site_length - pb_h) / 2)))
+pb_x = st.sidebar.slider("PB X Pos", 0, max(0, site_width - pb_w), pb_def_x, step=5)
+pb_y = st.sidebar.slider("PB Y Pos", 0, max(0, site_length - pb_h), pb_def_y, step=5)
 
 st.sidebar.subheader("Cooling Tower")
-ct_dx = st.sidebar.slider("CT X Offset", -200, 200, 0, step=5)
-ct_dy = st.sidebar.slider("CT Y Offset", -200, 200, 0, step=5)
+ct_w, ct_h = 60, 80
+ct_def_x = max(0, min(site_width - ct_w, site_width - ct_w - 10))
+ct_def_y = max(0, min(site_length - ct_h, int((site_length - ct_h) / 2)))
+ct_x = st.sidebar.slider("CT X Pos", 0, max(0, site_width - ct_w), ct_def_x, step=5)
+ct_y = st.sidebar.slider("CT Y Pos", 0, max(0, site_length - ct_h), ct_def_y, step=5)
 
 st.sidebar.subheader("Admin Building")
-adm_dx = st.sidebar.slider("Admin X Offset", -200, 200, 0, step=5)
-adm_dy = st.sidebar.slider("Admin Y Offset", -200, 200, 0, step=5)
+adm_w, adm_h = 50, 40
+adm_def_x = max(0, min(site_width - adm_w, 20))
+adm_def_y = max(0, min(site_length - adm_h, 20))
+adm_x = st.sidebar.slider("Admin X Pos", 0, max(0, site_width - adm_w), adm_def_x, step=5)
+adm_y = st.sidebar.slider("Admin Y Pos", 0, max(0, site_length - adm_h), adm_def_y, step=5)
 
 # --- CORE ENGINE (Matplotlib image) ---
 # Fixed pixel size: figsize × dpi = exact pixels on screen
@@ -73,9 +82,9 @@ if site_width > 2 * setback and site_length > 2 * setback:
 # 3. Main Building Groups
 groups = get_groups(
     site_width, site_length,
-    pb_dx=pb_dx, pb_dy=pb_dy,
-    ct_dx=ct_dx, ct_dy=ct_dy,
-    adm_dx=adm_dx, adm_dy=adm_dy
+    pb_x=pb_x, pb_y=pb_y,
+    ct_x=ct_x, ct_y=ct_y,
+    adm_x=adm_x, adm_y=adm_y
 )
 for g in groups:
     draw_group(ax, g)

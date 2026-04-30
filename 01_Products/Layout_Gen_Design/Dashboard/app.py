@@ -124,10 +124,10 @@ ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
 plt.tight_layout()
 
 # --- DISPLAY CONFIG ---
-NUM_COLS = 4       # ← change this freely: number of columns for multi-plot grid
+NUM_COLS = 3      # ← change this freely: number of columns for multi-plot grid
 
 # Collect all plots — add more figs here as new phases are built
-plots = [fig, fig, fig, fig]       # Phase 1: Site Boundary
+plots = [fig, fig, fig]       # Phase 1: Site Boundary
 
 
 def render_centered(container, plot_fig, width_px):

@@ -11,14 +11,17 @@
             "id": "3d069e6e1ed81850",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 3215.4329941864617,
+                  "y": 1000.8671990178825,
+                  "zoom": -0.4481803272529516
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Dashboard_Context"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           }
         ]
@@ -94,7 +97,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +106,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for !Dashboard_Context"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +115,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from !Dashboard_Context"
+              "title": "Outgoing links"
             }
           },
           {
@@ -156,13 +157,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+                "file": "Untitled.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of !Dashboard_Context"
+              "title": "Outline of Untitled"
             }
           }
         ]
@@ -186,10 +187,16 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "99_System/Agents/Gemini",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "Untitled.md",
+    "99_System/Agents/Claude",
+    "99_System/Agents",
+    "99_System",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
@@ -197,7 +204,7 @@
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",
     "02_Library/Obsidian&Vibe Coding/Vibe-Coding.md",
     "02_Library/Obsidian&Vibe Coding/Obsidian + Claude Code The Second Brain.md",
-    "05_Reports/Daily/Daily_Report_20260429.md",
-    "05_Reports/Daily/Daily_Report_20260428.md"
+    "04_Reports/Daily/Daily_Report_20260429.md",
+    "04_Reports/Daily/Daily_Report_20260428.md"
   ]
 }

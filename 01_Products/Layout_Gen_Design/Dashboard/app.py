@@ -5,6 +5,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
 import io, base64
+
+import importlib
+import Core.Groups
+importlib.reload(Core.Groups)
 from Core.Groups import get_groups, draw_group
 
 # Font: Malgun Gothic (pre-installed on Windows)

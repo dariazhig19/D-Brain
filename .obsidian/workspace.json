@@ -202,6 +202,8 @@
   },
   "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "02_Library/Prompts_Master/Prompt_History.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
@@ -216,9 +218,7 @@
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "00_Input/implementation_plan.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Core/__pycache__",
     "01_Products/Layout_Gen_Design/Dashboard/__init__.py",
     "01_Products/Layout_Gen_Design/Core/__init__.py",
     "01_Products/Layout_Gen_Design/Core/Groups.py",

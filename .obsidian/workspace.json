@@ -15,9 +15,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 3843.181089813548,
-                  "y": 487.0232833046456,
-                  "zoom": -0.4419819944110836
+                  "x": 3382.6599869316283,
+                  "y": 1227.4874828115965,
+                  "zoom": -1.4419819944110834
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -202,7 +202,8 @@
   },
   "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
-    "Pasted image 20260430171328.png",
+    "04_Reports/Daily/Daily_Report_20260430.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",

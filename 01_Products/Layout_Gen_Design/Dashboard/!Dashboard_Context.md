@@ -35,4 +35,4 @@ Main Streamlit application. Currently implements **Phase_01**:
 | ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
 | [[Daily_Report_20260428]] | `App.py` | Created Phase_01 Streamlit app — site boundary rectangle + 5m road setback dashed overlay, sidebar sliders for width/length. |
 | [[Daily_Report_20260429]] | `!Dashboard_Context.md` | Renamed from !Context.md; updated to match new naming convention. |
-| [[Daily_Report_20260430]] | `App.py` | Switched geometry from patches to X,Y coordinate lines (`ax.plot`); all comments English-only. |
+| [[Daily_Report_20260430]] | `App.py` | X,Y lines update. Added absolute bounded sliders, Wind input, high-res rendering and fixed legend clipping. |

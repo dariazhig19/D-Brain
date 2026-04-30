@@ -19,10 +19,10 @@
 		{"id":"t_gate","type":"text","text":"*Gate House*","x":4346,"y":3650,"width":200,"height":60},
 		{"id":"n_pb","type":"text","text":"**Power Block**","x":3600,"y":3130,"width":250,"height":80,"color":"5"},
 		{"id":"t_road","type":"text","text":"*Primary Road*","x":4346,"y":3230,"width":200,"height":60},
-		{"id":"c6ac6d0d49f73811","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md","x":3160,"y":1660,"width":981,"height":400},
 		{"id":"5b0f19c9511d7b9f","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md","x":521,"y":-720,"width":745,"height":595},
 		{"id":"14369d86ae2ca3cb","type":"text","text":"# Before Make Dashboard\n\n### 1) Python \nhttps://realpython.com/python-virtual-environments-a-primer/#create-it\n\n### 2) Streamlit\nhttps://docs.streamlit.io/get-started/installation/command-line\nhttps://www.youtube.com/watch?v=rMLwiVrK3Fw&list=PLMi6KgK4_mk2rK5jD-BK5RigFIP2QSq8W\n\n**Что такое Environment (виртуальное окружение)?** Представь, что это отдельный «контейнер» или «комната» специально для твоего проекта **PowerPlan AI**. Все библиотеки (Streamlit, Matplotlib), которые мы установим, останутся только в этой комнате и не сломают ничего на твоем компьютере.\n\nWhere to keep?\nLayout_Gen_Design/              \n│\n├── 📦 .venv/                   ← Твое виртуальное окружение (создается само)\n├── 📝 Notes/                   \n├── 🐍 Core/                    \n├── 📥 Data/                    \n└── 📊 Dashboard/\n\nSet\npython -m venv .venv\n.\\.venv\\Scripts\\activate\n\n(Если всё получилось, в терминале слева появится зеленая надпись `(.venv)`. Это значит, ты внутри!)\n\nDownload \npip install streamlit matplotlib pandas openpyxl\n\n### 3) Matplotlib\nустановили вместе с streamlit\n","x":-451,"y":1240,"width":790,"height":959},
-		{"id":"e55f878d070be45d","x":4246,"y":-41,"width":400,"height":189,"type":"file","file":"Pasted image 20260430171328.png"}
+		{"id":"e55f878d070be45d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png","x":4240,"y":-48,"width":400,"height":189},
+		{"id":"c6ac6d0d49f73811","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md","x":3257,"y":1660,"width":981,"height":400}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},
@@ -46,6 +46,8 @@
 		{"id":"b86ff888871e70e3","fromNode":"dbd75cb2f074486d","fromSide":"right","toNode":"57b2adc02e434c3d","toSide":"bottom"},
 		{"id":"162ad91bbd0ade7d","fromNode":"e05dc9ad5733ca89","fromSide":"bottom","toNode":"57b2adc02e434c3d","toSide":"top"},
 		{"id":"2bc1d374824b0827","fromNode":"14369d86ae2ca3cb","fromSide":"top","toNode":"f233baec8c93a369","toSide":"bottom"},
-		{"id":"a28432b7002520b4","fromNode":"f508b266d3094c8e","fromSide":"bottom","toNode":"ad25e67330fad38d","toSide":"left"}
+		{"id":"a28432b7002520b4","fromNode":"f508b266d3094c8e","fromSide":"bottom","toNode":"ad25e67330fad38d","toSide":"left"},
+		{"id":"e37f169a03267ac0","fromNode":"aefe42b28b3ea9ff","fromSide":"right","toNode":"e55f878d070be45d","toSide":"left"},
+		{"id":"6e72fd00147c4928","fromNode":"dfbb8cc09b4549f2","fromSide":"right","toNode":"e55f878d070be45d","toSide":"bottom"}
 	]
 }

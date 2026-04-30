@@ -33,4 +33,4 @@ Defines the main building groups (Power Block, Cooling Tower, Admin) as data str
 | ------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | [[Daily_Report_20260428]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |
 | [[Daily_Report_20260429]] | `!Core_Context.md` | Renamed from !Context.md; updated to match new naming convention. |
-| [[Daily_Report_20260430]] | `Groups.py` | Implemented main group data and drawing logic for Phase 2. All files use Capitalized naming. |
+| [[Daily_Report_20260430]] | `Groups.py` | Implemented Phase 2 logic. Refactored from offsets (dx) to bounded absolute coordinates (x). |

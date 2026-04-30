@@ -29,9 +29,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 2450.3061647938753,
-                  "y": 2800.9624277348453,
-                  "zoom": -1.5527360651150974
+                  "x": 2617.186970294436,
+                  "y": 2894.5618812263,
+                  "zoom": -0.21940273178176434
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -203,6 +203,7 @@
   },
   "active": "e4a14d9d81c3e620",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "02_Library/Prompts_Master/Prompt_History.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",

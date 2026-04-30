@@ -4,13 +4,12 @@
     "type": "split",
     "children": [
       {
-        "id": "de8115b3bddc6d83",
+        "id": "0ca70168766b4954",
         "type": "split",
         "children": [
           {
             "id": "deb8b1821b64bab8",
             "type": "tabs",
-            "dimension": 51.293103448275865,
             "children": [
               {
                 "id": "3d069e6e1ed81850",
@@ -29,12 +28,11 @@
             ]
           },
           {
-            "id": "09fdafff26adfb44",
+            "id": "da9b55196028ebe9",
             "type": "tabs",
-            "dimension": 48.706896551724135,
             "children": [
               {
-                "id": "c08d03164fda68a7",
+                "id": "4a4c456d55bd7071",
                 "type": "leaf",
                 "pinned": true,
                 "state": {
@@ -70,7 +68,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
+                  "title": "Terminal: C:\\WINDOWS\\system32\\cmd.exe  - \"node\"   \"C:\\Users\\DARIA-IMBU\\AppData\\Roaming\\npm\\\\node_modules\\@google\\gemini-cli\\bundle\\gemini.js\""
                 }
               }
             ]
@@ -149,7 +147,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "!Atlas_System.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -159,7 +156,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for !Atlas_System"
+              "title": "Backlinks"
             }
           },
           {
@@ -168,12 +165,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "!Atlas_System.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from !Atlas_System"
+              "title": "Outgoing links"
             }
           },
           {
@@ -211,13 +207,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "!Atlas_System.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of !Atlas_System"
+              "title": "Outline"
             }
           }
         ]
@@ -241,13 +236,15 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "4a4c456d55bd7071",
   "lastOpenFiles": [
+    "!Atlas_System.md",
+    "04_Reports/Daily/Daily_Report_20260429.md",
+    "04_Reports/Daily/Daily_Report_20260428.md",
     "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
     "99_System/Agents/Skills/Update_Context_Files_Daily",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "99_System/Agents/Skills/Untitled",
-    "!Atlas_System.md",
     "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
     "99_System/Agents/Gemini/Instructions.md",
@@ -269,8 +266,6 @@
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",
     "02_Library/Obsidian&Vibe Coding/Vibe-Coding.md",
-    "02_Library/Obsidian&Vibe Coding/Obsidian + Claude Code The Second Brain.md",
-    "04_Reports/Daily/Daily_Report_20260429.md",
-    "04_Reports/Daily/Daily_Report_20260428.md"
+    "02_Library/Obsidian&Vibe Coding/Obsidian + Claude Code The Second Brain.md"
   ]
 }

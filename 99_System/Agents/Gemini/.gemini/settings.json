@@ -1,0 +1,8 @@
+{
+  "ui": {
+    "incrementalRendering": false,
+    "accessibility": {
+      "screenReader": true
+    }
+  }
+}

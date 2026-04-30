@@ -10,8 +10,9 @@ This skill executes the "Evening Workflow" to formally close a development sessi
 ## Workflow
 
 ### 1. Implementation Plan Archive
-- Finalize today's Implementation Plan `.md`.
-- Save or append it to the active phase folder (e.g., `01_Products/*/Pipeline/Phase_XX/Phase_XX_Plan.md`).
+- Check `00_Input/` for any `Backup_Plan_*.md` files (buffered by the `Topic_Shift_Backup` skill).
+- Move these buffered plans, along with the currently active `implementation_plan.md`, into their respective phase folders (e.g., `01_Products/*/Pipeline/Phase_XX/Phase_XX_Plan.md`).
+- Delete the temporary backups from `00_Input/` after successfully moving them.
 
 ### 2. Daily Report Generation
 - Generate today's Daily Report in `04_Reports/Daily/Daily_Report_YYYYMMDD.md`.

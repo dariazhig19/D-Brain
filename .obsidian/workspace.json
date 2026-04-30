@@ -4,107 +4,45 @@
     "type": "split",
     "children": [
       {
-        "id": "0ca70168766b4954",
+        "id": "d7bdb0dd6a9c7919",
         "type": "split",
         "children": [
           {
-            "id": "d7bdb0dd6a9c7919",
-            "type": "split",
-            "dimension": 84.41091954022988,
+            "id": "deb8b1821b64bab8",
+            "type": "tabs",
             "children": [
               {
-                "id": "deb8b1821b64bab8",
-                "type": "tabs",
-                "children": [
-                  {
-                    "id": "3d069e6e1ed81850",
-                    "type": "leaf",
-                    "state": {
-                      "type": "image",
-                      "state": {
-                        "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png"
-                      },
-                      "icon": "lucide-image",
-                      "title": "Dashboard_V2"
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "cc5aaffcc7cbbf40",
-                "type": "tabs",
-                "children": [
-                  {
-                    "id": "6c3cd3d8e97f087b",
-                    "type": "leaf",
-                    "state": {
-                      "type": "canvas",
-                      "state": {
-                        "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                        "viewState": {
-                          "x": 3894.8518077218832,
-                          "y": 544.0141291088106,
-                          "zoom": -0.042132778518645275
-                        }
-                      },
-                      "icon": "lucide-layout-dashboard",
-                      "title": "Overview"
-                    }
-                  }
-                ]
+                "id": "3d069e6e1ed81850",
+                "type": "leaf",
+                "state": {
+                  "type": "image",
+                  "state": {
+                    "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png"
+                  },
+                  "icon": "lucide-image",
+                  "title": "Dashboard_V2"
+                }
               }
-            ],
-            "direction": "vertical"
+            ]
           },
           {
-            "id": "da9b55196028ebe9",
+            "id": "cc5aaffcc7cbbf40",
             "type": "tabs",
-            "dimension": 15.589080459770116,
             "children": [
               {
-                "id": "4a4c456d55bd7071",
+                "id": "6c3cd3d8e97f087b",
                 "type": "leaf",
-                "pinned": true,
                 "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: Select ◇  Ready (D-Brain)"
+                  "type": "graph",
+                  "state": {},
+                  "icon": "lucide-git-fork",
+                  "title": "Graph view"
                 }
               }
             ]
           }
         ],
-        "direction": "horizontal"
+        "direction": "vertical"
       }
     ],
     "direction": "vertical"
@@ -268,8 +206,9 @@
   },
   "active": "6c3cd3d8e97f087b",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
+    "01_Products/Layout_Gen_Design/Core/Groups.py",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "!Atlas_System.md",
     "04_Reports/Daily/Daily_Report_20260429.md",

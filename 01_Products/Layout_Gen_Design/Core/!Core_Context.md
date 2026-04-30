@@ -19,6 +19,9 @@ Handles all spatial/geometric operations: drawing site boundaries, placing build
 ### `Rules.py`
 Translates engineering constraints from `Plot plan requirement.xlsx` into Python validation functions. Each rule returns a pass/fail + penalty score. Examples: minimum setback from site boundary (5m primary road), minimum distance between Power Block and Admin Building (50m). **Status: stub — not yet implemented.**
 
+### `Groups.py`
+Defines the main building groups (Power Block, Cooling Tower, Admin) as data structures with dimensions and relative positions. Includes logic for rendering these groups using coordinate lines. **Status: implemented (Phase 2).**
+
 ## Key Design Principles
 - Core has zero Streamlit imports — it must be callable independently of the dashboard.
 - Scoring is additive: each rule contributes a penalty, lower total = better layout.
@@ -30,3 +33,4 @@ Translates engineering constraints from `Plot plan requirement.xlsx` into Python
 | ------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | [[Daily_Report_20260428]] | `Main.py`, `Geometry.py`, `Rules.py` | Initialized as empty stubs. Project structure established. |
 | [[Daily_Report_20260429]] | `!Core_Context.md` | Renamed from !Context.md; updated to match new naming convention. |
+| [[Daily_Report_20260430]] | `Groups.py` | Implemented main group data and drawing logic for Phase 2. All files use Capitalized naming. |

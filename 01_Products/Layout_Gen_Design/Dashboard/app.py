@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import io, base64
+from Core.Groups import get_groups, draw_group
 
 # Font: Malgun Gothic (pre-installed on Windows)
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -28,6 +29,21 @@ st.sidebar.header("Site Dimensions (m)")
 site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
 
+st.sidebar.divider()
+st.sidebar.header("Manual Group Offsets (m)")
+
+st.sidebar.subheader("Power Block")
+pb_dx = st.sidebar.slider("PB X Offset", -200, 200, 0, step=5)
+pb_dy = st.sidebar.slider("PB Y Offset", -200, 200, 0, step=5)
+
+st.sidebar.subheader("Cooling Tower")
+ct_dx = st.sidebar.slider("CT X Offset", -200, 200, 0, step=5)
+ct_dy = st.sidebar.slider("CT Y Offset", -200, 200, 0, step=5)
+
+st.sidebar.subheader("Admin Building")
+adm_dx = st.sidebar.slider("Admin X Offset", -200, 200, 0, step=5)
+adm_dy = st.sidebar.slider("Admin Y Offset", -200, 200, 0, step=5)
+
 # --- CORE ENGINE (Matplotlib image) ---
 # Fixed pixel size: figsize × dpi = exact pixels on screen
 # (8, 6) × 100 dpi = 800 × 600 px — never changes with browser scale
@@ -50,6 +66,16 @@ if site_width > 2 * setback and site_length > 2 * setback:
     sb_y = [s,           s,            site_length-s, site_length-s, s]
     ax.plot(sb_x, sb_y, color='red', linestyle='--', linewidth=0.8,
             label='Primary Road Setback (5m)')               # setback line
+
+# 3. Main Building Groups
+groups = get_groups(
+    site_width, site_length,
+    pb_dx=pb_dx, pb_dy=pb_dy,
+    ct_dx=ct_dx, ct_dy=ct_dy,
+    adm_dx=adm_dx, adm_dy=adm_dy
+)
+for g in groups:
+    draw_group(ax, g)
 
 # --- Plot view configuration ---
 ax.set_xlim(-10, site_width + 10)

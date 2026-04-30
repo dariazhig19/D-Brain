@@ -50,7 +50,6 @@ adm_dy = st.sidebar.slider("Admin Y Offset", -200, 200, 0, step=5)
 
 # --- CORE ENGINE (Matplotlib image) ---
 # Fixed pixel size: figsize × dpi = exact pixels on screen
-# (8, 6) × 100 dpi = 800 × 600 px — never changes with browser scale
 FIG_W_PX, FIG_H_PX = 500, 300
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)

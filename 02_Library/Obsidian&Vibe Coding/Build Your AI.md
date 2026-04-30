@@ -1,13 +1,13 @@
 ---
-title: "Any Model. Any App. Build Your AI OS to Work Everywhere."
-source: "https://www.youtube.com/watch?v=jbHB-rzKBAs"
+title: Any Model. Any App. Build Your AI OS to Work Everywhere.
+source: https://www.youtube.com/watch?v=jbHB-rzKBAs
 author:
   - "[[Linking Your Thinking with Nick Milo]]"
 published: 2026-04-08
 created: 2026-04-27
-description: "Build your own thinking partner with superpowers - Linking Your AI: https://www.linkingyourthinking.com/linking-your-ai?utm_source=youtube&utm_medium=social&..."
+description: Any Model. Any App. Build Your AI OS to Work Everywhere
 tags:
-  - "clippings"
+  - clippings
 ---
 ![](https://www.youtube.com/watch?v=jbHB-rzKBAs)
 

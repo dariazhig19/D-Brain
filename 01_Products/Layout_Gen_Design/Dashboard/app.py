@@ -92,7 +92,7 @@ wind_config = {
     "West":  ("→ Wind (W)", -15, site_length/2, 'right', 'center')
 }
 w_text, w_x, w_y, w_ha, w_va = wind_config.get(wind_dir, wind_config["East"])
-ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=10, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
+ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=6, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
 
 # 3. Main Building Groups
 groups = get_groups(

@@ -64,7 +64,7 @@ adm_y = st.sidebar.slider("Admin Y Pos", 0, max(0, site_length - adm_h), adm_def
 
 # --- CORE ENGINE (Matplotlib image) ---
 # High resolution rendering
-FIG_W_PX, FIG_H_PX = 800, 500
+FIG_W_PX, FIG_H_PX = 800, 600
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 

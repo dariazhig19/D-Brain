@@ -10,7 +10,7 @@
           {
             "id": "deb8b1821b64bab8",
             "type": "tabs",
-            "dimension": 58.189655172413794,
+            "dimension": 51.293103448275865,
             "children": [
               {
                 "id": "3d069e6e1ed81850",
@@ -18,12 +18,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
+                    "file": "!Atlas_System.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "SKILL"
+                  "title": "!Atlas_System"
                 }
               }
             ]
@@ -31,7 +31,7 @@
           {
             "id": "09fdafff26adfb44",
             "type": "tabs",
-            "dimension": 14.367816091954023,
+            "dimension": 48.706896551724135,
             "children": [
               {
                 "id": "c08d03164fda68a7",
@@ -70,24 +70,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (D-Brain)"
-                }
-              }
-            ]
-          },
-          {
-            "id": "36422e404059334c",
-            "type": "tabs",
-            "dimension": 27.442528735632184,
-            "children": [
-              {
-                "id": "e225788d15b7c0a2",
-                "type": "leaf",
-                "state": {
-                  "type": "empty",
-                  "state": {},
-                  "icon": "lucide-file",
-                  "title": "New tab"
+                  "title": "Terminal: ✦  Working… (D-Brain)"
                 }
               }
             ]
@@ -166,7 +149,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
+                "file": "!Atlas_System.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -176,7 +159,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for SKILL"
+              "title": "Backlinks for !Atlas_System"
             }
           },
           {
@@ -185,12 +168,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
+                "file": "!Atlas_System.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from SKILL"
+              "title": "Outgoing links from !Atlas_System"
             }
           },
           {
@@ -228,13 +211,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
+                "file": "!Atlas_System.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of SKILL"
+              "title": "Outline of !Atlas_System"
             }
           }
         ]

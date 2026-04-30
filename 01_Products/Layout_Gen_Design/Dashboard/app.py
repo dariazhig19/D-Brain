@@ -1,4 +1,8 @@
 import streamlit as st
+import sys, os
+# Add parent directory to path so 'Core' can be found
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import matplotlib.pyplot as plt
 import io, base64
 from Core.Groups import get_groups, draw_group

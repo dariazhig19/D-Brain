@@ -17,12 +17,12 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "!Atlas_System.md",
+                    "file": "99_System/Agents/Gemini/Instructions.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "!Atlas_System"
+                  "title": "Instructions"
                 }
               }
             ]
@@ -328,6 +328,7 @@
   },
   "active": "bb7679721272193f",
   "lastOpenFiles": [
+    "99_System/Agents/Gemini/Instructions.md",
     "GEMINI.md",
     "99_System/Agents/Claude",
     "99_System/Agents/New folder",

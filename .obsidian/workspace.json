@@ -10,17 +10,20 @@
           {
             "id": "deb8b1821b64bab8",
             "type": "tabs",
+            "dimension": 49.36823104693141,
             "children": [
               {
                 "id": "3d069e6e1ed81850",
                 "type": "leaf",
                 "state": {
-                  "type": "image",
+                  "type": "markdown",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png"
+                    "file": "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-image",
-                  "title": "Dashboard_V2"
+                  "icon": "lucide-file",
+                  "title": "!Core_Context"
                 }
               }
             ]
@@ -28,6 +31,7 @@
           {
             "id": "cc5aaffcc7cbbf40",
             "type": "tabs",
+            "dimension": 50.63176895306859,
             "children": [
               {
                 "id": "6c3cd3d8e97f087b",
@@ -204,30 +208,30 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "6c3cd3d8e97f087b",
+  "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
     "01_Products/Layout_Gen_Design/Dashboard/__init__.py",
     "01_Products/Layout_Gen_Design/Core/__init__.py",
     "01_Products/Layout_Gen_Design/Core/Groups.py",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "!Atlas_System.md",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
     "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
     "99_System/Agents/Skills/Update_Context_Files_Daily",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "99_System/Agents/Skills/Untitled",
     "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
     "99_System/Agents/Gemini/Instructions.md",
     "99_System/Agents/Skills/atlas-vibe-master/scripts/example_script.cjs",
     "99_System/Agents/Skills/atlas-vibe-master/assets/example_asset.txt",
-    "99_System/Agents/Skills/atlas-vibe-master/scripts",
     "GEMINI.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "Untitled.md",

@@ -161,8 +161,7 @@
                   "title": "New tab"
                 }
               }
-            ],
-            "currentTab": 1
+            ]
           }
         ],
         "direction": "horizontal"
@@ -327,8 +326,9 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "bb7679721272193f",
   "lastOpenFiles": [
+    "GEMINI.md",
     "99_System/Agents/Claude",
     "99_System/Agents/New folder",
     "-p",

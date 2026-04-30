@@ -57,13 +57,7 @@ Following the standard reporting logic:
 ---
 
 ## 🌙 Evening Workflow (Session Wrap-up)
-
-At the end of a coding session, the AI Agent must execute the following sequence to guarantee system synchronization:
-
-1. **Implementation Plan Archive**: Make today's Implementation Plan `.md` and save it to the active phase folder (e.g., `Pipeline/Phase_02/Phase_02_Plan.md`).
-2. **Daily Report Generation**: Make today's Daily Report in `04_Reports/Daily/` following the Atlas rules. Add a summary row to the `📅 Daily Changes` table in the active `!Context.md` files (linked to the daily report).
-3. **Context File Deep-Update**: Take important technical changes and architectural decisions from the Implementation Plan and add them directly into the body of the relevant `!Core_Context.md` and `!Dashboard_Context.md` files under the same phase heading (e.g., `**Phase_02 Implementations:**`).
-4. **Product Vision Sync**: Update the global roadmap and current status in `!Product_Vision.md`.
+Use Session_Wrapup skill 
 
 ---
 

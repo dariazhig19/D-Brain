@@ -86,10 +86,10 @@ if site_width > 2 * setback and site_length > 2 * setback:
 
 # 2.5 Wind Direction Indicator
 wind_config = {
-    "North": ("↓ Wind (N)", site_width/2, site_length + 8, 'center', 'bottom'),
-    "South": ("↑ Wind (S)", site_width/2, -8, 'center', 'top'),
-    "East":  ("← Wind (E)", site_width + 8, site_length/2, 'left', 'center'),
-    "West":  ("→ Wind (W)", -8, site_length/2, 'right', 'center')
+    "North": ("↓ Wind (N)", site_width/2, site_length + 15, 'center', 'bottom'),
+    "South": ("↑ Wind (S)", site_width/2, -15, 'center', 'top'),
+    "East":  ("← Wind (E)", site_width + 15, site_length/2, 'left', 'center'),
+    "West":  ("→ Wind (W)", -15, site_length/2, 'right', 'center')
 }
 w_text, w_x, w_y, w_ha, w_va = wind_config.get(wind_dir, wind_config["East"])
 ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=10, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
@@ -105,8 +105,9 @@ for g in groups:
     draw_group(ax, g)
 
 # --- Plot view configuration ---
-ax.set_xlim(-10, site_width + 10)
-ax.set_ylim(-10, site_length + 10)
+# Give enough padding so the wind text doesn't stretch the bounding box
+ax.set_xlim(-40, site_width + 40)
+ax.set_ylim(-40, site_length + 40)
 ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
 
 # Hide axis tick numbers (no x/y values shown)
@@ -118,7 +119,7 @@ for spine in ax.spines.values():
     spine.set_visible(False)
 
 # Legend placed outside below the plot
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.04),
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
           ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 

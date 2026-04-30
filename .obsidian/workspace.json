@@ -11,17 +11,14 @@
             "id": "3d069e6e1ed81850",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 3215.4329941864617,
-                  "y": 1000.8671990178825,
-                  "zoom": -0.4481803272529516
-                }
+                "file": "!Atlas_System.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "!Atlas_System"
             }
           }
         ]
@@ -97,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "!Atlas_System.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -106,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for !Atlas_System"
             }
           },
           {
@@ -115,11 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "!Atlas_System.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from !Atlas_System"
             }
           },
           {
@@ -157,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Untitled.md",
+                "file": "!Atlas_System.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Untitled"
+              "title": "Outline of !Atlas_System"
             }
           }
         ]
@@ -187,19 +186,19 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
+    "Untitled.md",
     "99_System/Agents/Gemini",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "Untitled.md",
     "99_System/Agents/Claude",
     "99_System/Agents",
     "99_System",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Templates/Daily_Report_Template.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",
     "02_Library/Obsidian&Vibe Coding/Vibe-Coding.md",

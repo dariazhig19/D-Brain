@@ -75,7 +75,7 @@ plt.tight_layout()
 NUM_COLS = 4       # ← change this freely: number of columns for multi-plot grid
 
 # Collect all plots — add more figs here as new phases are built
-plots = [fig, fig]       # Phase 1: Site Boundary
+plots = [fig, fig, fig, fig]       # Phase 1: Site Boundary
 
 
 def render_centered(container, plot_fig, width_px):

@@ -1,6 +1,5 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import io, base64
 
 # Font: Malgun Gothic (pre-installed on Windows, supports Korean)
@@ -36,22 +35,21 @@ FIG_W_PX, FIG_H_PX = 500, 300
 DPI = 100
 fig, ax = plt.subplots(figsize=(FIG_W_PX / DPI, FIG_H_PX / DPI), dpi=DPI)
 
-# 1. Site boundary
-site_rect = patches.Rectangle(
-    (0, 0), site_width, site_length,
-    linewidth=0.8, edgecolor='black', facecolor='#f0f8ff', label='Site Boundary'
-)
-ax.add_patch(site_rect)
+# 1. Site boundary — explicit X,Y coordinate lines (future-ready for line export)
+site_x = [0, site_width, site_width, 0,          0]
+site_y = [0, 0,          site_length, site_length, 0]
+ax.fill(site_x, site_y, color='#f0f8ff', zorder=0)          # light fill
+ax.plot(site_x, site_y, color='black', linewidth=1.2,
+        label='Site Boundary')                               # boundary line
 
-# 2. Road setback (5m inward from all edges)
+# 2. Road setback — explicit X,Y coordinate lines (5m inward from all edges)
 setback = 5
 if site_width > 2 * setback and site_length > 2 * setback:
-    road_rect = patches.Rectangle(
-        (setback, setback), site_width - 2 * setback, site_length - 2 * setback,
-        linewidth=0.8, edgecolor='red', linestyle='--', facecolor='none',
-        label='Primary Road Setback (5m)'
-    )
-    ax.add_patch(road_rect)
+    s = setback
+    sb_x = [s,           site_width-s, site_width-s, s,           s]
+    sb_y = [s,           s,            site_length-s, site_length-s, s]
+    ax.plot(sb_x, sb_y, color='red', linestyle='--', linewidth=0.8,
+            label='Primary Road Setback (5m)')               # setback line
 
 # --- Plot view configuration ---
 ax.set_xlim(-10, site_width + 10)

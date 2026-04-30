@@ -105,9 +105,9 @@ for g in groups:
     draw_group(ax, g)
 
 # --- Plot view configuration ---
-# Tighter padding around the plot
-ax.set_xlim(-20, site_width + 20)
-ax.set_ylim(-20, site_length + 20)
+# Extra padding at the bottom (-40) to make room for the legend inside the plot
+ax.set_xlim(-30, site_width + 30)
+ax.set_ylim(-40, site_length + 30)
 ax.set_aspect('equal', adjustable='box')  # equal scale, box shrinks to fit
 
 # Hide axis tick numbers (no x/y values shown)
@@ -118,9 +118,8 @@ ax.set_yticks([])
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Legend placed outside below the plot
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-          ncol=2, frameon=True, fontsize=8)
+# Legend placed inside the plot at the bottom empty space
+ax.legend(loc='lower center', ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 
 # --- DISPLAY CONFIG ---

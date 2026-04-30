@@ -84,6 +84,16 @@ if site_width > 2 * setback and site_length > 2 * setback:
     ax.plot(sb_x, sb_y, color='red', linestyle='--', linewidth=0.8,
             label='Primary Road Setback (5m)')               # setback line
 
+# 2.5 Wind Direction Indicator
+wind_config = {
+    "North": ("↓ Wind (N)", site_width/2, site_length + 8, 'center', 'bottom'),
+    "South": ("↑ Wind (S)", site_width/2, -8, 'center', 'top'),
+    "East":  ("← Wind (E)", site_width + 8, site_length/2, 'left', 'center'),
+    "West":  ("→ Wind (W)", -8, site_length/2, 'right', 'center')
+}
+w_text, w_x, w_y, w_ha, w_va = wind_config.get(wind_dir, wind_config["East"])
+ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=10, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
+
 # 3. Main Building Groups
 groups = get_groups(
     site_width, site_length,

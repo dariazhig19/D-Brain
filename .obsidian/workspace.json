@@ -17,22 +17,22 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
+                    "file": "!Atlas_System.md",
                     "mode": "source",
                     "source": false
                   },
                   "icon": "lucide-file",
-                  "title": "SKILL"
+                  "title": "!Atlas_System"
                 }
               }
             ]
           },
           {
-            "id": "36422e404059334c",
+            "id": "09fdafff26adfb44",
             "type": "tabs",
             "children": [
               {
-                "id": "bb7679721272193f",
+                "id": "c08d03164fda68a7",
                 "type": "leaf",
                 "pinned": true,
                 "state": {
@@ -70,87 +70,13 @@
                   "icon": "terminal",
                   "title": "Terminal: ◇  Ready (D-Brain)"
                 }
-              },
-              {
-                "id": "e18a7ed98fedd521",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: ◇  Ready (Agents)"
-                }
-              },
-              {
-                "id": "c73aafede2a18c79",
-                "type": "leaf",
-                "pinned": true,
-                "state": {
-                  "type": "terminal:terminal",
-                  "state": {
-                    "terminal:terminal": {
-                      "cwd": "X:\\CST본부 (구 기술지원부 폴더)\\15. 다리아\\D-Brain",
-                      "focus": false,
-                      "profile": {
-                        "args": [],
-                        "executable": "C:\\Windows\\System32\\cmd.exe",
-                        "followTheme": true,
-                        "name": "",
-                        "platforms": {
-                          "win32": true
-                        },
-                        "pythonExecutable": "python3",
-                        "restoreHistory": false,
-                        "rightClickAction": "copyPaste",
-                        "successExitCodes": [
-                          "0",
-                          "SIGINT",
-                          "SIGTERM"
-                        ],
-                        "terminalOptions": {
-                          "documentOverride": null
-                        },
-                        "type": "integrated",
-                        "useWin32Conhost": true
-                      },
-                      "serial": null
-                    }
-                  },
-                  "pinned": true,
-                  "icon": "terminal",
-                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
-                }
-              },
+              }
+            ]
+          },
+          {
+            "id": "36422e404059334c",
+            "type": "tabs",
+            "children": [
               {
                 "id": "e225788d15b7c0a2",
                 "type": "leaf",
@@ -237,7 +163,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -247,7 +172,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for SKILL"
+              "title": "Backlinks"
             }
           },
           {
@@ -256,12 +181,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from SKILL"
+              "title": "Outgoing links"
             }
           },
           {
@@ -299,13 +223,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of SKILL"
+              "title": "Outline"
             }
           }
         ]
@@ -329,11 +252,12 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "c08d03164fda68a7",
   "lastOpenFiles": [
+    "!Atlas_System.md",
+    "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
     "99_System/Agents/Gemini/Instructions.md",
-    "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/scripts/example_script.cjs",
     "99_System/Agents/Skills/atlas-vibe-master/assets/example_asset.txt",
     "99_System/Agents/Skills/atlas-vibe-master/scripts",
@@ -345,7 +269,6 @@
     "99_System/Agents/New folder",
     "-p",
     "99_System/Agents/Gemini",
-    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "Untitled.md",

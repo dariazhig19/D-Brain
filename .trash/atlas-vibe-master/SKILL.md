@@ -34,5 +34,4 @@ Every session must end with a Daily Report:
 ## 🛠️ Specialized Rules
 
 - **Additive Scoring**: Lower values = better results in all algorithms.
-- **Pipeline Phases**: `Phase_XX` folders must contain exactly one `.md` note and one `.png` output example.
 - **Prompt History**: Log LLM prompts in `02_Library/Prompts_Master/Prompt_History_Phase_XX.md`.

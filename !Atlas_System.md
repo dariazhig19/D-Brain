@@ -28,6 +28,34 @@ When a file is analyzed in `00_Input`, it must be transformed and moved:
 
 ---
 
+## 🔄 Workflow Structure (The 4 Levels)
+
+This defines the daily working process and where active context is maintained.
+
+### 🧭 Level 1: Global Compass (Notes Folder)
+Files changed rarely, usually during phase transitions.
+- `!Product_Vision.md` — Project phases and global roadmap.
+- `!Scoring_Logic.md` — Rule engine and mathematical scoring tables for clients.
+- `Overview.canvas` — Visual mind map and relationships.
+
+### 🧠 Level 2: Code Context (Core & Dashboard)
+Files updated at the end of each session. They provide immediate context to the AI Agent.
+- `!Core_Context.md` — Tracks Python engine logic, active scripts (e.g., `Groups.py`), and rules.
+- `!Dashboard_Context.md` — Tracks Streamlit UI state, sliders, and visual functions.
+
+### 🗄️ Level 3: Workbench (Pipeline Folder)
+The creative workspace structured by phases (e.g., `Pipeline/Phase_01/`, `Pipeline/Phase_02/`).
+- Contains screenshots, drafts, and Implementation Plans.
+- **Rule for Implementation Plans**: Save them here (e.g., `Phase_02_Plan.md`). If work continues on the same phase later, **do not modify the original plan — only append/add to it**. Once a phase is complete, its folder becomes a static archive.
+
+### 📅 Level 4: Execution Tracking (Daily Reports)
+Following the standard reporting logic:
+- A daily report is created in `04_Reports/Daily/` (e.g., `Daily_Report_YYYYMMDD.md`).
+- It uses the standard `Daily Report Structure` (Executive Summary, Project Progress, Connected Notes).
+- After creation, the `Update_Context_Files_Daily` skill updates Level 2 context files.
+
+---
+
 ## 🗺️ Full Vault Structure & Folder Rules
 
 ### 📁 01_Products — Active Product Development

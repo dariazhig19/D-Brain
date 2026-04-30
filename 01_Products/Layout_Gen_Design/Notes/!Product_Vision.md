@@ -24,17 +24,17 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 
 ## 📈 Development Roadmap (Phased Plan)
 
-### Phase_01: The Empty Plot (Current)
+### Phase_01: The Empty Plot (Completed)
 
-- [ ] Initialize project structure: `Core/`, `Dashboard/`, `Data/`, `Notes/`.
-- [ ] Setup `Dashboard/App.py` using Streamlit.
-- [ ] Draw the site boundary (Rectangle) based on User Inputs.
+- [x] Initialize project structure: `Core/`, `Dashboard/`, `Data/`, `Notes/`.
+- [x] Setup `Dashboard/App.py` using Streamlit.
+- [x] Draw the site boundary (Rectangle) based on User Inputs.
 
-### Phase_02: The Three Giants
+### Phase_02: The Three Giants (Completed)
 
-- [ ] Define 3 main groups: **Power Block**, **Cooling Tower**, **Admin Building**.
-- [ ] Render them as colored blocks inside the plot.
-- [ ] Add manual X/Y coordinate sliders to test the canvas limits.
+- [x] Define 3 main groups: **Power Block**, **Cooling Tower**, **Admin Building**.
+- [x] Render them as colored blocks inside the plot.
+- [x] Add manual X/Y coordinate sliders to test the canvas limits.
 
 ### Phase_03: Engineering Rules (The Logic)
 
@@ -52,4 +52,4 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [ ] Implementation of a scoring engine to evaluate "The Best Placement".
 - [ ] Export final geometry to DXF/CAD format.
 
-## 📍 Current Status: **Phase_01**
+## 📍 Current Status: **Phase_03 (Engineering Rules)**

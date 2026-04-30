@@ -8,21 +8,53 @@
         "type": "split",
         "children": [
           {
-            "id": "deb8b1821b64bab8",
-            "type": "tabs",
+            "id": "d7bdb0dd6a9c7919",
+            "type": "split",
             "dimension": 84.41091954022988,
             "children": [
               {
-                "id": "3d069e6e1ed81850",
-                "type": "leaf",
-                "state": {
-                  "type": "graph",
-                  "state": {},
-                  "icon": "lucide-git-fork",
-                  "title": "Graph view"
-                }
+                "id": "deb8b1821b64bab8",
+                "type": "tabs",
+                "children": [
+                  {
+                    "id": "3d069e6e1ed81850",
+                    "type": "leaf",
+                    "state": {
+                      "type": "image",
+                      "state": {
+                        "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png"
+                      },
+                      "icon": "lucide-image",
+                      "title": "Dashboard_V2"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "cc5aaffcc7cbbf40",
+                "type": "tabs",
+                "children": [
+                  {
+                    "id": "6c3cd3d8e97f087b",
+                    "type": "leaf",
+                    "state": {
+                      "type": "canvas",
+                      "state": {
+                        "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                        "viewState": {
+                          "x": 3894.8518077218832,
+                          "y": 544.0141291088106,
+                          "zoom": -0.042132778518645275
+                        }
+                      },
+                      "icon": "lucide-layout-dashboard",
+                      "title": "Overview"
+                    }
+                  }
+                ]
               }
-            ]
+            ],
+            "direction": "vertical"
           },
           {
             "id": "da9b55196028ebe9",
@@ -234,8 +266,11 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "6c3cd3d8e97f087b",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "!Atlas_System.md",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
@@ -255,10 +290,8 @@
     "GEMINI.md",
     "99_System/Agents/Claude",
     "99_System/Agents/New folder",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png",
     "Untitled.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "02_Library/Templates/Daily_Report_Template.md",
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",

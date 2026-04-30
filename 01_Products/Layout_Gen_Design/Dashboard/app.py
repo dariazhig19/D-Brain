@@ -33,9 +33,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- UI CONTROLS (Sliders on the left) ---
-st.sidebar.header("Site Dimensions (m)")
+st.sidebar.header("Site Information")
 site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
 site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
+wind_dir = st.sidebar.selectbox("Wind Direction", ["North", "South", "East", "West"], index=2) # Default East
 
 st.sidebar.divider()
 st.sidebar.header("Manual Group Positions (m)")

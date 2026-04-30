@@ -10,7 +10,16 @@
 		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase 01 Output Example.png","x":2760,"y":260,"width":639,"height":293},
 		{"id":"e05dc9ad5733ca89","type":"text","text":"# Phase_01","x":2003,"y":16,"width":250,"height":60,"color":"4"},
 		{"id":"51c804810c918d6e","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png","x":3520,"y":260,"width":399,"height":204},
-		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3960,"y":260,"width":495,"height":204}
+		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3960,"y":260,"width":495,"height":204},
+		{"id":"n_pb","type":"text","text":"**Power Block**","x":2805,"y":3100,"width":250,"height":80,"color":"5"},
+		{"id":"n_ct","type":"text","text":"**Cooling Tower**","x":2805,"y":3300,"width":250,"height":80,"color":"4"},
+		{"id":"n_admin","type":"text","text":"**Admin Building**","x":2805,"y":3500,"width":250,"height":80,"color":"2"},
+		{"id":"t_center","type":"text","text":"*Center of Plot*","x":3255,"y":3050,"width":200,"height":60},
+		{"id":"t_road","type":"text","text":"*Primary Road*","x":3255,"y":3180,"width":200,"height":60},
+		{"id":"t_edge","type":"text","text":"*Windward Edge*","x":3255,"y":3300,"width":200,"height":60},
+		{"id":"t_gate","type":"text","text":"*Gate House*","x":3255,"y":3600,"width":200,"height":60},
+		{"id":"f508b266d3094c8e","type":"file","file":"01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md","x":1905,"y":3100,"width":750,"height":600},
+		{"id":"dfbb8cc09b4549f2","type":"text","text":"# ⚖️ Visual Rule Engine (Phase 2)","x":1905,"y":3000,"width":750,"height":80,"color":"6"}
 	],
 	"edges":[
 		{"id":"7dbb395ec9a5c0c0","fromNode":"14369d86ae2ca3cb","fromSide":"right","toNode":"ceae6e826d95e20e","toSide":"left"},
@@ -21,6 +30,12 @@
 		{"id":"7b4aa36fe2863cf3","fromNode":"6d96f8456a8a6b7b","fromSide":"bottom","toNode":"5b0f19c9511d7b9f","toSide":"top"},
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},
 		{"id":"4fa8b02c2debb800","fromNode":"e05dc9ad5733ca89","fromSide":"bottom","toNode":"0f0031e9f4761233","toSide":"left"},
-		{"id":"2c1aee0dd3e07015","fromNode":"ceae6e826d95e20e","fromSide":"right","toNode":"f233baec8c93a369","toSide":"left"}
+		{"id":"2c1aee0dd3e07015","fromNode":"ceae6e826d95e20e","fromSide":"right","toNode":"f233baec8c93a369","toSide":"left"},
+		{"id":"10f71d96bdbb45cf","fromNode":"n_pb","fromSide":"right","toNode":"t_center","toSide":"left","label":"Center Alignment (PB-01)"},
+		{"id":"5a4cacac808243b8","fromNode":"n_pb","fromSide":"right","toNode":"t_road","toSide":"left","label":"Min 5m (PB-02)"},
+		{"id":"4938050f82204641","fromNode":"n_ct","fromSide":"right","toNode":"t_edge","toSide":"left","label":"Must place at (CT-01)"},
+		{"id":"289c105173b643de","fromNode":"n_ct","fromSide":"bottom","toNode":"n_admin","toSide":"top","label":"Min 50m (CT-02)"},
+		{"id":"63ba108af82c411c","fromNode":"n_admin","fromSide":"right","toNode":"t_road","toSide":"left","label":"Min 20m (AD-01)"},
+		{"id":"6ffbf8edb5cf40e8","fromNode":"n_admin","fromSide":"right","toNode":"t_gate","toSide":"left","label":"Max 50m (AD-02)"}
 	]
 }

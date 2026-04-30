@@ -1,34 +1,24 @@
-# Scoring Logic: Layout Generative Design
+# ⚖️ Rule Engine: Penalty Scoring Logic
 
-This document defines the evaluation criteria for the generated layout variants. Each criterion will be mapped to a Python formula for automated scoring.
+This document is the **Single Source of Truth** for all layout rules.
+The generative design system evaluates layouts by calculating a **Total Penalty Score**. 
+*Lower score = Better layout.* 
+A score of `0` means a perfect layout with no rule violations.
 
-## 1. Density (Efficiency of Land Use)
-- **Goal**: Maximize the ratio of built area to total site area while respecting regulations.
-- **Python Formula**:
-```python
-# [Insert Density Calculation Logic Here]
-```
+## 🏗️ Phase 2: The Three Giants
 
-## 2. Connectivity (Accessibility)
-- **Goal**: Minimize average path lengths between buildings and key infrastructure points.
-- **Python Formula**:
-```python
-# [Insert Connectivity Calculation Logic Here]
-```
+The following table defines the placement rules for the 3 main groups.
+You can adjust the "Penalty per Unit" to make rules more or less strict.
 
-## 3. Aesthetics (Visual Quality)
-- **Goal**: Quantify spatial diversity, sightlines, and shadow patterns.
-- **Python Formula**:
-```python
-# [Insert Aesthetics Metrics Logic Here]
-```
+| ID | Group | Constraint | Target Reference | Penalty per Unit | Condition |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PB-01** | Power Block | Must be centered | Center of Plot | 100 pts / meter | Distance from center |
+| **PB-02** | Power Block | Minimum Setback | Primary Road | 5000 pts (Violation) | If distance < 5m |
+| **CT-01** | Cooling Tower | Must be placed at | Windward Edge (Right) | 1000 pts | If not on edge |
+| **CT-02** | Cooling Tower | Minimum Distance | Admin Building | 500 pts / meter | If distance < 50m |
+| **AD-01** | Admin Building | Minimum Distance | Primary Road | 1000 pts | If distance < 20m |
+| **AD-02** | Admin Building | Maximum Distance | Gate House | 100 pts / meter | If distance > 50m |
 
-## 4. Cost-efficiency
-- **Goal**: Evaluate the cost-to-benefit ratio based on infrastructure length and building complexity.
-- **Python Formula**:
-```python
-# [Insert Cost-efficiency Estimation Logic Here]
-```
+---
 
-## Total Score calculation
-- **Formula**: `Final Score = (w1 * Density) + (w2 * Connectivity) + (w3 * Aesthetics) + (w4 * Cost)`
+*Note: In Phase 4, a Python script will automatically parse this Markdown table to build the `Rules.py` logic!*

@@ -41,9 +41,9 @@
                   "state": {
                     "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                     "viewState": {
-                      "x": 2199.977146380632,
-                      "y": 1851.747603203642,
-                      "zoom": -0.3491583004950162
+                      "x": 2692.7741840386757,
+                      "y": 2869.2328790758925,
+                      "zoom": -1.0418201756946275
                     }
                   },
                   "icon": "lucide-layout-dashboard",
@@ -217,10 +217,11 @@
   },
   "active": "6c3cd3d8e97f087b",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",

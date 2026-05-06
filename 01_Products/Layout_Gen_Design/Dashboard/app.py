@@ -94,6 +94,9 @@ wind_config = {
 w_text, w_x, w_y, w_ha, w_va = wind_config.get(wind_dir, wind_config["East"])
 ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=8, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
 
+# 2.6 Scale Indicator
+ax.text(site_width, site_length + 15, "Scale 1/100", color='#333333', fontsize=9, fontweight='bold', ha='right', va='bottom', zorder=3)
+
 # 3. Main Building Groups
 groups = get_groups(
     site_width, site_length,

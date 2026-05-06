@@ -155,8 +155,7 @@ def export_to_dxf(layout, site_width, site_length):
                     "insert": (0, -GH_H - 8)},
     )
 
-    # ── Serialise to BytesIO ────────────────────────────────────────────────
-    stream = io.BytesIO()
+    # ── Serialise to String ─────────────────────────────────────────────────
+    stream = io.StringIO()
     doc.write(stream)
-    stream.seek(0)
-    return stream
+    return stream.getvalue()

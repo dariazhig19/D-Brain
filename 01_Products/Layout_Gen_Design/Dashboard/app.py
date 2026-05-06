@@ -94,8 +94,17 @@ wind_config = {
 w_text, w_x, w_y, w_ha, w_va = wind_config.get(wind_dir, wind_config["East"])
 ax.text(w_x, w_y, w_text, color='#0078D7', fontsize=8, fontweight='bold', ha=w_ha, va=w_va, zorder=3)
 
-# 2.6 Scale Indicator
-ax.text(site_width, site_length + 15, "Scale 1/100", color='#333333', fontsize=9, fontweight='bold', ha='right', va='bottom', zorder=3)
+# 2.6 Scale Indicator (auto-computed)
+# Figure physical width in mm → axis x-span covers (site_width + 60) data units
+# 1 data unit = 1 m = 1000 mm in reality → scale = real_mm / drawn_mm
+_fig_w_mm   = (FIG_W_PX / DPI) * 25.4          # e.g. 8 in × 25.4 = 203.2 mm
+_axis_x_span = site_width + 60                  # xlim: -30 … site_width+30
+_mm_per_unit = _fig_w_mm / _axis_x_span         # drawn mm per 1 m
+_raw_scale   = 1000 / _mm_per_unit              # raw 1:N value
+_std_scales  = [50, 100, 200, 250, 500, 1000, 2000]
+_scale_denom = min(_std_scales, key=lambda s: abs(s - _raw_scale))
+ax.text(site_width, site_length + 15, f"Scale  1 / {_scale_denom:,}",
+        color='#333333', fontsize=9, fontweight='bold', ha='right', va='bottom', zorder=3)
 
 # 3. Main Building Groups
 groups = get_groups(

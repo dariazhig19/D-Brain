@@ -48,6 +48,7 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [ ] Automated Rule Parsing (generating validation logic directly from Excel rules).
 - [ ] Deconstruct the "Three Giants" into their individual sub-buildings.
 - [ ] **Cross-Group Dependencies:** Implement a "Node Network" architecture where specific sub-buildings inside one cluster (e.g., Cooling Tower) can have strict distance rules linking them to sub-buildings in another cluster (e.g., Power Block).
+- [ ] **Rule Network Visualizer:** Add a dedicated tab in the dashboard using **Pyvis** to render an interactive, physics-based bubble graph showing all buildings (nodes) and active rules (edges).
 - [ ] Introduce routing and placement rules for **Pipe Racks**.
 
 ### Phase_05: Generative Optimization

@@ -202,6 +202,7 @@
   },
   "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Main.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Rules.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",
@@ -235,7 +236,6 @@
     "01_Products/Layout_Gen_Design/Core/Groups.py",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
-    "99_System/Agents/Skills/Update_Context_Files_Daily",
     "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
     "99_System/Agents/Gemini/Instructions.md",

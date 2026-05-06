@@ -35,19 +35,23 @@ def _result(id_, name, group, passed, penalty, message, measured, threshold, cal
 # ── Individual Rules ────────────────────────────────────────────────────────
 
 def rule_pb01(power_block, site_width, site_length):
-    """PB-01: Power Block center must be close to the plot center. 100 pts/m."""
+    """PB-01: Power Block center within 20 m of plot center = PASS.
+    Beyond 20 m tolerance: 100 pts per metre of excess distance.
+    """
+    TOLERANCE = 20.0
     cx, cy = _center(power_block)
     site_cx, site_cy = site_width / 2, site_length / 2
     distance = _dist(cx, cy, site_cx, site_cy)
-    penalty = distance * 100
-    passed = distance < 1.0
+    excess  = max(0.0, distance - TOLERANCE)
+    penalty = excess * 100
+    passed  = excess == 0
     return _result(
-        "PB-01", "Power Block: Center", "Power Block",
+        "PB-01", "Power Block: Center (±20 m)", "Power Block",
         passed, penalty,
-        "Within 1m of center ✓" if passed else f"Power Block is off-center",
-        measured=f"{distance:.1f} m from center",
-        threshold="< 1 m (perfect) or 0 pts/m penalty",
-        calc=f"{distance:.1f} m × 100 pts/m = {penalty:,.0f} pts",
+        f"Within tolerance ✓ ({distance:.1f} m from center)" if passed else f"Off-center by {excess:.1f} m beyond 20 m tolerance",
+        measured=f"{distance:.1f} m from plot center",
+        threshold="≤ 20 m from center (free zone)",
+        calc=f"Excess: {distance:.1f} − 20 = {excess:.1f} m × 100 pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (within 20 m tolerance)",
     )
 
 

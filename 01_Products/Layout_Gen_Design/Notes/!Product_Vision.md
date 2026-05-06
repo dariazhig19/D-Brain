@@ -46,7 +46,8 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 
 - [ ] Parsing the Excel Data (`Plot plan requirement.xlsx`).
 - [ ] Automated Rule Parsing (generating validation logic directly from Excel rules).
-- [ ] Deconstruct the "Three Giants" into their individual sub-buildings (e.g., specific structures inside the Power Block).
+- [ ] Deconstruct the "Three Giants" into their individual sub-buildings.
+- [ ] **Cross-Group Dependencies:** Implement a "Node Network" architecture where specific sub-buildings inside one cluster (e.g., Cooling Tower) can have strict distance rules linking them to sub-buildings in another cluster (e.g., Power Block).
 - [ ] Introduce routing and placement rules for **Pipe Racks**.
 
 ### Phase_05: Generative Optimization

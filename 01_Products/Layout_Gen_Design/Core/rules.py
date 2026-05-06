@@ -17,6 +17,21 @@ def _dist(cx1, cy1, cx2, cy2):
     return math.sqrt((cx1 - cx2) ** 2 + (cy1 - cy2) ** 2)
 
 
+def _result(id_, name, group, passed, penalty, message, measured, threshold, calc):
+    """Standardized rule result dict."""
+    return {
+        "id":        id_,
+        "name":      name,
+        "group":     group,
+        "passed":    passed,
+        "penalty":   round(penalty, 1),
+        "message":   message,
+        "measured":  measured,   # actual measured value (with unit label)
+        "threshold": threshold,  # constraint limit (with unit label)
+        "calc":      calc,       # human-readable penalty calculation string
+    }
+
+
 # ── Individual Rules ────────────────────────────────────────────────────────
 
 def rule_pb01(power_block, site_width, site_length):
@@ -25,59 +40,63 @@ def rule_pb01(power_block, site_width, site_length):
     site_cx, site_cy = site_width / 2, site_length / 2
     distance = _dist(cx, cy, site_cx, site_cy)
     penalty = distance * 100
-    return {
-        "id": "PB-01",
-        "name": "Power Block: Center",
-        "group": "Power Block",
-        "passed": distance < 1.0,   # within 1m = perfect
-        "penalty": round(penalty, 1),
-        "message": f"Distance from center: {distance:.1f} m",
-    }
+    passed = distance < 1.0
+    return _result(
+        "PB-01", "Power Block: Center", "Power Block",
+        passed, penalty,
+        "Within 1m of center ✓" if passed else f"Power Block is off-center",
+        measured=f"{distance:.1f} m from center",
+        threshold="< 1 m (perfect) or 0 pts/m penalty",
+        calc=f"{distance:.1f} m × 100 pts/m = {penalty:,.0f} pts",
+    )
 
 
 def rule_pb02(power_block, site_width, site_length):
     """PB-02: Power Block must not violate 5m primary road setback. 5000 pts flat."""
     setback = 5
     x, y, w, h = power_block["x"], power_block["y"], power_block["width"], power_block["height"]
-    violated = (
-        x < setback or
-        y < setback or
-        (x + w) > (site_width - setback) or
-        (y + h) > (site_length - setback)
-    )
-    return {
-        "id": "PB-02",
-        "name": "Power Block: Road Setback",
-        "group": "Power Block",
-        "passed": not violated,
-        "penalty": 5000 if violated else 0,
-        "message": "Violates 5m primary road setback" if violated else "Setback OK",
+    edges = {
+        "left":   x,
+        "bottom": y,
+        "right":  site_width  - (x + w),
+        "top":    site_length - (y + h),
     }
+    min_edge_name = min(edges, key=edges.get)
+    min_edge_val  = edges[min_edge_name]
+    violated = min_edge_val < setback
+    return _result(
+        "PB-02", "Power Block: Road Setback", "Power Block",
+        not violated,
+        5000 if violated else 0,
+        f"Violates 5m setback ({min_edge_name}: {min_edge_val:.1f} m)" if violated else "All edges ≥ 5m setback ✓",
+        measured=f"Closest edge ({min_edge_name}): {min_edge_val:.1f} m",
+        threshold="≥ 5 m on all sides",
+        calc="5,000 pts flat (violation)" if violated else "0 pts (no violation)",
+    )
 
 
 def rule_ct01(cooling_tower, site_width, site_length, wind_dir):
-    """CT-01: Cooling Tower must be on the windward edge. 1000 pts flat.
-    Windward = the side FROM WHICH the wind blows.
-    threshold = 30m from the respective edge counts as 'on edge'.
-    """
+    """CT-01: Cooling Tower must be on the windward edge. 1000 pts flat."""
     x, y, w, h = cooling_tower["x"], cooling_tower["y"], cooling_tower["width"], cooling_tower["height"]
     threshold = 30
 
-    windward_checks = {
-        "East":  (x + w) >= (site_width - threshold),    # right side
-        "West":  x <= threshold,                          # left side
-        "North": (y + h) >= (site_length - threshold),   # top side
-        "South": y <= threshold,                          # bottom side
+    dist_map = {
+        "East":  ("right edge",  site_width  - (x + w)),
+        "West":  ("left edge",   x),
+        "North": ("top edge",    site_length - (y + h)),
+        "South": ("bottom edge", y),
     }
-    on_edge = windward_checks.get(wind_dir, True)
-    return {
-        "id": "CT-01",
-        "name": "Cooling Tower: Windward Edge",
-        "group": "Cooling Tower",
-        "passed": on_edge,
-        "penalty": 0 if on_edge else 1000,
-        "message": f"On {wind_dir} windward edge ✓" if on_edge else f"Not on {wind_dir} windward edge",
-    }
+    edge_label, dist_to_edge = dist_map.get(wind_dir, ("right edge", site_width - (x + w)))
+    on_edge = dist_to_edge <= threshold
+    return _result(
+        "CT-01", "Cooling Tower: Windward Edge", "Cooling Tower",
+        on_edge,
+        0 if on_edge else 1000,
+        f"On {wind_dir} windward edge ✓" if on_edge else f"Not on {wind_dir} windward edge",
+        measured=f"Distance to {edge_label}: {dist_to_edge:.1f} m",
+        threshold=f"≤ {threshold} m from {edge_label} (wind = {wind_dir})",
+        calc="0 pts (on edge)" if on_edge else "1,000 pts flat (not on windward edge)",
+    )
 
 
 def rule_ct02(cooling_tower, admin_building):
@@ -87,28 +106,38 @@ def rule_ct02(cooling_tower, admin_building):
     distance = _dist(ct_cx, ct_cy, adm_cx, adm_cy)
     shortfall = max(0.0, 50.0 - distance)
     penalty = shortfall * 500
-    return {
-        "id": "CT-02",
-        "name": "CT ↔ Admin: Min Dist (50m)",
-        "group": "Cooling Tower",
-        "passed": shortfall == 0,
-        "penalty": round(penalty, 1),
-        "message": f"CT–Admin distance: {distance:.1f} m (need ≥ 50 m)",
-    }
+    return _result(
+        "CT-02", "CT ↔ Admin: Min Dist", "Cooling Tower",
+        shortfall == 0,
+        penalty,
+        f"CT–Admin distance: {distance:.1f} m ✓" if shortfall == 0 else f"Too close: {distance:.1f} m (need ≥ 50 m)",
+        measured=f"CT center → Admin center: {distance:.1f} m",
+        threshold="≥ 50 m",
+        calc=f"Shortfall: 50 − {distance:.1f} = {shortfall:.1f} m × 500 pts/m = {penalty:,.0f} pts" if shortfall > 0 else "0 pts (distance OK)",
+    )
 
 
 def rule_ad01(admin_building, site_width, site_length):
     """AD-01: Admin Building must be ≥ 20m from any site boundary. 1000 pts flat."""
-    min_edge = _edge_distance(admin_building, site_width, site_length)
-    violated = min_edge < 20
-    return {
-        "id": "AD-01",
-        "name": "Admin: Road Setback (20m)",
-        "group": "Admin Building",
-        "passed": not violated,
-        "penalty": 1000 if violated else 0,
-        "message": f"Min edge distance: {min_edge:.1f} m (need ≥ 20 m)",
+    x, y, w, h = admin_building["x"], admin_building["y"], admin_building["width"], admin_building["height"]
+    edges = {
+        "left":   x,
+        "bottom": y,
+        "right":  site_width  - (x + w),
+        "top":    site_length - (y + h),
     }
+    min_edge_name = min(edges, key=edges.get)
+    min_edge_val  = edges[min_edge_name]
+    violated = min_edge_val < 20
+    return _result(
+        "AD-01", "Admin: Road Setback", "Admin Building",
+        not violated,
+        1000 if violated else 0,
+        f"Too close to {min_edge_name}: {min_edge_val:.1f} m" if violated else "Admin ≥ 20m from all edges ✓",
+        measured=f"Closest edge ({min_edge_name}): {min_edge_val:.1f} m",
+        threshold="≥ 20 m on all sides",
+        calc="1,000 pts flat (violation)" if violated else "0 pts (no violation)",
+    )
 
 
 def rule_ad02(admin_building, site_width):
@@ -120,14 +149,15 @@ def rule_ad02(admin_building, site_width):
     distance = _dist(adm_cx, adm_cy, gate_x, gate_y)
     excess = max(0.0, distance - 50.0)
     penalty = excess * 100
-    return {
-        "id": "AD-02",
-        "name": "Admin: Gate Distance (≤50m)",
-        "group": "Admin Building",
-        "passed": excess == 0,
-        "penalty": round(penalty, 1),
-        "message": f"Admin–Gate distance: {distance:.1f} m (need ≤ 50 m)",
-    }
+    return _result(
+        "AD-02", "Admin: Gate Distance", "Admin Building",
+        excess == 0,
+        penalty,
+        f"Admin–Gate: {distance:.1f} m ✓" if excess == 0 else f"Too far from gate: {distance:.1f} m (need ≤ 50 m)",
+        measured=f"Admin center → Gate House: {distance:.1f} m",
+        threshold="≤ 50 m",
+        calc=f"Excess: {distance:.1f} − 50 = {excess:.1f} m × 100 pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (within range)",
+    )
 
 
 # ── Master Evaluator ────────────────────────────────────────────────────────
@@ -165,7 +195,6 @@ def evaluate_all(groups, site_width, site_length, wind_dir):
 
     total_penalty = sum(r["penalty"] for r in results)
 
-    # Build per-group violation lookup for the dashboard overlay
     violations_by_group = {g["name"]: [] for g in groups}
     for r in results:
         if not r["passed"]:

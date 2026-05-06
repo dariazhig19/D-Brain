@@ -207,16 +207,14 @@ col_pass.metric("✅ Rules Passing", f"{passing} / {len(results)}")
 col_fail.metric("❌ Rules Failing", str(failing))
 
 st.markdown("#### Rule Results")
-# Build results table as markdown
-rows = []
-for r in results:
-    status = "✅ PASS" if r["passed"] else "❌ FAIL"
-    penalty_str = f"{r['penalty']:,.0f} pts" if r["penalty"] > 0 else "—"
-    rows.append(f"| **{r['id']}** | {r['name']} | {status} | {penalty_str} | {r['message']} |")
 
-table_md = (
-    "| ID | Rule | Status | Penalty | Detail |\n"
-    "|:---|:-----|:------:|-------:|:-------|\n"
-    + "\n".join(rows)
-)
-st.markdown(table_md)
+for r in results:
+    status_icon = "✅" if r["passed"] else "❌"
+    penalty_str = f"{r['penalty']:,.0f} pts" if r["penalty"] > 0 else "0 pts"
+    label = f"{status_icon} **{r['id']}** — {r['name']}  |  Penalty: **{penalty_str}**"
+
+    with st.expander(label, expanded=not r["passed"]):
+        col_m, col_t, col_c = st.columns(3)
+        col_m.markdown(f"**📐 Measured**\n\n{r['measured']}")
+        col_t.markdown(f"**🎯 Threshold**\n\n{r['threshold']}")
+        col_c.markdown(f"**🧮 Calculation**\n\n{r['calc']}")

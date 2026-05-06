@@ -87,6 +87,18 @@ if site_width > 2 * setback and site_length > 2 * setback:
     ax.plot(sb_x, sb_y, color='red', linestyle='--', linewidth=0.8,
             label='Primary Road Setback (5m)')               # setback line
 
+# 2.4 Gate House — fixed at bottom-center of site boundary (AD-02 reference)
+GH_W, GH_H = 12, 8                          # Gate House footprint (12m × 8m)
+gh_x = site_width / 2 - GH_W / 2           # centered on site width
+gh_y = -GH_H                                # straddles the bottom boundary (y=0)
+gh_pts_x = [gh_x,        gh_x + GH_W, gh_x + GH_W, gh_x,        gh_x]
+gh_pts_y = [gh_y,        gh_y,         0,            0,            gh_y]
+ax.fill(gh_pts_x, gh_pts_y, color='#5c4a32', alpha=0.85, zorder=2)
+ax.plot(gh_pts_x, gh_pts_y, color='black',   linewidth=1.0, zorder=3)
+ax.text(site_width / 2, gh_y - 2, "Gate House",
+        ha='center', va='top', fontsize=6.5, color='#3a2e1e', fontweight='bold', zorder=4)
+
+
 # 2.5 Wind Direction Indicator
 wind_config = {
     "North": ("↓ Wind (N)", site_width/2, site_length + 15, 'center', 'bottom'),

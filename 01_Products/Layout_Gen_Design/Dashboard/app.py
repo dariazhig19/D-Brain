@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 import io, base64, math
 
 import importlib
-import Core.Groups, Core.Rules, Core.Main
+import Core.Groups, Core.Rules, Core.Main, Core.Exporter
 importlib.reload(Core.Groups)
 importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
+importlib.reload(Core.Exporter)
 from Core.Groups import get_groups, draw_group
 from Core.Rules import evaluate_all
 from Core.Main import generate_layouts
+from Core.Exporter import export_to_dxf
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -212,3 +214,27 @@ else:
             col_m.markdown(f"**📐 Measured**\n\n{r['measured']}")
             col_t.markdown(f"**🎯 Threshold**\n\n{r['threshold']}")
             col_c.markdown(f"**🧮 Calculation**\n\n{r['calc']}")
+
+    # ── DXF Export ─────────────────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📐 Export to CAD")
+    st.caption(
+        "Exports the selected layout as a **DXF file** (opens directly in AutoCAD, BricsCAD, Revit, etc.). "
+        "All geometry is on separate named layers. Save as DWG from AutoCAD if needed."
+    )
+    _, export_col, _ = st.columns([2, 3, 2])
+    with export_col:
+        try:
+            dxf_stream = export_to_dxf(layout, sw, sl)
+            filename   = f"PowerPlan_Layout_{selected:02d}_{int(scoring['total_penalty'])}pts.dxf"
+            st.download_button(
+                label="⬇️ Download DXF",
+                data=dxf_stream,
+                file_name=filename,
+                mime="application/dxf",
+                use_container_width=True,
+                type="primary",
+            )
+        except Exception as e:
+            st.error(f"DXF export failed: {e}")
+

@@ -37,7 +37,7 @@ wind_dir    = st.sidebar.selectbox("Wind Direction",
                                    ["North", "South", "East", "West"], index=2)
 st.sidebar.divider()
 st.sidebar.header("Generation Settings")
-n_results   = st.sidebar.slider("Layouts to generate", 5, 20, 10, step=5)
+n_results   = st.sidebar.slider("Layouts to generate", 5, 100, 10, step=5)
 min_passing = st.sidebar.slider("Min rules passing",    1,  6,  3)
 
 # ── Header ─────────────────────────────────────────────────────────────────

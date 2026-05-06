@@ -8,8 +8,11 @@ import io, base64
 
 import importlib
 import Core.Groups
+import Core.Rules
 importlib.reload(Core.Groups)
+importlib.reload(Core.Rules)
 from Core.Groups import get_groups, draw_group
+from Core.Rules import evaluate_all
 
 # Font: Malgun Gothic (pre-installed on Windows)
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -20,7 +23,7 @@ plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign rendering
 st.set_page_config(page_title="PowerPlan AI", layout="wide")
 
 st.title("⚡ PowerPlan AI: Layout Generator")
-st.markdown("### Phase_01: Site Boundary & Primary Road Setback")
+st.markdown("### Phase_03: Rules Engine & Violation Alerts")
 
 # Center all st.pyplot figures inside their containers
 st.markdown("""
@@ -116,6 +119,23 @@ groups = get_groups(
 for g in groups:
     draw_group(ax, g)
 
+# --- PHASE 3: Rules Engine ---
+scoring = evaluate_all(groups, site_width, site_length, wind_dir)
+violations_by_group = scoring["violations_by_group"]
+
+# RED violation overlay — draw on top of each failing group (zorder=4)
+for g in groups:
+    if violations_by_group.get(g["name"]):
+        x, y, w, h = g["x"], g["y"], g["width"], g["height"]
+        vx = [x,   x+w, x+w, x,   x]
+        vy = [y,   y,   y+h, y+h, y]
+        ax.plot(vx, vy, color='crimson', linewidth=2.5, linestyle='--', zorder=4)
+        # Small violation badge above the building
+        rule_ids = ", ".join(violations_by_group[g["name"]])
+        ax.text(x + w/2, y + h + 3, f"⚠ {rule_ids}",
+                ha='center', va='bottom', fontsize=6.5,
+                color='crimson', fontweight='bold', zorder=5)
+
 # --- Plot view configuration ---
 # Extra padding at the bottom (-40) to make room for the legend inside the plot
 ax.set_xlim(-30, site_width + 30)
@@ -134,12 +154,7 @@ for spine in ax.spines.values():
 ax.legend(loc='lower center', ncol=2, frameon=True, fontsize=8)
 plt.tight_layout()
 
-# --- DISPLAY CONFIG ---
-NUM_COLS = 3      # ← change this freely: number of columns for multi-plot grid
-
-# Collect all plots — add more figs here as new phases are built
-plots = [fig, fig, fig]       # Phase 1: Site Boundary
-
+# --- DISPLAY ---
 
 def render_centered(container, plot_fig):
     """Render a matplotlib figure centered inside a Streamlit container responsively."""
@@ -154,18 +169,42 @@ def render_centered(container, plot_fig):
         unsafe_allow_html=True
     )
 
+# Main plot — full width
+plot_container = st.container(border=True)
+render_centered(plot_container, fig)
 
-# Layout logic:
-#   1 plot  → centered 50% ( narrow | plot | narrow )
-#   2+ plots → NUM_COLS grid, like stock app individual charts
-if len(plots) == 1:
-    _, center_col, _ = st.columns([1, 4, 1])  # Make center column much wider
-    cell = center_col.container(border=True)
-    cell.write("")
-    render_centered(cell, plots[0])
+# --- PHASE 3: Score Panel ---
+st.divider()
+total = scoring["total_penalty"]
+results = scoring["results"]
+
+# Top metric
+passing = sum(1 for r in results if r["passed"])
+failing = len(results) - passing
+
+if total == 0:
+    score_color = "normal"
 else:
-    cols = st.columns(NUM_COLS)
-    for i, plot_fig in enumerate(plots):
-        cell = cols[i % NUM_COLS].container(border=True)
-        cell.write("")
-        render_centered(cell, plot_fig)
+    score_color = "inverse"
+
+col_score, col_pass, col_fail = st.columns(3)
+col_score.metric("🏆 Total Penalty Score", f"{total:,.0f} pts",
+                 delta=f"{failing} violation(s)" if failing else "All rules passed",
+                 delta_color="inverse" if failing else "normal")
+col_pass.metric("✅ Rules Passing", f"{passing} / {len(results)}")
+col_fail.metric("❌ Rules Failing", str(failing))
+
+st.markdown("#### Rule Results")
+# Build results table as markdown
+rows = []
+for r in results:
+    status = "✅ PASS" if r["passed"] else "❌ FAIL"
+    penalty_str = f"{r['penalty']:,.0f} pts" if r["penalty"] > 0 else "—"
+    rows.append(f"| **{r['id']}** | {r['name']} | {status} | {penalty_str} | {r['message']} |")
+
+table_md = (
+    "| ID | Rule | Status | Penalty | Detail |\n"
+    "|:---|:-----|:------:|-------:|:-------|\n"
+    + "\n".join(rows)
+)
+st.markdown(table_md)

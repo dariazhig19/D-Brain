@@ -11,14 +11,17 @@
             "id": "3d069e6e1ed81850",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "!Atlas_System.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 2399.5,
+                  "y": 1620,
+                  "zoom": -1.971145137327815
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Atlas_System"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -199,12 +202,13 @@
   },
   "active": "3d069e6e1ed81850",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
+    "!Atlas_System.md",
     "99_System/Agents/Skills/Topic_Shift_Backup/SKILL.md",
     "99_System/Agents/Skills/Topic_Shift_Backup",
     "99_System/Agents/Skills/Session_Wrapup/SKILL.md",
     "99_System/Agents/Skills/Session_Wrapup",
     "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
-    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
@@ -216,7 +220,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
@@ -239,6 +242,4 @@
     "02_Library/Obsidian&Vibe Coding/AI System That Remembers EVERYTHING.md",
     "02_Library/Obsidian&Vibe Coding/Build Your AI.md",
     "02_Library/Obsidian&Vibe Coding/Vibe-Coding.md",
-    "02_Library/Obsidian&Vibe Coding/Obsidian + Claude Code The Second Brain.md"
-  ]
-}
+    "0

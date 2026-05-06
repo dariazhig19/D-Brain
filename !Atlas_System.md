@@ -8,6 +8,7 @@ This file defines the rules for processing information within the Product Incuba
 All raw ideas, code snippets, meeting notes, and business thoughts land here first. It is the "Buffer" zone.
 - No subfolders. Files stay here only until analyzed.
 - After analysis: move or transform into the correct destination folder.
+- Acts as the temporary backup folder for active AI Implementation Plans via the `Topic_Shift_Backup` skill.
 
 ---
 
@@ -146,7 +147,10 @@ The underlying logic, automation, and historical storage of the system.
 #### Agent Skills (Automation)
 Custom skills in `99_System/Agents/Skills/` extend the system's capabilities.
 - **Naming Rule**: Skill folder names must always start with a **Capital Letter** (e.g., `Update_Context_Files_Daily`).
-- **Core Automation**: `Update_Context_Files_Daily` — automatically syncs Daily Reports with product `!Context.md` files.
+- **Core Automation Skills**:
+  - `Update_Context_Files_Daily`: Automatically syncs Daily Reports with product `!Context.md` files.
+  - `Session_Wrapup`: Executes the Evening Workflow (archiving plans, writing reports, updating contexts).
+  - `Topic_Shift_Backup`: Buffers `implementation_plan.md` to `00_Input/` if the topic shifts to prevent accidental overwrites.
 
 ---
 

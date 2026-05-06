@@ -20,18 +20,6 @@
             }
           },
           {
-            "id": "dedaa1f9995e57ac",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png"
-              },
-              "icon": "lucide-image",
-              "title": "Dashboard_V4"
-            }
-          },
-          {
             "id": "c79a777deb34bba2",
             "type": "leaf",
             "state": {
@@ -39,8 +27,8 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 5017.3126925598835,
-                  "y": -98.7771789415667,
+                  "x": 5000.219349918591,
+                  "y": -89.48051270583952,
                   "zoom": 1
                 }
               },
@@ -63,7 +51,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -227,9 +215,11 @@
   },
   "active": "c79a777deb34bba2",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Exporter.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Exporter.py",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Main.cpython-314.pyc",
@@ -253,7 +243,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",

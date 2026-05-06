@@ -217,6 +217,18 @@ adm_bx1, adm_by1, adm_bx2, adm_by2 = adm_edges[adm_min_k]
 _draw_setback_bracket(ax, adm_bx1, adm_by1, adm_bx2, adm_by2, adm_dists[adm_min_k], threshold=20,
                       label_side='right' if adm_min_k in ('left','right') else 'right')
 
+# ② Setback bracket — Cooling Tower to windward edge (CT-01 rule, threshold 30 m)
+_ct_windward_edges = {
+    "East":  (ct_g["x"] + ct_g["width"], ct_g["y"] + ct_g["height"]/2,  site_width,  ct_g["y"] + ct_g["height"]/2),
+    "West":  (ct_g["x"],                 ct_g["y"] + ct_g["height"]/2,  0,            ct_g["y"] + ct_g["height"]/2),
+    "North": (ct_g["x"] + ct_g["width"]/2, ct_g["y"] + ct_g["height"], ct_g["x"] + ct_g["width"]/2, site_length),
+    "South": (ct_g["x"] + ct_g["width"]/2, ct_g["y"],                  ct_g["x"] + ct_g["width"]/2, 0),
+}
+ct_bx1, ct_by1, ct_bx2, ct_by2 = _ct_windward_edges[wind_dir]
+ct_edge_dist = math.dist((ct_bx1, ct_by1), (ct_bx2, ct_by2))
+_draw_setback_bracket(ax, ct_bx1, ct_by1, ct_bx2, ct_by2, ct_edge_dist, threshold=30,
+                      label_side='right' if wind_dir in ('East', 'West') else 'right')
+
 # --- Plot view configuration ---
 # Extra padding at the bottom (-40) to make room for the legend inside the plot
 ax.set_xlim(-30, site_width + 30)

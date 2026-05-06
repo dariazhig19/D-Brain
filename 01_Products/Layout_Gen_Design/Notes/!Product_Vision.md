@@ -36,11 +36,11 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [x] Render them as colored blocks inside the plot.
 - [x] Add manual X/Y coordinate sliders to test the canvas limits.
 
-### Phase_03: Engineering Rules (The Logic)
+### Phase_03: Engineering Rules (Completed)
 
-- [ ] Translate Excel rules into Python functions in `Core/Rules.py`.
-- [ ] Implement distance checks (Setbacks from boundaries and between buildings).
-- [ ] Visual Alerts: Turn blocks **RED** if they violate a rule.
+- [x] Translate Excel rules into Python functions in `Core/Rules.py`.
+- [x] Implement distance checks (Setbacks from boundaries and between buildings).
+- [x] Visual Alerts: Turn blocks **RED** if they violate a rule.
 
 ### Phase_04: Excel Integration (Scaling)
 
@@ -52,4 +52,4 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [ ] Implementation of a scoring engine to evaluate "The Best Placement".
 - [ ] Export final geometry to DXF/CAD format.
 
-## 📍 Current Status: **Phase_03 (Engineering Rules)**
+## 📍 Current Status: **Phase_04 (Excel Integration)**

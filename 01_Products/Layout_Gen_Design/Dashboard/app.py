@@ -4,7 +4,7 @@ import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
-import io, base64
+import io, base64, math
 
 import importlib
 import Core.Groups
@@ -147,6 +147,75 @@ for g in groups:
         ax.text(x + w/2, y + h + 3, f"⚠ {rule_ids}",
                 ha='center', va='bottom', fontsize=6.5,
                 color='crimson', fontweight='bold', zorder=5)
+
+# --- 3.5 Distance Visualization ---
+
+def _gcenter(g):
+    return g["x"] + g["width"] / 2, g["y"] + g["height"] / 2
+
+def _draw_dist_line(ax, x1, y1, x2, y2, dist_m, color):
+    """Dashed line between two points with a labelled distance badge."""
+    ax.plot([x1, x2], [y1, y2], '--', color=color, linewidth=0.9, alpha=0.7, zorder=3)
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    ax.text(mx, my, f"{dist_m:.0f} m",
+            ha='center', va='center', fontsize=6.0, color=color, fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', fc='white', ec=color, alpha=0.9, lw=0.6),
+            zorder=7)
+
+def _draw_setback_bracket(ax, bx1, by1, bx2, by2, dist_m, threshold, label_side='right'):
+    """Double-headed setback line from building edge to site boundary."""
+    color = '#27ae60' if dist_m >= threshold else 'crimson'
+    ax.annotate("", xy=(bx2, by2), xytext=(bx1, by1),
+                arrowprops=dict(arrowstyle='<->', color=color, lw=1.1), zorder=6)
+    offset = 4 if label_side == 'right' else -4
+    ax.text((bx1 + bx2) / 2 + offset, (by1 + by2) / 2,
+            f"{dist_m:.0f} m", fontsize=6.0, color=color, fontweight='bold',
+            ha='left' if label_side == 'right' else 'right', va='center', zorder=7)
+
+# Locate groups
+pb_g  = next(g for g in groups if g["name"] == "Power Block")
+ct_g  = next(g for g in groups if g["name"] == "Cooling Tower")
+adm_g = next(g for g in groups if g["name"] == "Admin Building")
+
+pb_cx,  pb_cy  = _gcenter(pb_g)
+ct_cx,  ct_cy  = _gcenter(ct_g)
+adm_cx, adm_cy = _gcenter(adm_g)
+
+# ① Inter-building distance lines
+d_pb_ct  = math.dist((pb_cx,  pb_cy),  (ct_cx,  ct_cy))
+d_pb_adm = math.dist((pb_cx,  pb_cy),  (adm_cx, adm_cy))
+d_ct_adm = math.dist((ct_cx,  ct_cy),  (adm_cx, adm_cy))
+
+_draw_dist_line(ax, pb_cx,  pb_cy,  ct_cx,  ct_cy,  d_pb_ct,  '#888888')       # PB↔CT (no rule, neutral)
+_draw_dist_line(ax, pb_cx,  pb_cy,  adm_cx, adm_cy, d_pb_adm, '#888888')       # PB↔Admin (no rule, neutral)
+_draw_dist_line(ax, ct_cx,  ct_cy,  adm_cx, adm_cy, d_ct_adm,                  # CT↔Admin — red if < 50m
+                'crimson' if d_ct_adm < 50 else '#27ae60')
+
+# ② Setback brackets — PB (threshold 5 m)
+pb_edges = {
+    "left":   (pb_g["x"], pb_g["y"] + pb_g["height"]/2, 0,           pb_g["y"] + pb_g["height"]/2),
+    "right":  (pb_g["x"] + pb_g["width"], pb_g["y"] + pb_g["height"]/2, site_width,  pb_g["y"] + pb_g["height"]/2),
+    "bottom": (pb_g["x"] + pb_g["width"]/2, pb_g["y"], pb_g["x"] + pb_g["width"]/2, 0),
+    "top":    (pb_g["x"] + pb_g["width"]/2, pb_g["y"] + pb_g["height"], pb_g["x"] + pb_g["width"]/2, site_length),
+}
+pb_dists = {k: math.dist(v[:2], v[2:]) for k, v in pb_edges.items()}
+pb_min_k = min(pb_dists, key=pb_dists.get)
+pb_bx1, pb_by1, pb_bx2, pb_by2 = pb_edges[pb_min_k]
+_draw_setback_bracket(ax, pb_bx1, pb_by1, pb_bx2, pb_by2, pb_dists[pb_min_k], threshold=5,
+                      label_side='right' if pb_min_k in ('left','right') else 'right')
+
+# ② Setback brackets — Admin (threshold 20 m)
+adm_edges = {
+    "left":   (adm_g["x"], adm_g["y"] + adm_g["height"]/2, 0,           adm_g["y"] + adm_g["height"]/2),
+    "right":  (adm_g["x"] + adm_g["width"], adm_g["y"] + adm_g["height"]/2, site_width,  adm_g["y"] + adm_g["height"]/2),
+    "bottom": (adm_g["x"] + adm_g["width"]/2, adm_g["y"], adm_g["x"] + adm_g["width"]/2, 0),
+    "top":    (adm_g["x"] + adm_g["width"]/2, adm_g["y"] + adm_g["height"], adm_g["x"] + adm_g["width"]/2, site_length),
+}
+adm_dists = {k: math.dist(v[:2], v[2:]) for k, v in adm_edges.items()}
+adm_min_k = min(adm_dists, key=adm_dists.get)
+adm_bx1, adm_by1, adm_bx2, adm_by2 = adm_edges[adm_min_k]
+_draw_setback_bracket(ax, adm_bx1, adm_by1, adm_bx2, adm_by2, adm_dists[adm_min_k], threshold=20,
+                      label_side='right' if adm_min_k in ('left','right') else 'right')
 
 # --- Plot view configuration ---
 # Extra padding at the bottom (-40) to make room for the legend inside the plot

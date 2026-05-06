@@ -11,12 +11,36 @@
             "id": "3d069e6e1ed81850",
             "type": "leaf",
             "state": {
+              "type": "image",
+              "state": {
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png"
+              },
+              "icon": "lucide-image",
+              "title": "CAD Output_V1"
+            }
+          },
+          {
+            "id": "dedaa1f9995e57ac",
+            "type": "leaf",
+            "state": {
+              "type": "image",
+              "state": {
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png"
+              },
+              "icon": "lucide-image",
+              "title": "Dashboard_V4"
+            }
+          },
+          {
+            "id": "c79a777deb34bba2",
+            "type": "leaf",
+            "state": {
               "type": "canvas",
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 174.99096205087355,
-                  "y": 809.8257681430545,
+                  "x": 4914.479599166786,
+                  "y": -36.29735574906215,
                   "zoom": 0.36218819600551794
                 }
               },
@@ -38,7 +62,8 @@
               "title": "Phase_01_Plan"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -200,8 +225,11 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "3d069e6e1ed81850",
+  "active": "c79a777deb34bba2",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Exporter.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Exporter.py",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Main.cpython-314.pyc",
@@ -222,7 +250,6 @@
     "02_Library/Templates/Daily_Report_Template.md",
     "02_Library/Prompts_Master/Prompt_History.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__",
@@ -233,7 +260,6 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03",
     "00_Input/implementation_plan.md",
-    "01_Products/Layout_Gen_Design/Dashboard/__init__.py",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
     "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",

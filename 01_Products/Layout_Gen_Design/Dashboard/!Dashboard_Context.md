@@ -31,6 +31,13 @@ Main Streamlit application. Currently implements **Phase_01**:
 - Moved Matplotlib Legend completely inside the axes bounds (`loc='lower center'`) with expanded `ylim` padding (`-40`) to fix clipping issues with `tight_layout()`.
 - Added `importlib.reload(Core.Groups)` to ensure hot-reloading works properly without Streamlit cache `TypeError`s.
 
+**Phase_03 Implementations (Generative Engine & Visualization):**
+- Replaced manual coordinate sliders with automated `generate_layouts()` flow.
+- Added 5-column thumbnail grid to display up to 100 candidate layouts visually.
+- Added Detailed Rule Inspector (`st.expander`) displaying `measured`, `threshold`, and `calc` logic for transparent penalty breakdowns.
+- Integrated `Core.Exporter` for DXF file download directly from the UI.
+- On-plot visual annotations: crimson dashed borders for rule violations, dashed inter-building distance lines, double-headed setback brackets, and fixed Gate House drawing.
+
 ## Key Design Principles
 - Dashboard calls Core functions only — no geometry/rules logic lives in App.py.
 - Each sidebar control section is clearly commented (`# --- UI CONTROLS ---`, `# --- CORE ENGINE ---`, `# --- DISPLAY ---`).

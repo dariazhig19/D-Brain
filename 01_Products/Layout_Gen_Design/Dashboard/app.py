@@ -171,7 +171,7 @@ else:
 
     st.markdown(f"#### All {len(results)} Layouts — sorted best → worst")
 
-    NUM_COLS = 5
+    NUM_COLS =4
     for row_start in range(0, len(results), NUM_COLS):
         row_results = results[row_start: row_start + NUM_COLS]
         cols = st.columns(NUM_COLS)

@@ -42,10 +42,12 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [x] Implement distance checks (Setbacks from boundaries and between buildings).
 - [x] Visual Alerts: Turn blocks **RED** if they violate a rule.
 
-### Phase_04: Excel Integration (Scaling)
+### Phase_04: Excel Integration & Sub-Clusters
 
-- [ ] Parse all 60+ items from `Plot plan requirement.xlsx`.
-- [ ] Create an automated sequence to place all buildings based on priority.
+- [ ] Parsing the Excel Data (`Plot plan requirement.xlsx`).
+- [ ] Automated Rule Parsing (generating validation logic directly from Excel rules).
+- [ ] Deconstruct the "Three Giants" into their individual sub-buildings (e.g., specific structures inside the Power Block).
+- [ ] Introduce routing and placement rules for **Pipe Racks**.
 
 ### Phase_05: Generative Optimization
 

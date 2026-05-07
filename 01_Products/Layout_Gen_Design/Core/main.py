@@ -52,6 +52,33 @@ def _has_any_overlap(positions):
     return False
 
 
+def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
+    """Check if line segment p1-p2 intersects rectangle (rx, ry, rw, rh)."""
+    min_x, max_x = min(p1[0], p2[0]), max(p1[0], p2[0])
+    min_y, max_y = min(p1[1], p2[1]), max(p1[1], p2[1])
+    
+    if max_x < rx or min_x > rx + rw: return False
+    if max_y < ry or min_y > ry + rh: return False
+
+    def ccw(A, B, C):
+        return (C[1]-A[1]) * (B[0]-A[0]) > (B[1]-A[1]) * (C[0]-A[0])
+        
+    def intersect(A, B, C, D):
+        return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D)
+
+    A, B = p1, p2
+    rect_pts = [(rx, ry), (rx+rw, ry), (rx+rw, ry+rh), (rx, ry+rh)]
+    for i in range(4):
+        if intersect(A, B, rect_pts[i], rect_pts[(i+1)%4]):
+            return True
+            
+    # Also check if fully inside
+    if rx <= p1[0] <= rx + rw and ry <= p1[1] <= ry + rh:
+        return True
+        
+    return False
+
+
 # ── Per-group placement strategies ────────────────────────────────────────
 
 def _place_power_block(sw, sl):
@@ -293,6 +320,20 @@ def generate_layouts(site_width, site_length, wind_dir,
         # Place racks based on group positions
         rack_segments = _place_racks(groups)
         racks = get_all_racks(groups, rack_segments=rack_segments)
+
+        # Reject if racks intersect any building (shrink building by 1m buffer to allow edge connection)
+        overlap_found = False
+        for rack in racks:
+            for p1, p2 in rack["segments"]:
+                for g in groups:
+                    if _line_intersects_rect(p1, p2, g["x"]+1, g["y"]+1, g["width"]-2, g["height"]-2):
+                        overlap_found = True
+                        break
+                if overlap_found: break
+            if overlap_found: break
+            
+        if overlap_found:
+            continue
 
         # Score
         scoring = evaluate_all_v2(groups, racks, site_width, site_length, wind_dir)

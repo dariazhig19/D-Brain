@@ -17,6 +17,7 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | `min_distance`        | `_eval_min_distance()`      | Center-to-center distance must be ≥ threshold      | Linear       |
 | `max_distance`        | `_eval_max_distance()`      | Center-to-center distance must be ≤ threshold      | Linear       |
 | `leeward_edge`        | `_eval_leeward_edge()`      | Is building on the downwind (leeward) side?        | Flat         |
+| `rack_length`         | `_eval_rack_length()`       | Edge-to-edge distance between two connected buildings | Linear     |
 | `pipe_rack_proximity` | `_eval_pipe_rack_proximity()` | Distance from building edge to nearest rack line | Linear       |
 
 **Penalty Modes:**
@@ -59,13 +60,29 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | **WA-02** | Water          | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | Near water treatment        |
 | **WA-03** | Water          | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | Cannot be too far from WWT  |
 
-### Polyline Racks
+### Polyline Racks — Connection Map
 
-Rack physical widths: Pipe Rack = 6 m, Main Rack = 8 m, Utility Rack = 6 m.
+Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
 
-> **Rack connection rules (TBD):** Once building-to-rack connections are defined, 
-> `pipe_rack_proximity` rules will be added here. All rack rules will enforce 
-> "minimum distance as possible" between the rack line and its connected buildings.
+| Rack | Width | Purpose | Connects |
+| :--- | :---- | :------ | :------- |
+| **Pipe Rack** | 6 m | Process piping (cooling water, fuel gas, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT |
+| **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Cable Tunnel, Power Block ↔ Admin Building |
+| **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower |
+
+### Rack Length Rules
+
+Rule: each connection should be as short as possible. Penalty = `rack_length × penalty_rate`.
+
+| ID        | Rack           | Rule Type      | Building A       | Building B       | Penalty          | Condition                      |
+| :-------- | :------------- | :------------- | :--------------- | :--------------- | :--------------- | :----------------------------- |
+| **PR-01** | Pipe Rack      | `rack_length`  | Power Block      | Cooling Tower    | 50 pts / m       | Shorter = better (cooling water) |
+| **PR-02** | Pipe Rack      | `rack_length`  | Power Block      | LPG/Metering     | 30 pts / m       | Shorter = better (fuel gas)    |
+| **PR-03** | Pipe Rack      | `rack_length`  | Power Block      | WT/WWT           | 30 pts / m       | Shorter = better (demin water) |
+| **MR-01** | Main Rack      | `rack_length`  | Power Block      | Cable Tunnel     | 40 pts / m       | Shorter = better (main cables) |
+| **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | Shorter = better (control cables) |
+| **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | Water            | 40 pts / m       | Shorter = better (raw water)   |
+| **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |
 
 ---
 
@@ -76,6 +93,6 @@ Rack physical widths: Pipe Rack = 6 m, Main Rack = 8 m, Utility Rack = 6 m.
 ## Pending Info From User
 
 - [ ] **1) Building sizes** — confirm or update dimensions for each group
-- [ ] **2) Rack connections** — which buildings does each rack connect? (e.g., Pipe Rack: Power Block <-> Cooling Tower)
+- [x] **2) Rack connections** — defined: 3 racks, 7 connections (see Rack Connection Map above)
 - [ ] **3) Placement priority** — ordered list of buildings by importance (placed first = highest priority)
 - [ ] **4) Manual placement list** — buildings that the user places manually (not auto-generated)

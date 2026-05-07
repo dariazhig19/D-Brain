@@ -117,6 +117,7 @@ def export_pyvis_html(G, output_path):
         font_color="#ffffff",
         directed=False,
         notebook=False,
+        cdn_resources="remote",
     )
 
     # Physics settings

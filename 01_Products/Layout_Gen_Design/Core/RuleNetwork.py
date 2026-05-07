@@ -54,9 +54,11 @@ RULE_TYPE_STYLES = {
     "center_proximity":    {"color": "#3498db", "dashes": False, "width": 2},
     "boundary_setback":    {"color": "#e74c3c", "dashes": [5, 5], "width": 1.5},
     "windward_edge":       {"color": "#2ecc71", "dashes": [10, 5], "width": 2},
+    "leeward_edge":        {"color": "#27ae60", "dashes": [10, 5], "width": 2},
     "min_distance":        {"color": "#e67e22", "dashes": False, "width": 2.5},
     "max_distance":        {"color": "#9b59b6", "dashes": False, "width": 2.5},
     "pipe_rack_proximity": {"color": "#95a5a6", "dashes": [3, 3], "width": 2},
+    "rack_length":         {"color": "#f1c40f", "dashes": False, "width": 3},
 }
 
 
@@ -83,13 +85,15 @@ def build_rule_graph():
     # Add edges
     for rule in RULES:
         style = RULE_TYPE_STYLES.get(rule["type"], {"color": "#aaa", "dashes": False, "width": 1})
-        label = f"{rule['id']}: {rule['type']}\n({rule['threshold']}m, {rule['penalty_rate']}pts)"
+        threshold_val = rule.get('threshold')
+        threshold_str = f"{threshold_val}m" if threshold_val is not None else "0m"
+        label = f"{rule['id']}: {rule['type']}\n({threshold_str}, {rule['penalty_rate']}pts)"
         title = (
             f"<b>{rule['id']}</b><br>"
             f"Type: {rule['type']}<br>"
             f"Group: {rule['group']}<br>"
             f"Target: {rule['target']}<br>"
-            f"Threshold: {rule['threshold']} m<br>"
+            f"Threshold: {threshold_str}<br>"
             f"Penalty: {rule['penalty_rate']} pts/{rule['penalty_mode']}"
         )
         G.add_edge(
@@ -171,9 +175,11 @@ def _inject_legend(output_path):
         <div style="margin-bottom:5px;"><span style="color:#3498db;">━━</span> center_proximity</div>
         <div style="margin-bottom:5px;"><span style="color:#e74c3c;">╌╌</span> boundary_setback</div>
         <div style="margin-bottom:5px;"><span style="color:#2ecc71;">━ ╌</span> windward_edge</div>
+        <div style="margin-bottom:5px;"><span style="color:#27ae60;">━ ╌</span> leeward_edge</div>
         <div style="margin-bottom:5px;"><span style="color:#e67e22;">━━</span> min_distance</div>
         <div style="margin-bottom:5px;"><span style="color:#9b59b6;">━━</span> max_distance</div>
         <div style="margin-bottom:5px;"><span style="color:#95a5a6;">╌╌</span> pipe_rack_proximity</div>
+        <div style="margin-bottom:5px;"><span style="color:#f1c40f;">━━━</span> rack_length</div>
         <hr style="border-color:#444; margin:10px 0;">
         <div style="font-size:11px; color:#888;">
             ◼ Box = Building &nbsp; ◆ Diamond = Rack &nbsp; ● Dot = Reference

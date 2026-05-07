@@ -11,14 +11,17 @@
             "id": "0a7dcc1c308cb298",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 8790.204997843659,
+                  "y": 2940.7712168939665,
+                  "zoom": -1.1132406297172814
+                }
               },
-              "icon": "lucide-file",
-              "title": "Explanation of Rule Logic"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -108,7 +111,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +121,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Explanation of Rule Logic"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -199,18 +202,22 @@
   },
   "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "04_Reports/Daily/Daily_Report_20260507.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Implementation_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Implementation_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/Rule_Network.html",
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.min.js",
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.css",
@@ -227,9 +234,6 @@
     "04_Reports/Daily/Daily_Report_20260506.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase_03_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "99_System/Agents/Skills/Topic_Shift_Backup/SKILL.md",
     "99_System/Agents/Skills/Session_Wrapup/SKILL.md",
     "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
@@ -241,7 +245,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
-    "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md"
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png"
   ]
 }

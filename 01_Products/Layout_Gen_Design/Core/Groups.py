@@ -127,58 +127,31 @@ def get_all_groups(site_width, site_length, positions=None):
     return groups
 
 
-def get_all_racks(groups, rack_endpoints=None):
+def get_all_racks(groups, rack_segments=None):
     """
     Return all 3 polyline racks for Phase 04.
 
-    Each rack is a straight line between two points.
-    Default endpoints connect related groups.
+    Each rack consists of one or more straight line segments connecting buildings.
 
     Args:
-        groups         : list of group dicts (to derive default endpoints)
-        rack_endpoints : dict — optional {rack_name: ((x1,y1), (x2,y2))} overrides
+        groups        : list of group dicts
+        rack_segments : dict — optional {rack_name: [((x1,y1), (x2,y2)), ...]} overrides
 
     Returns:
-        list of rack dicts with keys: name, type, start, end, color, width_m
+        list of rack dicts with keys: name, type, segments, color, width_m
     """
-    if rack_endpoints is None:
-        rack_endpoints = {}
-
-    by_name = {g["name"]: g for g in groups}
-
-    def _center(g):
-        return g["x"] + g["width"] / 2, g["y"] + g["height"] / 2
-
-    def _edge_mid_right(g):
-        return g["x"] + g["width"], g["y"] + g["height"] / 2
-
-    def _edge_mid_left(g):
-        return g["x"], g["y"] + g["height"] / 2
-
-    def _edge_mid_top(g):
-        return g["x"] + g["width"] / 2, g["y"] + g["height"]
-
-    # Default rack routes (straight lines between groups)
-    pb = by_name.get("Power Block")
-    ct = by_name.get("Cooling Tower")
-    ww = by_name.get("WT/WWT")
-
-    default_routes = {
-        "Pipe Rack":    (_edge_mid_right(pb), _edge_mid_left(ct))  if pb and ct else ((0,0),(100,0)),
-        "Main Rack":    (_edge_mid_top(pb),   (pb["x"] + pb["width"]/2, pb["y"] + pb["height"] + 40)) if pb else ((0,0),(0,100)),
-        "Utility Rack": (_edge_mid_right(ww), (ww["x"] + ww["width"] + 60, ww["y"] + ww["height"]/2)) if ww else ((0,0),(100,0)),
-    }
+    if rack_segments is None:
+        rack_segments = {}
 
     racks = []
     for name, width_m in RACK_WIDTHS.items():
-        start, end = rack_endpoints.get(name, default_routes[name])
+        segments = rack_segments.get(name, [])
         racks.append({
-            "name":    name,
-            "type":    "rack",
-            "start":   start,
-            "end":     end,
-            "color":   RACK_COLORS[name],
-            "width_m": width_m,
+            "name":     name,
+            "type":     "rack",
+            "segments": segments,
+            "color":    RACK_COLORS[name],
+            "width_m":  width_m,
         })
     return racks
 
@@ -208,18 +181,22 @@ def draw_group(ax, group):
 
 def draw_rack(ax, rack):
     """
-    Render a rack as a dashed polyline (straight line between start and end).
+    Render a rack as dashed polylines for all its segments.
     """
-    x1, y1 = rack["start"]
-    x2, y2 = rack["end"]
+    if not rack["segments"]:
+        return
 
-    # Draw the rack line (thick dashed)
-    ax.plot([x1, x2], [y1, y2],
-            color=rack["color"], linewidth=2.5, linestyle='--',
-            solid_capstyle='round', zorder=1, alpha=0.8)
+    # Draw all segments
+    for idx, (p1, p2) in enumerate(rack["segments"]):
+        x1, y1 = p1
+        x2, y2 = p2
+        ax.plot([x1, x2], [y1, y2],
+                color=rack["color"], linewidth=2.5, linestyle='--',
+                solid_capstyle='round', zorder=1, alpha=0.8)
 
-    # Label at midpoint
-    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    # Label at midpoint of the first segment
+    p1, p2 = rack["segments"][0]
+    mx, my = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
     ax.text(mx, my, rack["name"],
             ha='center', va='bottom', fontsize=5.5, fontweight='bold',
             color=rack["color"], zorder=3,

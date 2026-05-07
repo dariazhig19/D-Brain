@@ -116,10 +116,11 @@ def _render_layout(layout, sw, sl, wd, rank):
     # Rack violations
     for rack in layout["racks"]:
         if viols.get(rack["name"]):
-            x1, y1 = rack["start"]
-            x2, y2 = rack["end"]
-            ax.plot([x1, x2], [y1, y2],
-                    color='crimson', lw=3.0, linestyle='-', zorder=4, alpha=0.7)
+            for p1, p2 in rack["segments"]:
+                x1, y1 = p1
+                x2, y2 = p2
+                ax.plot([x1, x2], [y1, y2],
+                        color='crimson', lw=3.0, linestyle='-', zorder=4, alpha=0.7)
 
     # Title
     total   = layout["scoring"]["total_penalty"]

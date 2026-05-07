@@ -206,37 +206,45 @@ def _place_water(sw, sl, ww_x, ww_y):
 # ── Rack placement ────────────────────────────────────────────────────────
 
 def _place_racks(groups):
-    """Generate rack endpoints connecting related groups."""
+    """Generate rack segments connecting related groups."""
     by_name = {g["name"]: g for g in groups}
 
-    def _edge_mid(g, side):
-        x, y, w, h = g["x"], g["y"], g["width"], g["height"]
-        if side == "right":  return (x + w, y + h / 2)
-        if side == "left":   return (x, y + h / 2)
-        if side == "top":    return (x + w / 2, y + h)
-        if side == "bottom": return (x + w / 2, y)
+    def _center(name):
+        g = by_name.get(name)
+        if g:
+            return (g["x"] + g["width"] / 2, g["y"] + g["height"] / 2)
+        return None
 
-    pb = by_name["Power Block"]
-    ct = by_name["Cooling Tower"]
-    ww = by_name["WT/WWT"]
+    def segment(name1, name2):
+        c1 = _center(name1)
+        c2 = _center(name2)
+        if c1 and c2:
+            return (c1, c2)
+        return None
 
-    # Pipe Rack: Power Block right edge → Cooling Tower left edge
-    pb_right = _edge_mid(pb, "right")
-    ct_left = _edge_mid(ct, "left")
-    pipe_rack = (pb_right, ct_left)
+    # Pipe Rack: Power Block <-> Cooling Tower, LPG/Metering, WT/WWT
+    pipe_rack = [
+        segment("Power Block", "Cooling Tower"),
+        segment("Power Block", "LPG/Metering"),
+        segment("Power Block", "WT/WWT"),
+    ]
 
-    # Main Rack: runs vertically from Power Block top
-    pb_top = _edge_mid(pb, "top")
-    main_rack = (pb_top, (pb_top[0], pb_top[1] + 50))
+    # Main Rack: Power Block <-> Cable Tunnel, Admin Building
+    main_rack = [
+        segment("Power Block", "Cable Tunnel"),
+        segment("Power Block", "Admin Building"),
+    ]
 
-    # Utility Rack: WT/WWT right edge → extends toward site interior
-    ww_right = _edge_mid(ww, "right")
-    utility_rack = (ww_right, (ww_right[0] + 60, ww_right[1]))
+    # Utility Rack: WT/WWT <-> Water, Cooling Tower
+    utility_rack = [
+        segment("WT/WWT", "Water"),
+        segment("WT/WWT", "Cooling Tower"),
+    ]
 
     return {
-        "Pipe Rack":    pipe_rack,
-        "Main Rack":    main_rack,
-        "Utility Rack": utility_rack,
+        "Pipe Rack":    [s for s in pipe_rack if s],
+        "Main Rack":    [s for s in main_rack if s],
+        "Utility Rack": [s for s in utility_rack if s],
     }
 
 

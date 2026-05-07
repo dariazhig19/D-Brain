@@ -24,7 +24,7 @@
 		{"id":"6ddc39a468cad0c8","type":"text","text":"# Phase_03","x":6097,"y":1603,"width":750,"height":50,"color":"4"},
 		{"id":"2389ff13f7dc4e0f","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md","x":5880,"y":1916,"width":1184,"height":650},
 		{"id":"b66900d9e49c36ef","type":"text","text":"# Phase_04","x":8200,"y":1603,"width":750,"height":50,"color":"4"},
-		{"id":"d7674efd8c7b8d49","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md","x":8200,"y":1916,"width":775,"height":650},
+		{"id":"d7674efd8c7b8d49","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md","x":8200,"y":1916,"width":1200,"height":650},
 		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3617,"y":-56,"width":495,"height":204},
 		{"id":"51c804810c918d6e","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png","x":3057,"y":-56,"width":399,"height":204},
 		{"id":"e55f878d070be45d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png","x":4261,"y":-51,"width":400,"height":189},

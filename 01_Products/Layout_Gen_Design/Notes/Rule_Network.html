@@ -1,0 +1,182 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 700px;
+                 background-color: #1a1a2e;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 2, "borderWidthSelected": 4, "color": "#cccccc", "font": {"color": "#ffffff"}, "id": "Plot Center", "label": "Plot Center", "shape": "dot", "size": 10, "title": "Plot Center"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#5c4a32", "font": {"color": "#ffffff"}, "id": "Gate House", "label": "Gate House", "shape": "box", "size": 15, "title": "Gate House"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#95a5a6", "font": {"color": "#ffffff"}, "id": "Pipe Rack", "label": "Pipe Rack", "shape": "diamond", "size": 12, "title": "Pipe Rack"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#bdc3c7", "font": {"color": "#ffffff"}, "id": "Utility Rack", "label": "Utility Rack", "shape": "diamond", "size": 12, "title": "Utility Rack"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#4a90d9", "font": {"color": "#ffffff"}, "id": "Power Block", "label": "Power Block", "shape": "box", "size": 24, "title": "Power Block"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#cccccc", "font": {"color": "#ffffff"}, "id": "Primary Road", "label": "Primary Road", "shape": "dot", "size": 10, "title": "Primary Road"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#3498db", "font": {"color": "#ffffff"}, "id": "WT/WWT", "label": "WT/WWT", "shape": "box", "size": 15, "title": "WT/WWT"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#1abc9c", "font": {"color": "#ffffff"}, "id": "Water", "label": "Water", "shape": "box", "size": 15, "title": "Water"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#f5a623", "font": {"color": "#ffffff"}, "id": "Admin Building", "label": "Admin Building", "shape": "box", "size": 15, "title": "Admin Building"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#7f8c8d", "font": {"color": "#ffffff"}, "id": "Main Rack", "label": "Main Rack", "shape": "diamond", "size": 12, "title": "Main Rack"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#cccccc", "font": {"color": "#ffffff"}, "id": "Wind Direction", "label": "Wind Direction", "shape": "dot", "size": 10, "title": "Wind Direction"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#e67e22", "font": {"color": "#ffffff"}, "id": "Flare", "label": "Flare", "shape": "box", "size": 15, "title": "Flare"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#8e44ad", "font": {"color": "#ffffff"}, "id": "Cable Tunnel", "label": "Cable Tunnel", "shape": "box", "size": 15, "title": "Cable Tunnel"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#e74c3c", "font": {"color": "#ffffff"}, "id": "LPG/Metering", "label": "LPG/Metering", "shape": "box", "size": 15, "title": "LPG/Metering"}, {"borderWidth": 2, "borderWidthSelected": 4, "color": "#7ed6a0", "font": {"color": "#ffffff"}, "id": "Cooling Tower", "label": "Cooling Tower", "shape": "box", "size": 19, "title": "Cooling Tower"}]);
+                  edges = new vis.DataSet([{"color": "#3498db", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Plot Center", "label": "PB-01", "title": "\u003cb\u003ePB-01\u003c/b\u003e\u003cbr\u003eType: center_proximity\u003cbr\u003eGroup: Power Block\u003cbr\u003eTarget: Plot Center\u003cbr\u003eThreshold: 20 m\u003cbr\u003ePenalty: 100 pts/linear", "to": "Power Block", "width": 2}, {"color": "#9b59b6", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Gate House", "label": "AD-02", "title": "\u003cb\u003eAD-02\u003c/b\u003e\u003cbr\u003eType: max_distance\u003cbr\u003eGroup: Admin Building\u003cbr\u003eTarget: Gate House\u003cbr\u003eThreshold: 50 m\u003cbr\u003ePenalty: 100 pts/linear", "to": "Admin Building", "width": 2.5}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Gate House", "label": "GH-01", "title": "\u003cb\u003eGH-01\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: Gate House\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 0 m\u003cbr\u003ePenalty: 5000 pts/flat", "to": "Primary Road", "width": 1.5}, {"color": "#95a5a6", "dashes": [3, 3], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Pipe Rack", "label": "PR-01", "title": "\u003cb\u003ePR-01\u003c/b\u003e\u003cbr\u003eType: pipe_rack_proximity\u003cbr\u003eGroup: Pipe Rack\u003cbr\u003eTarget: Cooling Tower\u003cbr\u003eThreshold: 6 m\u003cbr\u003ePenalty: 500 pts/linear", "to": "Cooling Tower", "width": 2}, {"color": "#95a5a6", "dashes": [3, 3], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Utility Rack", "label": "UR-01", "title": "\u003cb\u003eUR-01\u003c/b\u003e\u003cbr\u003eType: pipe_rack_proximity\u003cbr\u003eGroup: Utility Rack\u003cbr\u003eTarget: WT/WWT\u003cbr\u003eThreshold: 6 m\u003cbr\u003ePenalty: 500 pts/linear", "to": "WT/WWT", "width": 2}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Power Block", "label": "PB-02", "title": "\u003cb\u003ePB-02\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: Power Block\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 5 m\u003cbr\u003ePenalty: 5000 pts/flat", "to": "Primary Road", "width": 1.5}, {"color": "#9b59b6", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Power Block", "label": "CT-04", "title": "\u003cb\u003eCT-04\u003c/b\u003e\u003cbr\u003eType: max_distance\u003cbr\u003eGroup: Cable Tunnel\u003cbr\u003eTarget: Power Block\u003cbr\u003eThreshold: 30 m\u003cbr\u003ePenalty: 200 pts/linear", "to": "Cable Tunnel", "width": 2.5}, {"color": "#e67e22", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Power Block", "label": "LP-02", "title": "\u003cb\u003eLP-02\u003c/b\u003e\u003cbr\u003eType: min_distance\u003cbr\u003eGroup: LPG/Metering\u003cbr\u003eTarget: Power Block\u003cbr\u003eThreshold: 30 m\u003cbr\u003ePenalty: 300 pts/linear", "to": "LPG/Metering", "width": 2.5}, {"color": "#e67e22", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Power Block", "label": "FL-03", "title": "\u003cb\u003eFL-03\u003c/b\u003e\u003cbr\u003eType: min_distance\u003cbr\u003eGroup: Flare\u003cbr\u003eTarget: Power Block\u003cbr\u003eThreshold: 50 m\u003cbr\u003ePenalty: 300 pts/linear", "to": "Flare", "width": 2.5}, {"color": "#95a5a6", "dashes": [3, 3], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Power Block", "label": "MR-01", "title": "\u003cb\u003eMR-01\u003c/b\u003e\u003cbr\u003eType: pipe_rack_proximity\u003cbr\u003eGroup: Main Rack\u003cbr\u003eTarget: Power Block\u003cbr\u003eThreshold: 8 m\u003cbr\u003ePenalty: 500 pts/linear", "to": "Main Rack", "width": 2}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Primary Road", "label": "AD-01", "title": "\u003cb\u003eAD-01\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: Admin Building\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 20 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "Admin Building", "width": 1.5}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Primary Road", "label": "LP-01", "title": "\u003cb\u003eLP-01\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: LPG/Metering\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 10 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "LPG/Metering", "width": 1.5}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Primary Road", "label": "WW-01", "title": "\u003cb\u003eWW-01\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: WT/WWT\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 10 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "WT/WWT", "width": 1.5}, {"color": "#e74c3c", "dashes": [5, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Primary Road", "label": "WA-01", "title": "\u003cb\u003eWA-01\u003c/b\u003e\u003cbr\u003eType: boundary_setback\u003cbr\u003eGroup: Water\u003cbr\u003eTarget: Primary Road\u003cbr\u003eThreshold: 10 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "Water", "width": 1.5}, {"color": "#2ecc71", "dashes": [10, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "WT/WWT", "label": "WW-02", "title": "\u003cb\u003eWW-02\u003c/b\u003e\u003cbr\u003eType: windward_edge\u003cbr\u003eGroup: WT/WWT\u003cbr\u003eTarget: Wind Direction\u003cbr\u003eThreshold: 50 m\u003cbr\u003ePenalty: 500 pts/flat", "to": "Wind Direction", "width": 2}, {"color": "#9b59b6", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "WT/WWT", "label": "WA-03", "title": "\u003cb\u003eWA-03\u003c/b\u003e\u003cbr\u003eType: max_distance\u003cbr\u003eGroup: Water\u003cbr\u003eTarget: WT/WWT\u003cbr\u003eThreshold: 80 m\u003cbr\u003ePenalty: 100 pts/linear", "to": "Water", "width": 2.5}, {"color": "#e67e22", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Admin Building", "label": "CT-02", "title": "\u003cb\u003eCT-02\u003c/b\u003e\u003cbr\u003eType: min_distance\u003cbr\u003eGroup: Cooling Tower\u003cbr\u003eTarget: Admin Building\u003cbr\u003eThreshold: 50 m\u003cbr\u003ePenalty: 500 pts/linear", "to": "Cooling Tower", "width": 2.5}, {"color": "#e67e22", "dashes": false, "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Admin Building", "label": "FL-02", "title": "\u003cb\u003eFL-02\u003c/b\u003e\u003cbr\u003eType: min_distance\u003cbr\u003eGroup: Flare\u003cbr\u003eTarget: Admin Building\u003cbr\u003eThreshold: 100 m\u003cbr\u003ePenalty: 500 pts/linear", "to": "Flare", "width": 2.5}, {"color": "#2ecc71", "dashes": [10, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Wind Direction", "label": "CT-01", "title": "\u003cb\u003eCT-01\u003c/b\u003e\u003cbr\u003eType: windward_edge\u003cbr\u003eGroup: Cooling Tower\u003cbr\u003eTarget: Wind Direction\u003cbr\u003eThreshold: 30 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "Cooling Tower", "width": 2}, {"color": "#2ecc71", "dashes": [10, 5], "font": {"align": "middle", "color": "#aaaaaa", "face": "Arial", "size": 10}, "from": "Wind Direction", "label": "FL-01", "title": "\u003cb\u003eFL-01\u003c/b\u003e\u003cbr\u003eType: windward_edge\u003cbr\u003eGroup: Flare\u003cbr\u003eTarget: Wind Direction\u003cbr\u003eThreshold: 30 m\u003cbr\u003ePenalty: 1000 pts/flat", "to": "Flare", "width": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.09,
+            "gravitationalConstant": -3000,
+            "springConstant": 0.05,
+            "springLength": 200
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+    <div style="position:fixed; top:10px; right:10px; background:rgba(26,26,46,0.95);
+                border:1px solid #444; border-radius:8px; padding:15px; z-index:1000;
+                font-family:Arial; color:#fff; font-size:12px; max-width:220px;">
+        <div style="font-size:14px; font-weight:bold; margin-bottom:10px; color:#f0f0f0;">
+            🔗 Rule Types
+        </div>
+        <div style="margin-bottom:5px;"><span style="color:#3498db;">━━</span> center_proximity</div>
+        <div style="margin-bottom:5px;"><span style="color:#e74c3c;">╌╌</span> boundary_setback</div>
+        <div style="margin-bottom:5px;"><span style="color:#2ecc71;">━ ╌</span> windward_edge</div>
+        <div style="margin-bottom:5px;"><span style="color:#e67e22;">━━</span> min_distance</div>
+        <div style="margin-bottom:5px;"><span style="color:#9b59b6;">━━</span> max_distance</div>
+        <div style="margin-bottom:5px;"><span style="color:#95a5a6;">╌╌</span> pipe_rack_proximity</div>
+        <hr style="border-color:#444; margin:10px 0;">
+        <div style="font-size:11px; color:#888;">
+            ◼ Box = Building &nbsp; ◆ Diamond = Rack &nbsp; ● Dot = Reference
+        </div>
+    </div>
+    
+</body>
+</html>

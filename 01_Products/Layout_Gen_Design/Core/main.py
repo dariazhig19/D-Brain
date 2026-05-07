@@ -1,88 +1,267 @@
 import random
 import math
-from Core.Groups import get_groups
-from Core.Rules import evaluate_all
+from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS
+from Core.Rules import evaluate_all_v2
 
-# Building footprints (must match Groups.py)
-PB_W, PB_H   = 120, 80
-CT_W, CT_H   = 60,  80
-ADM_W, ADM_H = 50,  40
+# ── Footprint shortcuts ───────────────────────────────────────────────────
 
-
-def _place_pb(site_width, site_length):
-    """Power Block: near center with random ±25% variation."""
-    cx = (site_width  - PB_W) / 2
-    cy = (site_length - PB_H) / 2
-    x = cx + random.uniform(-site_width  * 0.25, site_width  * 0.25)
-    y = cy + random.uniform(-site_length * 0.25, site_length * 0.25)
-    return max(5, min(site_width  - PB_W - 5, x)), \
-           max(5, min(site_length - PB_H - 5, y))
+_FP = FOOTPRINTS  # {name: (width, height)}
 
 
-def _place_ct(site_width, site_length, wind_dir):
+# ── Placement helpers ─────────────────────────────────────────────────────
+
+def _clamp(val, lo, hi):
+    return max(lo, min(hi, val))
+
+
+def _rand_pos(site_w, site_l, w, h, margin=5):
+    """Random position within site boundaries with a minimum margin."""
+    x = random.uniform(margin, max(margin, site_w - w - margin))
+    y = random.uniform(margin, max(margin, site_l - h - margin))
+    return x, y
+
+
+# ── Per-group placement strategies ────────────────────────────────────────
+
+def _place_power_block(sw, sl):
+    """Power Block: near center with ±25% random variation."""
+    w, h = _FP["Power Block"]
+    cx = (sw - w) / 2 + random.uniform(-sw * 0.15, sw * 0.15)
+    cy = (sl - h) / 2 + random.uniform(-sl * 0.15, sl * 0.15)
+    return _clamp(cx, 5, sw - w - 5), _clamp(cy, 5, sl - h - 5)
+
+
+def _place_cooling_tower(sw, sl, wind_dir):
     """Cooling Tower: constrained to windward zone (within 25 m of windward edge)."""
+    w, h = _FP["Cooling Tower"]
     margin = 5
-    depth  = random.uniform(5, 25)      # distance from windward edge
+    depth = random.uniform(5, 25)
 
     if wind_dir == "East":
-        x = site_width  - CT_W - depth
-        y = random.uniform(margin, site_length - CT_H - margin)
+        x = sw - w - depth
+        y = random.uniform(margin, sl - h - margin)
     elif wind_dir == "West":
         x = depth
-        y = random.uniform(margin, site_length - CT_H - margin)
+        y = random.uniform(margin, sl - h - margin)
     elif wind_dir == "North":
-        x = random.uniform(margin, site_width - CT_W - margin)
-        y = site_length - CT_H - depth
-    else:   # South
-        x = random.uniform(margin, site_width - CT_W - margin)
+        x = random.uniform(margin, sw - w - margin)
+        y = sl - h - depth
+    else:  # South
+        x = random.uniform(margin, sw - w - margin)
         y = depth
 
-    return max(0, min(site_width  - CT_W, x)), \
-           max(0, min(site_length - CT_H, y))
+    return _clamp(x, 0, sw - w), _clamp(y, 0, sl - h)
 
 
-def _place_adm(site_width, site_length, attempts=400):
-    """Admin: ≥20 m setback AND within 50 m of Gate House (site_width/2, 0)."""
-    gate_x, gate_y = site_width / 2, 0.0
-    for _ in range(attempts):
-        x = random.uniform(20, site_width  - ADM_W - 20)
-        y = random.uniform(20, min(site_length - ADM_H - 20, 65))
-        cx, cy = x + ADM_W / 2, y + ADM_H / 2
+def _place_admin(sw, sl):
+    """Admin: ≥ 20 m setback AND within 50 m of Gate House (sw/2, 0)."""
+    w, h = _FP["Admin Building"]
+    gate_x, gate_y = sw / 2, 0.0
+    for _ in range(400):
+        x = random.uniform(20, sw - w - 20)
+        y = random.uniform(20, min(sl - h - 20, 65))
+        cx, cy = x + w / 2, y + h / 2
         if math.dist((cx, cy), (gate_x, gate_y)) <= 50:
             return x, y
-    # fallback: bottom-center
-    return max(20, site_width / 2 - ADM_W / 2), 20
+    return max(20, sw / 2 - w / 2), 20
 
+
+def _place_gate_house(sw, sl):
+    """Gate House: on bottom boundary, random horizontal position."""
+    w, h = _FP["Gate House"]
+    x = random.uniform(sw * 0.3, sw * 0.7 - w)
+    return x, 0  # sits on the bottom edge
+
+
+def _place_cable_tunnel(sw, sl, pb_x, pb_y):
+    """Cable Tunnel: near Power Block, below or beside it."""
+    w, h = _FP["Cable Tunnel"]
+    pb_w, pb_h = _FP["Power Block"]
+    # Place just below Power Block with slight random offset
+    x = pb_x + random.uniform(-10, 10)
+    y = pb_y - h - random.uniform(5, 15)
+    return _clamp(x, 5, sw - w - 5), _clamp(y, 5, sl - h - 5)
+
+
+def _place_lpg(sw, sl):
+    """LPG/Metering: setback ≥ 10 m, away from center (corner placement)."""
+    w, h = _FP["LPG/Metering"]
+    margin = 10
+    # Prefer corners
+    corner = random.choice(["top-left", "top-right", "bottom-left", "bottom-right"])
+    if corner == "top-left":
+        x, y = margin, sl - h - margin
+    elif corner == "top-right":
+        x, y = sw - w - margin, sl - h - margin
+    elif corner == "bottom-left":
+        x, y = margin, margin
+    else:
+        x, y = sw - w - margin, margin
+    # Add some randomness
+    x += random.uniform(-5, 5)
+    y += random.uniform(-5, 5)
+    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+
+
+def _place_flare(sw, sl, wind_dir):
+    """Flare: on windward edge, like cooling tower but at the corner."""
+    w, h = _FP["Flare"]
+    margin = 5
+    depth = random.uniform(5, 25)
+
+    if wind_dir == "East":
+        x = sw - w - depth
+        y = random.choice([random.uniform(margin, margin + 40),
+                           random.uniform(sl - h - 40, sl - h - margin)])
+    elif wind_dir == "West":
+        x = depth
+        y = random.choice([random.uniform(margin, margin + 40),
+                           random.uniform(sl - h - 40, sl - h - margin)])
+    elif wind_dir == "North":
+        y = sl - h - depth
+        x = random.choice([random.uniform(margin, margin + 40),
+                           random.uniform(sw - w - 40, sw - w - margin)])
+    else:
+        y = depth
+        x = random.choice([random.uniform(margin, margin + 40),
+                           random.uniform(sw - w - 40, sw - w - margin)])
+
+    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+
+
+def _place_wt_wwt(sw, sl, wind_dir):
+    """WT/WWT: setback ≥ 10 m, prefer downwind side."""
+    w, h = _FP["WT/WWT"]
+    margin = 10
+    # Place on the opposite side of wind direction (downwind)
+    if wind_dir == "East":
+        x = random.uniform(margin, sw * 0.3)
+    elif wind_dir == "West":
+        x = random.uniform(sw * 0.7 - w, sw - w - margin)
+    else:
+        x = random.uniform(margin, sw - w - margin)
+
+    if wind_dir == "North":
+        y = random.uniform(margin, sl * 0.3)
+    elif wind_dir == "South":
+        y = random.uniform(sl * 0.7 - h, sl - h - margin)
+    else:
+        y = random.uniform(margin, sl - h - margin)
+
+    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+
+
+def _place_water(sw, sl, ww_x, ww_y):
+    """Water: near WT/WWT, within 80 m but at least 10 m away."""
+    w, h = _FP["Water"]
+    ww_w, ww_h = _FP["WT/WWT"]
+    margin = 10
+    for _ in range(200):
+        x = ww_x + random.uniform(-60, 60)
+        y = ww_y + random.uniform(-60, 60)
+        x = _clamp(x, margin, sw - w - margin)
+        y = _clamp(y, margin, sl - h - margin)
+        # Check distance
+        cx1, cy1 = x + w / 2, y + h / 2
+        cx2, cy2 = ww_x + ww_w / 2, ww_y + ww_h / 2
+        dist = math.dist((cx1, cy1), (cx2, cy2))
+        if 10 <= dist <= 80:
+            return x, y
+    # Fallback: next to WT/WWT
+    return _clamp(ww_x + ww_w + 10, margin, sw - w - margin), \
+           _clamp(ww_y, margin, sl - h - margin)
+
+
+# ── Rack placement ────────────────────────────────────────────────────────
+
+def _place_racks(groups):
+    """Generate rack endpoints connecting related groups."""
+    by_name = {g["name"]: g for g in groups}
+
+    def _edge_mid(g, side):
+        x, y, w, h = g["x"], g["y"], g["width"], g["height"]
+        if side == "right":  return (x + w, y + h / 2)
+        if side == "left":   return (x, y + h / 2)
+        if side == "top":    return (x + w / 2, y + h)
+        if side == "bottom": return (x + w / 2, y)
+
+    pb = by_name["Power Block"]
+    ct = by_name["Cooling Tower"]
+    ww = by_name["WT/WWT"]
+
+    # Pipe Rack: Power Block right edge → Cooling Tower left edge
+    pb_right = _edge_mid(pb, "right")
+    ct_left = _edge_mid(ct, "left")
+    pipe_rack = (pb_right, ct_left)
+
+    # Main Rack: runs vertically from Power Block top
+    pb_top = _edge_mid(pb, "top")
+    main_rack = (pb_top, (pb_top[0], pb_top[1] + 50))
+
+    # Utility Rack: WT/WWT right edge → extends toward site interior
+    ww_right = _edge_mid(ww, "right")
+    utility_rack = (ww_right, (ww_right[0] + 60, ww_right[1]))
+
+    return {
+        "Pipe Rack":    pipe_rack,
+        "Main Rack":    main_rack,
+        "Utility Rack": utility_rack,
+    }
+
+
+# ── Main generator ────────────────────────────────────────────────────────
 
 def generate_layouts(site_width, site_length, wind_dir,
-                     n_results=10, min_rules_passing=3, max_pool=3000):
+                     n_results=10, min_rules_passing=10, max_pool=3000):
     """
-    Constrained random placement engine.
+    Constrained random placement engine for all 12 groups (Phase 04).
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
-    Each dict: {pb_x, pb_y, ct_x, ct_y, adm_x, adm_y, groups, scoring}
+    Each dict: {positions, rack_endpoints, groups, racks, scoring}
     """
     candidates = []
 
     for _ in range(max_pool):
-        pb_x, pb_y  = _place_pb(site_width, site_length)
-        ct_x, ct_y  = _place_ct(site_width, site_length, wind_dir)
-        adm_x, adm_y = _place_adm(site_width, site_length)
+        # Place all 9 rectangular groups
+        pb_x, pb_y     = _place_power_block(site_width, site_length)
+        ct_x, ct_y     = _place_cooling_tower(site_width, site_length, wind_dir)
+        adm_x, adm_y   = _place_admin(site_width, site_length)
+        gh_x, gh_y     = _place_gate_house(site_width, site_length)
+        cab_x, cab_y   = _place_cable_tunnel(site_width, site_length, pb_x, pb_y)
+        lpg_x, lpg_y   = _place_lpg(site_width, site_length)
+        fl_x, fl_y     = _place_flare(site_width, site_length, wind_dir)
+        ww_x, ww_y     = _place_wt_wwt(site_width, site_length, wind_dir)
+        wa_x, wa_y     = _place_water(site_width, site_length, ww_x, ww_y)
 
-        groups  = get_groups(site_width, site_length,
-                             pb_x=pb_x, pb_y=pb_y,
-                             ct_x=ct_x, ct_y=ct_y,
-                             adm_x=adm_x, adm_y=adm_y)
-        scoring = evaluate_all(groups, site_width, site_length, wind_dir)
+        positions = {
+            "Power Block":    (pb_x, pb_y),
+            "Cooling Tower":  (ct_x, ct_y),
+            "Admin Building": (adm_x, adm_y),
+            "Gate House":     (gh_x, gh_y),
+            "Cable Tunnel":   (cab_x, cab_y),
+            "LPG/Metering":   (lpg_x, lpg_y),
+            "Flare":          (fl_x, fl_y),
+            "WT/WWT":         (ww_x, ww_y),
+            "Water":          (wa_x, wa_y),
+        }
+
+        groups = get_all_groups(site_width, site_length, positions=positions)
+
+        # Place racks based on group positions
+        rack_endpoints = _place_racks(groups)
+        racks = get_all_racks(groups, rack_endpoints=rack_endpoints)
+
+        # Score
+        scoring = evaluate_all_v2(groups, racks, site_width, site_length, wind_dir)
         passing = sum(1 for r in scoring["results"] if r["passed"])
 
         if passing >= min_rules_passing:
             candidates.append({
-                "pb_x": pb_x, "pb_y": pb_y,
-                "ct_x": ct_x, "ct_y": ct_y,
-                "adm_x": adm_x, "adm_y": adm_y,
-                "groups":  groups,
-                "scoring": scoring,
+                "positions":      positions,
+                "rack_endpoints": rack_endpoints,
+                "groups":         groups,
+                "racks":          racks,
+                "scoring":        scoring,
             })
 
         if len(candidates) >= n_results * 15:
@@ -97,23 +276,20 @@ def generate_layouts(site_width, site_length, wind_dir,
             break
         too_close = False
         for d in diverse:
-            if (abs(c["pb_x"]  - d["pb_x"])  < 10 and
-                abs(c["ct_x"]  - d["ct_x"])  < 10 and
-                abs(c["adm_x"] - d["adm_x"]) < 10):
+            diffs = [abs(c["positions"][k][0] - d["positions"][k][0]) for k in c["positions"]]
+            if all(diff < 10 for diff in diffs):
                 too_close = True
                 break
         if not too_close:
             diverse.append(c)
 
-    # If diversity filter left too few, pad with next-best
+    # Pad if diversity filter was too strict
     if len(diverse) < n_results:
-        used_penalties = {d["scoring"]["total_penalty"] for d in diverse}
         for c in candidates:
             if len(diverse) >= n_results:
                 break
-            if c["scoring"]["total_penalty"] not in used_penalties:
+            if c not in diverse:
                 diverse.append(c)
-                used_penalties.add(c["scoring"]["total_penalty"])
 
     diverse.sort(key=lambda c: c["scoring"]["total_penalty"])
     return diverse[:n_results]

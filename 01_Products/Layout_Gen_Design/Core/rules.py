@@ -17,6 +17,29 @@ def _dist(cx1, cy1, cx2, cy2):
     return math.sqrt((cx1 - cx2) ** 2 + (cy1 - cy2) ** 2)
 
 
+def _closest_edge(group, site_width, site_length):
+    """Return (edge_name, distance) for the closest site boundary."""
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    edges = {
+        "left":   x,
+        "bottom": y,
+        "right":  site_width  - (x + w),
+        "top":    site_length - (y + h),
+    }
+    name = min(edges, key=edges.get)
+    return name, edges[name]
+
+
+def _point_to_line_dist(px, py, x1, y1, x2, y2):
+    """Minimum distance from point (px,py) to line segment (x1,y1)-(x2,y2)."""
+    dx, dy = x2 - x1, y2 - y1
+    if dx == 0 and dy == 0:
+        return _dist(px, py, x1, y1)
+    t = max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+    proj_x, proj_y = x1 + t * dx, y1 + t * dy
+    return _dist(px, py, proj_x, proj_y)
+
+
 def _result(id_, name, group, passed, penalty, message, measured, threshold, calc):
     """Standardized rule result dict."""
     return {
@@ -32,7 +55,9 @@ def _result(id_, name, group, passed, penalty, message, measured, threshold, cal
     }
 
 
-# ── Individual Rules ────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════
+#  Phase 03 — Individual Rules (kept for backward compatibility)
+# ══════════════════════════════════════════════════════════════════════════
 
 def rule_pb01(power_block, site_width, site_length):
     """PB-01: Power Block center within 20 m of plot center = PASS.
@@ -164,7 +189,7 @@ def rule_ad02(admin_building, site_width):
     )
 
 
-# ── Master Evaluator ────────────────────────────────────────────────────────
+# ── Phase 03 Master Evaluator (backward compat) ───────────────────────────
 
 def evaluate_all(groups, site_width, site_length, wind_dir):
     """
@@ -202,6 +227,254 @@ def evaluate_all(groups, site_width, site_length, wind_dir):
     violations_by_group = {g["name"]: [] for g in groups}
     for r in results:
         if not r["passed"]:
+            violations_by_group[r["group"]].append(r["id"])
+
+    return {
+        "results": results,
+        "total_penalty": round(total_penalty, 1),
+        "violations_by_group": violations_by_group,
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Phase 04 — Generic Rule Engine (data-driven by RULES list)
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── RULES data list — mirrors !Scoring_Logic.md ───────────────────────────
+# Each dict maps 1:1 to a row in the Scoring Logic table.
+# "type" must match one of the generic evaluator keys in _EVALUATORS.
+
+RULES = [
+    # ── Phase 03 rules (re-declared as data) ──────────────────────────────
+    {"id": "PB-01", "type": "center_proximity", "group": "Power Block",    "target": "Plot Center",    "threshold": 20,  "penalty_rate": 100,  "penalty_mode": "linear"},
+    {"id": "PB-02", "type": "boundary_setback", "group": "Power Block",    "target": "Primary Road",   "threshold": 5,   "penalty_rate": 5000, "penalty_mode": "flat"},
+    {"id": "CT-01", "type": "windward_edge",    "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
+    {"id": "AD-01", "type": "boundary_setback", "group": "Admin Building", "target": "Primary Road",   "threshold": 20,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "AD-02", "type": "max_distance",     "group": "Admin Building", "target": "Gate House",     "threshold": 50,  "penalty_rate": 100,  "penalty_mode": "linear"},
+
+    # ── Phase 04 new rules ────────────────────────────────────────────────
+    # Gate House
+    {"id": "GH-01", "type": "boundary_setback", "group": "Gate House",     "target": "Primary Road",   "threshold": 0,   "penalty_rate": 5000, "penalty_mode": "flat"},
+
+    # Cable Tunnel
+    {"id": "CT-03", "type": "min_distance",     "group": "Cable Tunnel",   "target": "Power Block",    "threshold": 5,   "penalty_rate": 500,  "penalty_mode": "linear"},
+    {"id": "CT-04", "type": "max_distance",     "group": "Cable Tunnel",   "target": "Power Block",    "threshold": 30,  "penalty_rate": 200,  "penalty_mode": "linear"},
+
+    # LPG/Metering
+    {"id": "LP-01", "type": "boundary_setback", "group": "LPG/Metering",   "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "LP-02", "type": "min_distance",     "group": "LPG/Metering",   "target": "Power Block",    "threshold": 30,  "penalty_rate": 300,  "penalty_mode": "linear"},
+
+    # Flare
+    {"id": "FL-01", "type": "windward_edge",    "group": "Flare",          "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "FL-02", "type": "min_distance",     "group": "Flare",          "target": "Admin Building", "threshold": 100, "penalty_rate": 500,  "penalty_mode": "linear"},
+    {"id": "FL-03", "type": "min_distance",     "group": "Flare",          "target": "Power Block",    "threshold": 50,  "penalty_rate": 300,  "penalty_mode": "linear"},
+
+    # WT/WWT
+    {"id": "WW-01", "type": "boundary_setback", "group": "WT/WWT",         "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "WW-02", "type": "windward_edge",    "group": "WT/WWT",         "target": "Wind Direction", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "flat"},
+
+    # Water
+    {"id": "WA-01", "type": "boundary_setback", "group": "Water",          "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "WA-02", "type": "min_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
+    {"id": "WA-03", "type": "max_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
+
+    # Racks
+    {"id": "PR-01", "type": "pipe_rack_proximity", "group": "Pipe Rack",    "target": "Cooling Tower",  "threshold": 6,  "penalty_rate": 500, "penalty_mode": "linear"},
+    {"id": "MR-01", "type": "pipe_rack_proximity", "group": "Main Rack",    "target": "Power Block",    "threshold": 8,  "penalty_rate": 500, "penalty_mode": "linear"},
+    {"id": "UR-01", "type": "pipe_rack_proximity", "group": "Utility Rack", "target": "WT/WWT",         "threshold": 6,  "penalty_rate": 500, "penalty_mode": "linear"},
+]
+
+
+# ── Generic evaluator functions ───────────────────────────────────────────
+
+def _eval_center_proximity(rule, group, site_width, site_length, **_):
+    """Distance from building center to plot center. Linear penalty on excess."""
+    cx, cy = _center(group)
+    site_cx, site_cy = site_width / 2, site_length / 2
+    distance = _dist(cx, cy, site_cx, site_cy)
+    excess = max(0.0, distance - rule["threshold"])
+    penalty = excess * rule["penalty_rate"]
+    passed = excess == 0
+    return _result(
+        rule["id"], f"{rule['group']}: Center (±{rule['threshold']} m)", rule["group"],
+        passed, penalty,
+        f"Within tolerance ✓ ({distance:.1f} m)" if passed else f"Off-center by {excess:.1f} m",
+        measured=f"{distance:.1f} m from plot center",
+        threshold=f"≤ {rule['threshold']} m",
+        calc=f"{excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (OK)",
+    )
+
+
+def _eval_boundary_setback(rule, group, site_width, site_length, **_):
+    """Min distance from any group edge to site boundary. Flat penalty."""
+    edge_name, edge_val = _closest_edge(group, site_width, site_length)
+    violated = edge_val < rule["threshold"]
+    penalty = rule["penalty_rate"] if violated else 0
+    return _result(
+        rule["id"], f"{rule['group']}: Setback ({rule['threshold']} m)", rule["group"],
+        not violated, penalty,
+        f"Too close to {edge_name}: {edge_val:.1f} m" if violated else f"All edges ≥ {rule['threshold']} m ✓",
+        measured=f"Closest edge ({edge_name}): {edge_val:.1f} m",
+        threshold=f"≥ {rule['threshold']} m on all sides",
+        calc=f"{rule['penalty_rate']:,} pts flat (violation)" if violated else "0 pts (OK)",
+    )
+
+
+def _eval_windward_edge(rule, group, site_width, site_length, wind_dir, **_):
+    """Check if building is on the windward edge. Flat penalty."""
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    dist_map = {
+        "East":  ("right edge",  site_width  - (x + w)),
+        "West":  ("left edge",   x),
+        "North": ("top edge",    site_length - (y + h)),
+        "South": ("bottom edge", y),
+    }
+    edge_label, dist_to_edge = dist_map.get(wind_dir, ("right edge", site_width - (x + w)))
+    on_edge = dist_to_edge <= rule["threshold"]
+    penalty = 0 if on_edge else rule["penalty_rate"]
+    return _result(
+        rule["id"], f"{rule['group']}: Windward Edge", rule["group"],
+        on_edge, penalty,
+        f"On {wind_dir} windward edge ✓" if on_edge else f"Not on {wind_dir} windward edge",
+        measured=f"Distance to {edge_label}: {dist_to_edge:.1f} m",
+        threshold=f"≤ {rule['threshold']} m from {edge_label} (wind = {wind_dir})",
+        calc="0 pts (on edge)" if on_edge else f"{rule['penalty_rate']:,} pts flat (not on windward edge)",
+    )
+
+
+def _eval_min_distance(rule, group, target_group, **_):
+    """Center-to-center distance must be ≥ threshold. Linear penalty on shortfall."""
+    cx1, cy1 = _center(group)
+    cx2, cy2 = _center(target_group)
+    distance = _dist(cx1, cy1, cx2, cy2)
+    shortfall = max(0.0, rule["threshold"] - distance)
+    penalty = shortfall * rule["penalty_rate"]
+    return _result(
+        rule["id"], f"{rule['group']} ↔ {rule['target']}: Min Dist", rule["group"],
+        shortfall == 0, penalty,
+        f"{distance:.1f} m ✓" if shortfall == 0 else f"Too close: {distance:.1f} m (need ≥ {rule['threshold']} m)",
+        measured=f"{distance:.1f} m center-to-center",
+        threshold=f"≥ {rule['threshold']} m",
+        calc=f"Shortfall: {rule['threshold']} − {distance:.1f} = {shortfall:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if shortfall > 0 else "0 pts (OK)",
+    )
+
+
+def _eval_max_distance(rule, group, target_group, **_):
+    """Center-to-center distance must be ≤ threshold. Linear penalty on excess."""
+    cx1, cy1 = _center(group)
+    cx2, cy2 = _center(target_group)
+    distance = _dist(cx1, cy1, cx2, cy2)
+    excess = max(0.0, distance - rule["threshold"])
+    penalty = excess * rule["penalty_rate"]
+    return _result(
+        rule["id"], f"{rule['group']} ↔ {rule['target']}: Max Dist", rule["group"],
+        excess == 0, penalty,
+        f"{distance:.1f} m ✓" if excess == 0 else f"Too far: {distance:.1f} m (need ≤ {rule['threshold']} m)",
+        measured=f"{distance:.1f} m center-to-center",
+        threshold=f"≤ {rule['threshold']} m",
+        calc=f"Excess: {distance:.1f} − {rule['threshold']} = {excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (OK)",
+    )
+
+
+def _eval_pipe_rack_proximity(rule, rack, target_group, **_):
+    """Distance from rack line to target building center. Linear penalty on excess."""
+    cx, cy = _center(target_group)
+    x1, y1 = rack["start"]
+    x2, y2 = rack["end"]
+    distance = _point_to_line_dist(cx, cy, x1, y1, x2, y2)
+    excess = max(0.0, distance - rule["threshold"])
+    penalty = excess * rule["penalty_rate"]
+    return _result(
+        rule["id"], f"{rule['group']} ↔ {rule['target']}: Rack Proximity", rule["group"],
+        excess == 0, penalty,
+        f"Rack within {distance:.1f} m ✓" if excess == 0 else f"Rack too far: {distance:.1f} m (need ≤ {rule['threshold']} m)",
+        measured=f"{distance:.1f} m from rack to building center",
+        threshold=f"≤ {rule['threshold']} m",
+        calc=f"Excess: {distance:.1f} − {rule['threshold']} = {excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (OK)",
+    )
+
+
+# ── Evaluator dispatch table ──────────────────────────────────────────────
+
+_EVALUATORS = {
+    "center_proximity":    _eval_center_proximity,
+    "boundary_setback":    _eval_boundary_setback,
+    "windward_edge":       _eval_windward_edge,
+    "min_distance":        _eval_min_distance,
+    "max_distance":        _eval_max_distance,
+    "pipe_rack_proximity": _eval_pipe_rack_proximity,
+}
+
+
+# ── Phase 04 Master Evaluator ─────────────────────────────────────────────
+
+def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
+    """
+    Run all rules from the RULES data list using generic evaluators.
+
+    Args:
+        groups      : list of group dicts (rectangles)
+        racks       : list of rack dicts (polylines)
+        site_width  : float — plot width in metres
+        site_length : float — plot length in metres
+        wind_dir    : str   — "North" | "South" | "East" | "West"
+
+    Returns:
+        {
+            "results"             : list of rule result dicts,
+            "total_penalty"       : float,
+            "violations_by_group" : { group_name: [rule_id, ...] }
+        }
+    """
+    by_name = {g["name"]: g for g in groups}
+    rack_by_name = {r["name"]: r for r in racks}
+
+    results = []
+
+    for rule in RULES:
+        evaluator = _EVALUATORS.get(rule["type"])
+        if evaluator is None:
+            continue  # unknown rule type — skip silently
+
+        rule_type = rule["type"]
+
+        # Resolve the primary group/rack
+        if rule_type == "pipe_rack_proximity":
+            # For rack rules: group = the rack, target = the building
+            rack = rack_by_name.get(rule["group"])
+            target = by_name.get(rule["target"])
+            if rack is None or target is None:
+                continue
+            r = evaluator(rule, rack, target)
+        elif rule_type in ("min_distance", "max_distance"):
+            # Two-building rules
+            group = by_name.get(rule["group"])
+            target = by_name.get(rule["target"])
+            if group is None or target is None:
+                continue
+            r = evaluator(rule, group, target)
+        elif rule_type == "windward_edge":
+            group = by_name.get(rule["group"])
+            if group is None:
+                continue
+            r = evaluator(rule, group, site_width, site_length, wind_dir)
+        else:
+            # Single-building rules (center_proximity, boundary_setback)
+            group = by_name.get(rule["group"])
+            if group is None:
+                continue
+            r = evaluator(rule, group, site_width, site_length)
+
+        results.append(r)
+
+    total_penalty = sum(r["penalty"] for r in results)
+
+    # Build violations map for all groups + racks
+    all_names = [g["name"] for g in groups] + [r["name"] for r in racks]
+    violations_by_group = {name: [] for name in all_names}
+    for r in results:
+        if not r["passed"] and r["group"] in violations_by_group:
             violations_by_group[r["group"]].append(r["id"])
 
     return {

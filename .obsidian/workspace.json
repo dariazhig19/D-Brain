@@ -8,16 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "c79a777deb34bba2",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
-            }
-          },
-          {
             "id": "0a7dcc1c308cb298",
             "type": "leaf",
             "state": {
@@ -118,6 +108,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -127,7 +118,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for Explanation of Rule Logic"
             }
           },
           {
@@ -190,8 +181,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -207,31 +197,35 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "c79a777deb34bba2",
+  "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
+    "04_Reports/Daily/Daily_Report_20260428.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Notes/Rule_Network.html",
+    "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.min.js",
+    "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.css",
+    "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.css",
+    "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.complete.min.js",
+    "01_Products/Layout_Gen_Design/lib/bindings/utils.js",
+    "01_Products/Layout_Gen_Design/lib/vis-9.1.2",
+    "01_Products/Layout_Gen_Design/lib/tom-select",
+    "01_Products/Layout_Gen_Design/lib/bindings",
+    "01_Products/Layout_Gen_Design/lib",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
+    "!Me.md",
+    "!Atlas_System.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "04_Reports/Daily/Daily_Report_20260506.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase_03_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Exporter.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Core/Exporter.py",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Main.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Rules.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
-    "!Atlas_System.md",
     "99_System/Agents/Skills/Topic_Shift_Backup/SKILL.md",
-    "99_System/Agents/Skills/Topic_Shift_Backup",
     "99_System/Agents/Skills/Session_Wrapup/SKILL.md",
-    "99_System/Agents/Skills/Session_Wrapup",
     "99_System/Agents/Skills/Update_Context_Files_Daily/SKILL.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
@@ -240,17 +234,13 @@
     "02_Library/Prompts_Master/Prompt_History.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Core/__pycache__",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
     "00_Input/implementation_plan.md",
     "04_Reports/Daily/Daily_Report_20260429.md",
-    "04_Reports/Daily/Daily_Report_20260428.md",
     "99_System/Agents/Skills/atlas-vibe-master/SKILL.md",
     "99_System/Agents/Skills/atlas-vibe-master/references/example_reference.md",
-    "99_System/Agents/Gemini/Instructions.md",
-    "GEMINI.md"
+    "99_System/Agents/Gemini/Instructions.md"
   ]
 }

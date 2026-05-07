@@ -12,16 +12,43 @@ from ezdxf.enums import TextEntityAlignment
 
 # ── Layer definitions ───────────────────────────────────────────────────────
 LAYERS = [
-    # (name,            color_index,  linetype)
-    ("SITE_BOUNDARY",   colors.WHITE,   "CONTINUOUS"),
-    ("ROAD_SETBACK",    colors.RED,     "DASHED"),
-    ("GATE_HOUSE",      colors.YELLOW,  "CONTINUOUS"),
-    ("POWER_BLOCK",     colors.CYAN,    "CONTINUOUS"),
-    ("COOLING_TOWER",   colors.GREEN,   "CONTINUOUS"),
-    ("ADMIN_BUILDING",  colors.MAGENTA, "CONTINUOUS"),
-    ("LABELS",          colors.WHITE,   "CONTINUOUS"),
-    ("DIMENSIONS",      colors.GRAY,    "CONTINUOUS"),
+    # (name,                color_index,     linetype)
+    ("SITE_BOUNDARY",       colors.WHITE,    "CONTINUOUS"),
+    ("ROAD_SETBACK",        colors.RED,      "DASHED"),
+    ("GATE_HOUSE",          colors.YELLOW,   "CONTINUOUS"),
+    ("POWER_BLOCK",         colors.CYAN,     "CONTINUOUS"),
+    ("COOLING_TOWER",       colors.GREEN,    "CONTINUOUS"),
+    ("ADMIN_BUILDING",      colors.MAGENTA,  "CONTINUOUS"),
+    ("CABLE_TUNNEL",        5,               "CONTINUOUS"),   # purple (ACI 5)
+    ("LPG_METERING",        colors.RED,      "CONTINUOUS"),
+    ("FLARE",               30,              "CONTINUOUS"),   # orange (ACI 30)
+    ("WT_WWT",              4,               "CONTINUOUS"),   # light blue (ACI 4)
+    ("WATER",               3,               "CONTINUOUS"),   # teal (ACI 3)
+    ("PIPE_RACK",           colors.GRAY,     "DASHED"),
+    ("MAIN_RACK",           colors.GRAY,     "DASHED"),
+    ("UTILITY_RACK",        colors.GRAY,     "DASHED"),
+    ("LABELS",              colors.WHITE,    "CONTINUOUS"),
+    ("DIMENSIONS",          colors.GRAY,     "CONTINUOUS"),
 ]
+
+# Map group names to layer names
+GROUP_LAYER_MAP = {
+    "Power Block":    "POWER_BLOCK",
+    "Cooling Tower":  "COOLING_TOWER",
+    "Admin Building": "ADMIN_BUILDING",
+    "Gate House":     "GATE_HOUSE",
+    "Cable Tunnel":   "CABLE_TUNNEL",
+    "LPG/Metering":   "LPG_METERING",
+    "Flare":          "FLARE",
+    "WT/WWT":         "WT_WWT",
+    "Water":          "WATER",
+}
+
+RACK_LAYER_MAP = {
+    "Pipe Rack":    "PIPE_RACK",
+    "Main Rack":    "MAIN_RACK",
+    "Utility Rack": "UTILITY_RACK",
+}
 
 
 def _add_closed_polyline(msp, points, layer):
@@ -53,12 +80,12 @@ def export_to_dxf(layout, site_width, site_length):
     Convert a layout dict (from Core/Main.py) to a DXF binary stream.
 
     Args:
-        layout      : dict with keys 'groups', 'scoring', 'pb_x' etc.
+        layout      : dict with keys 'groups', 'racks', 'scoring'
         site_width  : float — site width in metres
         site_length : float — site length in metres
 
     Returns:
-        io.BytesIO stream containing the DXF file, ready for st.download_button.
+        DXF content as a string, ready for st.download_button.
     """
     doc = ezdxf.new(dxfversion="R2010")
     doc.header["$INSUNITS"] = 6   # 6 = metres
@@ -80,7 +107,7 @@ def export_to_dxf(layout, site_width, site_length):
 
     # ── 1. Site Boundary ────────────────────────────────────────────────────
     _add_rect(msp, 0, 0, site_width, site_length, "SITE_BOUNDARY")
-    _add_label(msp, f"Site  {site_width:.0f} × {site_length:.0f} m",
+    _add_label(msp, f"Site  {site_width:.0f} x {site_length:.0f} m",
                site_width / 2, site_length + 6, 3.0, "LABELS")
 
     # ── 2. Road Setback (5 m) ───────────────────────────────────────────────
@@ -93,24 +120,11 @@ def export_to_dxf(layout, site_width, site_length):
                         "insert": (s + 1, s + 1)},
         )
 
-    # ── 3. Gate House ───────────────────────────────────────────────────────
-    GH_W, GH_H = 12, 8
-    gh_x = site_width / 2 - GH_W / 2
-    gh_y = -GH_H
-    _add_rect(msp, gh_x, gh_y, GH_W, GH_H, "GATE_HOUSE")
-    _add_label(msp, "Gate House", site_width / 2, gh_y - 3, 2.0, "LABELS")
-
-    # ── 4. Building Groups ──────────────────────────────────────────────────
-    layer_map = {
-        "Power Block":    "POWER_BLOCK",
-        "Cooling Tower":  "COOLING_TOWER",
-        "Admin Building": "ADMIN_BUILDING",
-    }
-
+    # ── 3. Building Groups ──────────────────────────────────────────────────
     for group in layout["groups"]:
         x, y = group["x"], group["y"]
         w, h = group["width"], group["height"]
-        layer = layer_map.get(group["name"], "SITE_BOUNDARY")
+        layer = GROUP_LAYER_MAP.get(group["name"], "SITE_BOUNDARY")
 
         # Outline
         _add_rect(msp, x, y, w, h, layer)
@@ -122,10 +136,10 @@ def export_to_dxf(layout, site_width, site_length):
         msp.add_line((cx, cy - tick), (cx, cy + tick), dxfattribs={"layer": layer})
 
         # Name label inside block
-        _add_label(msp, group["name"], cx, cy, min(w, h) * 0.10, "LABELS")
+        label_height = max(1.5, min(w, h) * 0.10)
+        _add_label(msp, group["name"], cx, cy, label_height, "LABELS")
 
-        # Dimension: width and height annotations
-        # Width arrow below
+        # Dimension: width annotation below
         msp.add_linear_dim(
             base=(x, y - 6),
             p1=(x, y),
@@ -134,7 +148,7 @@ def export_to_dxf(layout, site_width, site_length):
             override={"dimtxt": 2.0},
             dxfattribs={"layer": "DIMENSIONS"},
         ).render()
-        # Height arrow to the right
+        # Dimension: height annotation to the right
         msp.add_linear_dim(
             base=(x + w + 6, y),
             p1=(x + w, y),
@@ -145,14 +159,26 @@ def export_to_dxf(layout, site_width, site_length):
             dxfattribs={"layer": "DIMENSIONS"},
         ).render()
 
+    # ── 4. Polyline Racks ───────────────────────────────────────────────────
+    for rack in layout.get("racks", []):
+        layer = RACK_LAYER_MAP.get(rack["name"], "PIPE_RACK")
+        x1, y1 = rack["start"]
+        x2, y2 = rack["end"]
+        msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer})
+
+        # Label at midpoint
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        _add_label(msp, rack["name"], mx, my + 3, 1.5, "LABELS")
+
     # ── 5. Score annotation ─────────────────────────────────────────────────
     total   = layout["scoring"]["total_penalty"]
     passing = sum(1 for r in layout["scoring"]["results"] if r["passed"])
-    score_text = f"Penalty Score: {total:,.0f} pts  |  {passing}/6 rules passing"
+    n_rules = len(layout["scoring"]["results"])
+    score_text = f"Penalty Score: {total:,.0f} pts  |  {passing}/{n_rules} rules passing"
     msp.add_text(
         score_text,
         dxfattribs={"layer": "LABELS", "height": 3.0,
-                    "insert": (0, -GH_H - 8)},
+                    "insert": (0, -15)},
     )
 
     # ── Serialise to String ─────────────────────────────────────────────────

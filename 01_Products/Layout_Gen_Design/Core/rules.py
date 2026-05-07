@@ -248,10 +248,11 @@ RULES = [
     # ── Phase 03 rules (re-declared as data) ──────────────────────────────
     {"id": "PB-01", "type": "center_proximity", "group": "Power Block",    "target": "Plot Center",    "threshold": 20,  "penalty_rate": 100,  "penalty_mode": "linear"},
     {"id": "PB-02", "type": "boundary_setback", "group": "Power Block",    "target": "Primary Road",   "threshold": 5,   "penalty_rate": 5000, "penalty_mode": "flat"},
-    {"id": "CT-01", "type": "windward_edge",    "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "CT-01", "type": "leeward_edge",     "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
     {"id": "AD-01", "type": "boundary_setback", "group": "Admin Building", "target": "Primary Road",   "threshold": 20,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "AD-02", "type": "max_distance",     "group": "Admin Building", "target": "Gate House",     "threshold": 50,  "penalty_rate": 100,  "penalty_mode": "linear"},
+    {"id": "AD-03", "type": "windward_edge",    "group": "Admin Building", "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
 
     # ── Phase 04 new rules ────────────────────────────────────────────────
     # Gate House
@@ -266,13 +267,13 @@ RULES = [
     {"id": "LP-02", "type": "min_distance",     "group": "LPG/Metering",   "target": "Power Block",    "threshold": 30,  "penalty_rate": 300,  "penalty_mode": "linear"},
 
     # Flare
-    {"id": "FL-01", "type": "windward_edge",    "group": "Flare",          "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "FL-01", "type": "leeward_edge",     "group": "Flare",          "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "FL-02", "type": "min_distance",     "group": "Flare",          "target": "Admin Building", "threshold": 100, "penalty_rate": 500,  "penalty_mode": "linear"},
     {"id": "FL-03", "type": "min_distance",     "group": "Flare",          "target": "Power Block",    "threshold": 50,  "penalty_rate": 300,  "penalty_mode": "linear"},
 
     # WT/WWT
     {"id": "WW-01", "type": "boundary_setback", "group": "WT/WWT",         "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
-    {"id": "WW-02", "type": "windward_edge",    "group": "WT/WWT",         "target": "Wind Direction", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "flat"},
+    {"id": "WW-02", "type": "leeward_edge",     "group": "WT/WWT",         "target": "Wind Direction", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "flat"},
 
     # Water
     {"id": "WA-01", "type": "boundary_setback", "group": "Water",          "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
@@ -341,6 +342,31 @@ def _eval_windward_edge(rule, group, site_width, site_length, wind_dir, **_):
     )
 
 
+def _eval_leeward_edge(rule, group, site_width, site_length, wind_dir, **_):
+    """Check if building is on the leeward (downwind) edge. Flat penalty.
+    Leeward = OPPOSITE side of wind direction.
+    """
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    # Leeward is opposite of wind: if wind is East, leeward side is left (West)
+    dist_map = {
+        "East":  ("left edge (downwind)",   x),
+        "West":  ("right edge (downwind)",  site_width  - (x + w)),
+        "North": ("bottom edge (downwind)", y),
+        "South": ("top edge (downwind)",    site_length - (y + h)),
+    }
+    edge_label, dist_to_edge = dist_map.get(wind_dir, ("left edge (downwind)", x))
+    on_edge = dist_to_edge <= rule["threshold"]
+    penalty = 0 if on_edge else rule["penalty_rate"]
+    return _result(
+        rule["id"], f"{rule['group']}: Leeward Edge (Downwind)", rule["group"],
+        on_edge, penalty,
+        f"On downwind ({wind_dir} leeward) edge" if on_edge else f"Not on downwind edge",
+        measured=f"Distance to {edge_label}: {dist_to_edge:.1f} m",
+        threshold=f"<= {rule['threshold']} m from {edge_label} (wind = {wind_dir})",
+        calc="0 pts (on edge)" if on_edge else f"{rule['penalty_rate']:,} pts flat (not on downwind edge)",
+    )
+
+
 def _eval_min_distance(rule, group, target_group, **_):
     """Center-to-center distance must be ≥ threshold. Linear penalty on shortfall."""
     cx1, cy1 = _center(group)
@@ -399,6 +425,7 @@ _EVALUATORS = {
     "center_proximity":    _eval_center_proximity,
     "boundary_setback":    _eval_boundary_setback,
     "windward_edge":       _eval_windward_edge,
+    "leeward_edge":        _eval_leeward_edge,
     "min_distance":        _eval_min_distance,
     "max_distance":        _eval_max_distance,
     "pipe_rack_proximity": _eval_pipe_rack_proximity,
@@ -452,7 +479,7 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
             if group is None or target is None:
                 continue
             r = evaluator(rule, group, target)
-        elif rule_type == "windward_edge":
+        elif rule_type in ("windward_edge", "leeward_edge"):
             group = by_name.get(rule["group"])
             if group is None:
                 continue

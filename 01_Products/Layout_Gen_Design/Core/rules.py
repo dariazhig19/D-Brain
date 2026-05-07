@@ -274,9 +274,7 @@ RULES = [
     # Gate House
     {"id": "GH-01", "type": "boundary_setback", "group": "Gate House",     "target": "Primary Road",   "threshold": 0,   "penalty_rate": 5000, "penalty_mode": "flat"},
 
-    # Cable Tunnel
-    {"id": "CT-03", "type": "min_distance",     "group": "Cable Tunnel",   "target": "Power Block",    "threshold": 5,   "penalty_rate": 500,  "penalty_mode": "linear"},
-    {"id": "CT-04", "type": "max_distance",     "group": "Cable Tunnel",   "target": "Power Block",    "threshold": 30,  "penalty_rate": 200,  "penalty_mode": "linear"},
+
 
     # LPG/Metering
     {"id": "LP-01", "type": "boundary_setback", "group": "LPG/Metering",   "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
@@ -302,7 +300,6 @@ RULES = [
     {"id": "PR-02", "type": "rack_length", "group": "Power Block",   "target": "LPG/Metering",   "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
     {"id": "PR-03", "type": "rack_length", "group": "Power Block",   "target": "WT/WWT",         "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
     # Main Rack connections
-    {"id": "MR-01", "type": "rack_length", "group": "Power Block",   "target": "Cable Tunnel",   "rack": "Main Rack",    "penalty_rate": 40, "penalty_mode": "linear"},
     {"id": "MR-02", "type": "rack_length", "group": "Power Block",   "target": "Admin Building", "rack": "Main Rack",    "penalty_rate": 20, "penalty_mode": "linear"},
     # Utility Rack connections
     {"id": "UR-01", "type": "rack_length", "group": "WT/WWT",        "target": "Water",          "rack": "Utility Rack", "penalty_rate": 40, "penalty_mode": "linear"},

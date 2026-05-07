@@ -209,17 +209,27 @@ def _place_racks(groups):
     """Generate rack segments connecting related groups."""
     by_name = {g["name"]: g for g in groups}
 
-    def _center(name):
-        g = by_name.get(name)
-        if g:
-            return (g["x"] + g["width"] / 2, g["y"] + g["height"] / 2)
-        return None
+    def _closest_points(g1, g2):
+        l1, r1 = g1["x"], g1["x"] + g1["width"]
+        b1, t1 = g1["y"], g1["y"] + g1["height"]
+        l2, r2 = g2["x"], g2["x"] + g2["width"]
+        b2, t2 = g2["y"], g2["y"] + g2["height"]
+
+        if r1 <= l2:   px1, px2 = r1, l2
+        elif r2 <= l1: px1, px2 = l1, r2
+        else:          px1 = px2 = (max(l1, l2) + min(r1, r2)) / 2
+
+        if t1 <= b2:   py1, py2 = t1, b2
+        elif t2 <= b1: py1, py2 = b1, t2
+        else:          py1 = py2 = (max(b1, b2) + min(t1, t2)) / 2
+
+        return (px1, py1), (px2, py2)
 
     def segment(name1, name2):
-        c1 = _center(name1)
-        c2 = _center(name2)
-        if c1 and c2:
-            return (c1, c2)
+        g1 = by_name.get(name1)
+        g2 = by_name.get(name2)
+        if g1 and g2:
+            return _closest_points(g1, g2)
         return None
 
     # Pipe Rack: Power Block <-> Cooling Tower, LPG/Metering, WT/WWT
@@ -229,9 +239,8 @@ def _place_racks(groups):
         segment("Power Block", "WT/WWT"),
     ]
 
-    # Main Rack: Power Block <-> Cable Tunnel, Admin Building
+    # Main Rack: Power Block <-> Admin Building
     main_rack = [
-        segment("Power Block", "Cable Tunnel"),
         segment("Power Block", "Admin Building"),
     ]
 

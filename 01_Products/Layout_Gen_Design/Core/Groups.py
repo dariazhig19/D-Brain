@@ -69,7 +69,6 @@ FOOTPRINTS = {
     "Cooling Tower":  (60,  80),
     "Admin Building": (50,  40),
     "Gate House":     (12,   8),
-    "Cable Tunnel":   (60,   3),
     "LPG/Metering":   (40,  30),
     "Flare":          (20,  20),
     "WT/WWT":         (50,  40),
@@ -81,6 +80,27 @@ RACK_WIDTHS = {
     "Pipe Rack":    6,
     "Main Rack":    8,
     "Utility Rack": 6,
+    "Cable Tunnel": 3,
+}
+
+# ── Color Palette ─────────────────────────────────────────────────────────
+
+GROUP_COLORS = {
+    "Power Block":    "#4a90d9",
+    "Cooling Tower":  "#7ed6a0",
+    "Admin Building": "#f5a623",
+    "Gate House":     "#9b59b6",
+    "LPG/Metering":   "#f1c40f",
+    "Flare":          "#e74c3c",
+    "WT/WWT":         "#34495e",
+    "Water":          "#00bcd4",
+}
+
+RACK_COLORS = {
+    "Pipe Rack":    "#f1c40f", # Yellow
+    "Main Rack":    "#2ecc71", # Green
+    "Utility Rack": "#9b59b6", # Purple
+    "Cable Tunnel": "#555555", # Dark Grey
 }
 
 
@@ -106,7 +126,6 @@ def get_all_groups(site_width, site_length, positions=None):
         "Cooling Tower":  (site_width - 60 - 10,   (site_length - 80) / 2),
         "Admin Building": (20,                      20),
         "Gate House":     (site_width / 2 - 6,       0),
-        "Cable Tunnel":   ((site_width - 60) / 2,   (site_length - 80) / 2 - 10),
         "LPG/Metering":   (20,                      site_length - 30 - 20),
         "Flare":          (site_width - 20 - 20,    site_length - 20 - 20),
         "WT/WWT":         (20,                      site_length / 2 - 20),
@@ -174,8 +193,11 @@ def draw_group(ax, group):
     # Border line
     ax.plot(gx, gy, color="black", linewidth=0.8, zorder=2)
     
+    # Wrap text if there are spaces or slashes
+    name_str = group["name"].replace(" ", "\n").replace("/", "/\n")
+    
     # Group label in the center
-    ax.text(x + w/2, y + h/2, group["name"],
+    ax.text(x + w/2, y + h/2, name_str,
             ha='center', va='center', fontsize=7, fontweight='bold', zorder=3)
 
 
@@ -193,12 +215,3 @@ def draw_rack(ax, rack):
         ax.plot([x1, x2], [y1, y2],
                 color=rack["color"], linewidth=2.5, linestyle='--',
                 solid_capstyle='round', zorder=1, alpha=0.8)
-
-    # Label at midpoint of the first segment
-    p1, p2 = rack["segments"][0]
-    mx, my = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
-    ax.text(mx, my, rack["name"],
-            ha='center', va='bottom', fontsize=5.5, fontweight='bold',
-            color=rack["color"], zorder=3,
-            bbox=dict(boxstyle='round,pad=0.15', fc='white', ec=rack["color"],
-                      alpha=0.85, lw=0.5))

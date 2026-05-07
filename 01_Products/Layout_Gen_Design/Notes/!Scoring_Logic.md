@@ -47,8 +47,6 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | ID        | Group          | Rule Type           | Target              | Threshold | Penalty          | Condition                   |
 | :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
 | **GH-01** | Gate House     | `boundary_setback`  | Primary Road        | 0 m       | 5000 pts (flat)  | Must be on site boundary    |
-| **CT-03** | Cable Tunnel   | `min_distance`      | Power Block         | 5 m       | 500 pts / m      | Must be near Power Block    |
-| **CT-04** | Cable Tunnel   | `max_distance`      | Power Block         | 30 m      | 200 pts / m      | Cannot be too far from PB   |
 | **LP-01** | LPG/Metering   | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
 | **LP-02** | LPG/Metering   | `min_distance`      | Power Block         | 30 m      | 300 pts / m      | Safe distance from PB       |
 | **FL-01** | Flare          | `leeward_edge`      | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **downwind** edge |
@@ -67,8 +65,9 @@ Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
 | Rack | Width | Purpose | Connects |
 | :--- | :---- | :------ | :------- |
 | **Pipe Rack** | 6 m | Process piping (cooling water, fuel gas, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT |
-| **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Cable Tunnel, Power Block ↔ Admin Building |
+| **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Admin Building |
 | **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower |
+| **Cable Tunnel** | 3 m | Underground cable route | *(No buildings connected yet, waiting for user input)* |
 
 ### Rack Length Rules
 
@@ -79,7 +78,6 @@ Rule: each connection should be as short as possible. Penalty = `rack_length × 
 | **PR-01** | Pipe Rack      | `rack_length`  | Power Block      | Cooling Tower    | 50 pts / m       | Shorter = better (cooling water) |
 | **PR-02** | Pipe Rack      | `rack_length`  | Power Block      | LPG/Metering     | 30 pts / m       | Shorter = better (fuel gas)    |
 | **PR-03** | Pipe Rack      | `rack_length`  | Power Block      | WT/WWT           | 30 pts / m       | Shorter = better (demin water) |
-| **MR-01** | Main Rack      | `rack_length`  | Power Block      | Cable Tunnel     | 40 pts / m       | Shorter = better (main cables) |
 | **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | Shorter = better (control cables) |
 | **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | Water            | 40 pts / m       | Shorter = better (raw water)   |
 | **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |

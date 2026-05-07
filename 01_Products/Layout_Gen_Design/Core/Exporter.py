@@ -162,13 +162,10 @@ def export_to_dxf(layout, site_width, site_length):
     # ── 4. Polyline Racks ───────────────────────────────────────────────────
     for rack in layout.get("racks", []):
         layer = RACK_LAYER_MAP.get(rack["name"], "PIPE_RACK")
-        x1, y1 = rack["start"]
-        x2, y2 = rack["end"]
-        msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer})
-
-        # Label at midpoint
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        _add_label(msp, rack["name"], mx, my + 3, 1.5, "LABELS")
+        for p1, p2 in rack.get("segments", []):
+            x1, y1 = p1
+            x2, y2 = p2
+            msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer})
 
     # ── 5. Score annotation ─────────────────────────────────────────────────
     total   = layout["scoring"]["total_penalty"]

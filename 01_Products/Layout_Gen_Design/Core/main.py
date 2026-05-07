@@ -104,14 +104,7 @@ def _place_gate_house(sw, sl):
     return x, 0  # sits on the bottom edge
 
 
-def _place_cable_tunnel(sw, sl, pb_x, pb_y):
-    """Cable Tunnel: near Power Block, below or beside it."""
-    w, h = _FP["Cable Tunnel"]
-    pb_w, pb_h = _FP["Power Block"]
-    # Place just below Power Block with slight random offset
-    x = pb_x + random.uniform(-10, 10)
-    y = pb_y - h - random.uniform(5, 15)
-    return _clamp(x, 5, sw - w - 5), _clamp(y, 5, sl - h - 5)
+
 
 
 def _place_lpg(sw, sl):
@@ -275,7 +268,6 @@ def generate_layouts(site_width, site_length, wind_dir,
         ct_x, ct_y     = _place_cooling_tower(site_width, site_length, wind_dir)
         adm_x, adm_y   = _place_admin(site_width, site_length)
         gh_x, gh_y     = _place_gate_house(site_width, site_length)
-        cab_x, cab_y   = _place_cable_tunnel(site_width, site_length, pb_x, pb_y)
         lpg_x, lpg_y   = _place_lpg(site_width, site_length)
         fl_x, fl_y     = _place_flare(site_width, site_length, wind_dir)
         ww_x, ww_y     = _place_wt_wwt(site_width, site_length, wind_dir)
@@ -286,7 +278,6 @@ def generate_layouts(site_width, site_length, wind_dir,
             "Cooling Tower":  (ct_x, ct_y),
             "Admin Building": (adm_x, adm_y),
             "Gate House":     (gh_x, gh_y),
-            "Cable Tunnel":   (cab_x, cab_y),
             "LPG/Metering":   (lpg_x, lpg_y),
             "Flare":          (fl_x, fl_y),
             "WT/WWT":         (ww_x, ww_y),

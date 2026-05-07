@@ -40,6 +40,22 @@ def _point_to_line_dist(px, py, x1, y1, x2, y2):
     return _dist(px, py, proj_x, proj_y)
 
 
+def _rect_edge_distance(g1, g2):
+    """Minimum edge-to-edge distance between two rectangles.
+    Returns 0 if they overlap.
+    """
+    x1, y1, w1, h1 = g1["x"], g1["y"], g1["width"], g1["height"]
+    x2, y2, w2, h2 = g2["x"], g2["y"], g2["width"], g2["height"]
+
+    # Separation on each axis (negative = overlap on that axis)
+    dx = max(0, max(x1 - (x2 + w2), x2 - (x1 + w1)))
+    dy = max(0, max(y1 - (y2 + h2), y2 - (y1 + h1)))
+
+    if dx == 0 and dy == 0:
+        return 0.0  # overlapping or touching
+    return math.sqrt(dx * dx + dy * dy)
+
+
 def _result(id_, name, group, passed, penalty, message, measured, threshold, calc):
     """Standardized rule result dict."""
     return {
@@ -280,8 +296,17 @@ RULES = [
     {"id": "WA-02", "type": "min_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
     {"id": "WA-03", "type": "max_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
 
-    # Rack rules — TBD: will be added once building-to-rack connections are defined.
-    # All rack rules will use "pipe_rack_proximity" type with threshold = 0 (as close as possible).
+    # Rack length rules — shorter connection = lower penalty
+    # Pipe Rack connections
+    {"id": "PR-01", "type": "rack_length", "group": "Power Block",   "target": "Cooling Tower",  "rack": "Pipe Rack",    "penalty_rate": 50, "penalty_mode": "linear"},
+    {"id": "PR-02", "type": "rack_length", "group": "Power Block",   "target": "LPG/Metering",   "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
+    {"id": "PR-03", "type": "rack_length", "group": "Power Block",   "target": "WT/WWT",         "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
+    # Main Rack connections
+    {"id": "MR-01", "type": "rack_length", "group": "Power Block",   "target": "Cable Tunnel",   "rack": "Main Rack",    "penalty_rate": 40, "penalty_mode": "linear"},
+    {"id": "MR-02", "type": "rack_length", "group": "Power Block",   "target": "Admin Building", "rack": "Main Rack",    "penalty_rate": 20, "penalty_mode": "linear"},
+    # Utility Rack connections
+    {"id": "UR-01", "type": "rack_length", "group": "WT/WWT",        "target": "Water",          "rack": "Utility Rack", "penalty_rate": 40, "penalty_mode": "linear"},
+    {"id": "UR-02", "type": "rack_length", "group": "WT/WWT",        "target": "Cooling Tower",  "rack": "Utility Rack", "penalty_rate": 30, "penalty_mode": "linear"},
 ]
 
 
@@ -419,6 +444,25 @@ def _eval_pipe_rack_proximity(rule, rack, target_group, **_):
     )
 
 
+def _eval_rack_length(rule, group, target_group, **_):
+    """Edge-to-edge distance between two connected buildings (rack length).
+    Penalty = distance × penalty_rate. No threshold — shorter is always better.
+    """
+    distance = _rect_edge_distance(group, target_group)
+    penalty = distance * rule["penalty_rate"]
+    rack_name = rule.get("rack", "Rack")
+    return _result(
+        rule["id"],
+        f"{rack_name}: {rule['group']} \u2194 {rule['target']}",
+        rack_name,  # attribute penalty to the rack, not a building
+        distance == 0, penalty,
+        f"Edge-to-edge: {distance:.1f} m" if distance > 0 else "Adjacent (0 m)",
+        measured=f"{distance:.1f} m edge-to-edge",
+        threshold="0 m (as short as possible)",
+        calc=f"{distance:.1f} m \u00d7 {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if distance > 0 else "0 pts (adjacent)",
+    )
+
+
 # ── Evaluator dispatch table ──────────────────────────────────────────────
 
 _EVALUATORS = {
@@ -429,6 +473,7 @@ _EVALUATORS = {
     "min_distance":        _eval_min_distance,
     "max_distance":        _eval_max_distance,
     "pipe_rack_proximity": _eval_pipe_rack_proximity,
+    "rack_length":         _eval_rack_length,
 }
 
 
@@ -474,6 +519,13 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
             r = evaluator(rule, rack, target)
         elif rule_type in ("min_distance", "max_distance"):
             # Two-building rules
+            group = by_name.get(rule["group"])
+            target = by_name.get(rule["target"])
+            if group is None or target is None:
+                continue
+            r = evaluator(rule, group, target)
+        elif rule_type == "rack_length":
+            # Two-building rack connection rule
             group = by_name.get(rule["group"])
             target = by_name.get(rule["target"])
             if group is None or target is None:

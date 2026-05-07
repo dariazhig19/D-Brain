@@ -107,7 +107,7 @@ def build_rule_graph():
 def export_pyvis_html(G, output_path):
     """Render the graph as an interactive Pyvis HTML file."""
     net = Network(
-        height="700px",
+        height="100vh",
         width="100%",
         bgcolor="#1a1a2e",
         font_color="#ffffff",
@@ -180,8 +180,15 @@ def _inject_legend(output_path):
         </div>
     </div>
     """
+    fullscreen_css = """
+    <style>
+        html, body { margin:0; padding:0; overflow:hidden; height:100%; width:100%; }
+        #mynetwork { height:100vh !important; width:100vw !important; }
+    </style>
+    """
     with open(output_path, "r", encoding="utf-8") as f:
         html = f.read()
+    html = html.replace("</head>", fullscreen_css + "\n</head>")
     html = html.replace("</body>", legend_html + "\n</body>")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)

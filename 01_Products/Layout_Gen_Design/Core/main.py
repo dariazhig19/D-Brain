@@ -291,8 +291,8 @@ def generate_layouts(site_width, site_length, wind_dir,
         groups = get_all_groups(site_width, site_length, positions=positions)
 
         # Place racks based on group positions
-        rack_endpoints = _place_racks(groups)
-        racks = get_all_racks(groups, rack_endpoints=rack_endpoints)
+        rack_segments = _place_racks(groups)
+        racks = get_all_racks(groups, rack_segments=rack_segments)
 
         # Score
         scoring = evaluate_all_v2(groups, racks, site_width, site_length, wind_dir)
@@ -301,7 +301,7 @@ def generate_layouts(site_width, site_length, wind_dir,
         if passing >= min_rules_passing:
             candidates.append({
                 "positions":      positions,
-                "rack_endpoints": rack_endpoints,
+                "rack_segments":  rack_segments,
                 "groups":         groups,
                 "racks":          racks,
                 "scoring":        scoring,

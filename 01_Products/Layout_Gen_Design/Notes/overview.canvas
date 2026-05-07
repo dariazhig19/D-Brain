@@ -11,11 +11,8 @@
 		{"id":"ec6428e9d629d393","type":"text","text":"📋 **Rule Analysis for Your Project**\n\n**1. The Road Network is the skeleton:**\n\n- **Primary Road:** A ring road around the entire site. The setback from the boundary is 5m, and the width is 8m.\n    \n- **Inner Road:** A mandatory road around the Power Block.\n    \n- **Distances:** Roads must be a minimum of 3m away from buildings and 2m away from the Pipe Racks.\n    \n\n**2. Main Groups (Your 3 pillars for Step 01):**\n\n- **Power Block (Units 1, 2, 3, 5):** Must be located in the center. There is always a road surrounding it. The Main Pipe Rack connects to it.\n    \n- **Cooling Tower (Unit 12):** An important rule — it must be at least 50m away from the Admin Building.\n    \n- **Admin Building (Unit 28):** Must be positioned 20m away from the power units and with its back facing the wind direction.\n    \n\n**3. Utility Connections (Pipe Racks):**\n\n- The **Main Rack** has a fixed width of 8m, while the others are 6m.\n    \n- These are the lines that connect your blocks.","x":662,"y":360,"width":884,"height":536},
 		{"id":"e55f878d070be45d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png","x":4240,"y":-48,"width":400,"height":189},
 		{"id":"57b2adc02e434c3d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md","x":535,"y":1520,"width":1011,"height":400},
-		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png","x":4680,"y":719,"width":639,"height":293},
-		{"id":"c6ac6d0d49f73811","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md","x":3257,"y":1660,"width":981,"height":400},
 		{"id":"e05dc9ad5733ca89","type":"text","text":"# Phase_01","x":2040,"y":16,"width":750,"height":60,"color":"4"},
 		{"id":"n_pb","type":"text","text":"**Power Block**","x":3600,"y":3130,"width":250,"height":80,"color":"5"},
-		{"id":"dfbb8cc09b4549f2","type":"text","text":"# Phase_02","x":2040,"y":1680,"width":750,"height":50,"color":"4"},
 		{"id":"3759543cf37e75a3","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png","x":4780,"y":-440,"width":400,"height":272},
 		{"id":"n_ct","type":"text","text":"**Cooling Tower**","x":3600,"y":3330,"width":250,"height":80,"color":"4"},
 		{"id":"n_admin","type":"text","text":"**Admin Building**","x":3600,"y":3530,"width":250,"height":80,"color":"2"},
@@ -24,7 +21,11 @@
 		{"id":"t_road","type":"text","text":"*Primary Road*","x":4346,"y":3230,"width":200,"height":60},
 		{"id":"t_edge","type":"text","text":"*Windward Edge*","x":4346,"y":3350,"width":200,"height":60},
 		{"id":"t_gate","type":"text","text":"*Gate House*","x":4346,"y":3650,"width":200,"height":60},
-		{"id":"f508b266d3094c8e","type":"file","file":"01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md","x":2040,"y":1860,"width":750,"height":900}
+		{"id":"f508b266d3094c8e","type":"file","file":"01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md","x":2040,"y":1860,"width":750,"height":900},
+		{"id":"dfbb8cc09b4549f2","type":"text","text":"# Phase_02","x":2040,"y":1680,"width":750,"height":50,"color":"4"},
+		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png","x":4496,"y":480,"width":639,"height":293},
+		{"id":"6ddc39a468cad0c8","type":"text","text":"# Phase_03","x":4496,"y":1480,"width":750,"height":50,"color":"4"},
+		{"id":"c6ac6d0d49f73811","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md","x":3240,"y":1860,"width":981,"height":650}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

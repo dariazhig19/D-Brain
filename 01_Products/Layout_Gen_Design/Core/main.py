@@ -21,6 +21,37 @@ def _rand_pos(site_w, site_l, w, h, margin=5):
     return x, y
 
 
+# ── Overlap detection ─────────────────────────────────────────────────────
+
+_OVERLAP_GAP = 2  # minimum gap (metres) between any two buildings
+
+
+def _rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2, gap=_OVERLAP_GAP):
+    """Return True if two rectangles overlap (with a minimum gap buffer)."""
+    return not (x1 + w1 + gap <= x2 or
+                x2 + w2 + gap <= x1 or
+                y1 + h1 + gap <= y2 or
+                y2 + h2 + gap <= y1)
+
+
+def _has_any_overlap(positions):
+    """
+    Check if any pair of placed rectangles overlaps.
+    positions: dict {name: (x, y)}  — uses FOOTPRINTS for width/height.
+    Returns True if ANY overlap exists.
+    """
+    items = []
+    for name, (x, y) in positions.items():
+        if name in _FP:
+            w, h = _FP[name]
+            items.append((x, y, w, h))
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            if _rects_overlap(*items[i], *items[j]):
+                return True
+    return False
+
+
 # ── Per-group placement strategies ────────────────────────────────────────
 
 def _place_power_block(sw, sl):
@@ -244,6 +275,10 @@ def generate_layouts(site_width, site_length, wind_dir,
             "WT/WWT":         (ww_x, ww_y),
             "Water":          (wa_x, wa_y),
         }
+
+        # Reject if any buildings overlap
+        if _has_any_overlap(positions):
+            continue
 
         groups = get_all_groups(site_width, site_length, positions=positions)
 

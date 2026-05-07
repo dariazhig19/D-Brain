@@ -279,10 +279,8 @@ RULES = [
     {"id": "WA-02", "type": "min_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
     {"id": "WA-03", "type": "max_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
 
-    # Racks
-    {"id": "PR-01", "type": "pipe_rack_proximity", "group": "Pipe Rack",    "target": "Cooling Tower",  "threshold": 6,  "penalty_rate": 500, "penalty_mode": "linear"},
-    {"id": "MR-01", "type": "pipe_rack_proximity", "group": "Main Rack",    "target": "Power Block",    "threshold": 8,  "penalty_rate": 500, "penalty_mode": "linear"},
-    {"id": "UR-01", "type": "pipe_rack_proximity", "group": "Utility Rack", "target": "WT/WWT",         "threshold": 6,  "penalty_rate": 500, "penalty_mode": "linear"},
+    # Rack rules — TBD: will be added once building-to-rack connections are defined.
+    # All rack rules will use "pipe_rack_proximity" type with threshold = 0 (as close as possible).
 ]
 
 

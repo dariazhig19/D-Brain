@@ -57,13 +57,13 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | **WA-02** | Water          | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | Near water treatment        |
 | **WA-03** | Water          | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | Cannot be too far from WWT  |
 
-### Polyline Rack Rules
+### Polyline Racks
 
-| ID        | Group          | Rule Type              | Target              | Threshold | Penalty          | Condition                   |
-| :-------- | :------------- | :--------------------- | :------------------ | :-------- | :--------------- | :-------------------------- |
-| **PR-01** | Pipe Rack      | `pipe_rack_proximity`  | Cooling Tower       | 6 m       | 500 pts / m      | Rack must be ≤ 6 m from CT  |
-| **MR-01** | Main Rack      | `pipe_rack_proximity`  | Power Block         | 8 m       | 500 pts / m      | Rack must be ≤ 8 m from PB  |
-| **UR-01** | Utility Rack   | `pipe_rack_proximity`  | WT/WWT              | 6 m       | 500 pts / m      | Rack must be ≤ 6 m from WWT |
+Rack physical widths: Pipe Rack = 6 m, Main Rack = 8 m, Utility Rack = 6 m.
+
+> **Rack connection rules (TBD):** Once building-to-rack connections are defined, 
+> `pipe_rack_proximity` rules will be added here. All rack rules will enforce 
+> "minimum distance as possible" between the rack line and its connected buildings.
 
 ---
 

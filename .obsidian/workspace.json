@@ -8,32 +8,13 @@
         "type": "tabs",
         "children": [
           {
-            "id": "3d069e6e1ed81850",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png"
-              },
-              "icon": "lucide-image",
-              "title": "CAD Output_V1"
-            }
-          },
-          {
             "id": "c79a777deb34bba2",
             "type": "leaf",
             "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 4781.143367454344,
-                  "y": 1717.4908728277337,
-                  "zoom": 0.028854862672184622
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           },
           {
@@ -42,7 +23,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Explanation of Rule Logic.md",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
                 "mode": "source",
                 "source": false
               },
@@ -64,8 +45,7 @@
               "title": "Phase_01_Plan"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -227,10 +207,12 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "0a7dcc1c308cb298",
+  "active": "c79a777deb34bba2",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "Explanation of Rule Logic.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "04_Reports/Daily/Daily_Report_20260506.md",
@@ -238,7 +220,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Exporter.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Exporter.py",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Main.cpython-314.pyc",
@@ -264,7 +245,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03",
     "00_Input/implementation_plan.md",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",

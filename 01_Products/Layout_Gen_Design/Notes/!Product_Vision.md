@@ -58,5 +58,6 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [ ] **Advanced Rack Logic:** Refactor rack routing so that 1 rack acts as a main spine connecting multiple buildings.
 - [ ] **Hierarchical Placement Logic:** Change layout generator to place the 3 main blocks sequentially, starting with anchoring the Power Block.
 - [ ] **Rule Network:** Stop updating `RuleNetwork.py` and `Rule_Network.html` (no longer needed for Phase 05 and beyond).
+- [ ] **Building Rotation:** Add building rotation randomizing to the generative engine.
 
 ## 📍 Current Status: **Phase_04 Completed, Moving to Phase_05 (Generative Optimization & Sub-Clusters)**

@@ -44,19 +44,19 @@
 
 ### 새로운 사각형 그룹
 
-| ID        | 그룹           | 규칙 유형            | 대상                | 임계값    | 페널티           | 조건                         |
-| :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :--------------------------- |
-| **GH-01** | Gate House     | `boundary_setback`  | 주 도로              | 0 m       | 5000 pts (flat)  | 반드시 부지 경계에 위치해야 함 |
-| **LP-01** | LPG/Metering   | `boundary_setback`  | 주 도로              | 10 m      | 1000 pts (flat)  | 경계로부터 이격                |
-| **LP-02** | LPG/Metering   | `min_distance`      | Power Block         | 30 m      | 300 pts / m      | PB로부터 안전 거리             |
-| **FL-01** | Flare          | `leeward_edge`      | 풍향                 | 30 m      | 1000 pts (flat)  | 반드시 **풍하측**에 있어야 함 |
-| **FL-02** | Flare          | `min_distance`      | Admin Building      | 100 m     | 500 pts / m      | Admin으로부터 안전 거리        |
-| **FL-03** | Flare          | `min_distance`      | Power Block         | 50 m      | 300 pts / m      | PB로부터 안전 거리             |
-| **WW-01** | WT/WWT         | `boundary_setback`  | 주 도로              | 10 m      | 1000 pts (flat)  | 경계로부터 이격                |
-| **WW-02** | WT/WWT         | `leeward_edge`      | 풍향                 | 50 m      | 500 pts (flat)   | 반드시 **풍하측**에 있어야 함 |
-| **WA-01** | Water          | `boundary_setback`  | 주 도로              | 10 m      | 1000 pts (flat)  | 경계로부터 이격                |
-| **WA-02** | Water          | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | 수처리 시설 인근                |
-| **WA-03** | Water          | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | WWT로부터 너무 멀면 안 됨      |
+| ID        | 그룹           | 규칙 유형              | 대상             | 임계값   | 페널티             | 조건                 |
+| :-------- | :----------- | :----------------- | :------------- | :---- | :-------------- | :----------------- |
+| **GH-01** | Gate House   | `boundary_setback` | 주 도로           | 0 m   | 5000 pts (flat) | 반드시 부지 경계에 위치해야 함  |
+| **LP-01** | LPG/Metering | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
+| **LP-02** | LPG/Metering | `min_distance`     | Power Block    | 30 m  | 300 pts / m     | PB로부터 안전 거리        |
+| **FL-01** | Flare        | `leeward_edge`     | 풍향             | 30 m  | 1000 pts (flat) | 반드시 **풍하측**에 있어야 함 |
+| **FL-02** | Flare        | `min_distance`     | Admin Building | 100 m | 500 pts / m     | Admin으로부터 안전 거리    |
+| **FL-03** | Flare        | `min_distance`     | Power Block    | 50 m  | 300 pts / m     | PB로부터 안전 거리        |
+| **WW-01** | WT/WWT       | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
+| **WW-02** | WT/WWT       | `leeward_edge`     | 풍향             | 50 m  | 500 pts (flat)  | 반드시 **풍하측**에 있어야 함 |
+| **WA-01** | Water        | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
+| **WA-02** | Water        | `min_distance`     | WT/WWT         | 10 m  | 200 pts / m     | 수처리 시설 인근          |
+| **WA-03** | Water        | `max_distance`     | WT/WWT         | 80 m  | 100 pts / m     | WWT로부터 너무 멀면 안 됨   |
 
 ### 폴리라인 랙 — 연결 맵
 
@@ -73,14 +73,14 @@
 
 규칙: 각 연결은 가능한 짧아야 합니다. 페널티 = `랙 길이 × 페널티 비율`.
 
-| ID        | 랙              | 규칙 유형      | 건물 A           | 건물 B           | 페널티           | 조건                              |
-| :-------- | :------------- | :------------- | :--------------- | :--------------- | :--------------- | :-------------------------------- |
-| **PR-01** | Pipe Rack      | `rack_length`  | Power Block      | Cooling Tower    | 50 pts / m       | 짧을수록 좋음 (냉각수)             |
-| **PR-02** | Pipe Rack      | `rack_length`  | Power Block      | LPG/Metering     | 30 pts / m       | 짧을수록 좋음 (연료가스)           |
-| **PR-03** | Pipe Rack      | `rack_length`  | Power Block      | WT/WWT           | 30 pts / m       | 짧을수록 좋음 (탈염수)             |
-| **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | 짧을수록 좋음 (제어 케이블)        |
-| **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | Water            | 40 pts / m       | 짧을수록 좋음 (원수)               |
-| **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | 짧을수록 좋음 (보충수)             |
+| ID        | 랙            | 규칙 유형         | 건물 A        | 건물 B           | 페널티        | 조건               |
+| :-------- | :----------- | :------------ | :---------- | :------------- | :--------- | :--------------- |
+| **PR-01** | Pipe Rack    | `rack_length` | Power Block | Cooling Tower  | 50 pts / m | 짧을수록 좋음 (냉각수)    |
+| **PR-02** | Pipe Rack    | `rack_length` | Power Block | LPG/Metering   | 30 pts / m | 짧을수록 좋음 (연료가스)   |
+| **PR-03** | Pipe Rack    | `rack_length` | Power Block | WT/WWT         | 30 pts / m | 짧을수록 좋음 (탈염수)    |
+| **MR-02** | Main Rack    | `rack_length` | Power Block | Admin Building | 20 pts / m | 짧을수록 좋음 (제어 케이블) |
+| **UR-01** | Utility Rack | `rack_length` | WT/WWT      | Water          | 40 pts / m | 짧을수록 좋음 (원수)     |
+| **UR-02** | Utility Rack | `rack_length` | WT/WWT      | Cooling Tower  | 30 pts / m | 짧을수록 좋음 (보충수)    |
 
 ---
 

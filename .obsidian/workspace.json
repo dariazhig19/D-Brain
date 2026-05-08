@@ -11,12 +11,17 @@
             "id": "0a7dcc1c308cb298",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png"
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 8509.270687609243,
+                  "y": 1115.0165582150626,
+                  "zoom": -0.25329729135765205
+                }
               },
-              "icon": "lucide-image",
-              "title": "Rules Visualisation"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           }
         ]
@@ -92,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +107,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Rules Visualisation"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -183,15 +188,15 @@
   },
   "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "04_Reports/Daily/Daily_Report_20260507.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Implementation_Plan.md",

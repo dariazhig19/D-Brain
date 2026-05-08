@@ -97,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -107,7 +107,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Overview"
+              "title": "Backlinks for Explanation of Rule Logic"
             }
           },
           {
@@ -188,6 +188,7 @@
   },
   "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",

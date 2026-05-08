@@ -70,7 +70,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -143,7 +143,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -153,7 +153,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for !Scoring_Logic_한국어"
+              "title": "Backlinks for !Product_Vision"
             }
           },
           {
@@ -216,7 +216,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 921.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -232,11 +232,13 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "e86e93a64e926171",
+  "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "04_Reports/Meeting_Notes/20260508_미팅.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "04_Reports/Meeting_Notes",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
@@ -261,7 +263,6 @@
     "01_Products/Layout_Gen_Design/lib/bindings/utils.js",
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2",
     "01_Products/Layout_Gen_Design/lib/tom-select",
-    "01_Products/Layout_Gen_Design/lib/bindings",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
     "!Atlas_System.md",

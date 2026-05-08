@@ -30,9 +30,9 @@
 		{"id":"e55f878d070be45d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png","x":4261,"y":-51,"width":400,"height":189},
 		{"id":"b2e284e702c884ef","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png","x":5977,"y":-48,"width":400,"height":196},
 		{"id":"3759543cf37e75a3","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png","x":5977,"y":-433,"width":400,"height":272},
-		{"id":"a9e9c8d03eb544d9","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png","x":8375,"y":-48,"width":399,"height":199},
 		{"id":"11538245c3e3c3ac","type":"text","text":"# Use Pyvis to make professional network rule visualisation","x":7495,"y":3410,"width":705,"height":117},
-		{"id":"2b1817c8b0282b87","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png","x":8360,"y":3135,"width":779,"height":667}
+		{"id":"2b1817c8b0282b87","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png","x":8360,"y":3135,"width":779,"height":667},
+		{"id":"a9e9c8d03eb544d9","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png","x":8375,"y":-48,"width":399,"height":199}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

@@ -102,3 +102,5 @@
 
 Gate, Wind -> Rack, Road  + added buildings -> need to compare
 
+
+boundary 작게 -> 넘어가도 된다

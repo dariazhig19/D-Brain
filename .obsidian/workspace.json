@@ -70,7 +70,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -143,7 +143,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -153,7 +153,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Overview"
+              "title": "Backlinks for !Scoring_Logic_한국어"
             }
           },
           {
@@ -232,12 +232,12 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "e6586c9fbcfe05d7",
+  "active": "e86e93a64e926171",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",

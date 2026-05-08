@@ -44,30 +44,34 @@
 
 ### 새로운 사각형 그룹
 
-| ID        | 그룹           | 규칙 유형              | 대상             | 임계값   | 페널티             | 조건                 |
-| :-------- | :----------- | :----------------- | :------------- | :---- | :-------------- | :----------------- |
-| **GH-01** | Gate House   | `boundary_setback` | 주 도로           | 0 m   | 5000 pts (flat) | 반드시 부지 경계에 위치해야 함  |
-| **LP-01** | LPG/Metering | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
-| **LP-02** | LPG/Metering | `min_distance`     | Power Block    | 30 m  | 300 pts / m     | PB로부터 안전 거리        |
-| **FL-01** | Flare        | `leeward_edge`     | 풍향             | 30 m  | 1000 pts (flat) | 반드시 **풍하측**에 있어야 함 |
-| **FL-02** | Flare        | `min_distance`     | Admin Building | 100 m | 500 pts / m     | Admin으로부터 안전 거리    |
-| **FL-03** | Flare        | `min_distance`     | Power Block    | 50 m  | 300 pts / m     | PB로부터 안전 거리        |
-| **WW-01** | WT/WWT       | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
-| **WW-02** | WT/WWT       | `leeward_edge`     | 풍향             | 50 m  | 500 pts (flat)  | 반드시 **풍하측**에 있어야 함 |
-| **WA-01** | Water        | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
-| **WA-02** | Water        | `min_distance`     | WT/WWT         | 10 m  | 200 pts / m     | 수처리 시설 인근          |
-| **WA-03** | Water        | `max_distance`     | WT/WWT         | 80 m  | 100 pts / m     | WWT로부터 너무 멀면 안 됨   |
+| ID        | 그룹                 | 규칙 유형              | 대상             | 임계값   | 페널티             | 조건                 |
+| :-------- | :----------------- | :----------------- | :------------- | :---- | :-------------- | :----------------- |
+| **GH-01** | Gate House User 지정 | `boundary_setback` | 주 도로           | 0 m   | 5000 pts (flat) | 반드시 부지 경계에 위치해야 함  |
+| **LP-01** | LPG/MeteringXXX    | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부X터 이격          |
+| **LP-02** | LPG/MeteringXXX    | `min_distance`     | Power Block    | 30 m  | 300 pts / m     | PB로부터 안전 거리        |
+| **FL-01** | Flare              | `leeward_edge`     | 풍향             | 30 m  | 1000 pts (flat) | 반드시 **풍하측**에 있어야 함 |
+| **FL-02** | Flare              | `min_distance`     | Admin Building | 100 m | 500 pts / m     | Admin으로부터 안전 거리    |
+| **FL-03** | Flare              | `min_distance`     | Power Block    | 50 m  | 300 pts / m     | PB로부터 안전 거리        |
+| **WW-01** | WT/WWT             | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
+| **WW-02** | WT/WWT             | `leeward_edge`     | 풍향             | 50 m  | 500 pts (flat)  | 반드시 **풍하측**에 있어야 함 |
+| **WA-01** | Water              | `boundary_setback` | 주 도로           | 10 m  | 1000 pts (flat) | 경계로부터 이격           |
+| **WA-02** | Water              | `min_distance`     | WT/WWT         | 10 m  | 200 pts / m     | 수처리 시설 인근          |
+| **WA-03** | Water              | `max_distance`     | WT/WWT         | 80 m  | 100 pts / m     | WWT로부터 너무 멀면 안 됨   |
+|           | tank 3EA           |                    |                |       |                 |                    |
+|           | Warehouse          |                    |                |       |                 |                    |
+|           | 전기                 |                    |                |       |                 |                    |
+|           |                    |                    |                |       |                 |                    |
 
 ### 폴리라인 랙 — 연결 맵
 
 랙은 건물을 연결하는 배관/케이블 통로입니다. **짧을수록 좋음.**
 
-| 랙              | 폭     | 용도                                                  | 연결                                                                              |
-| :-------------- | :---- | :--------------------------------------------------- | :-------------------------------------------------------------------------------- |
-| **Pipe Rack**   | 6 m   | 공정 배관 (냉각수, 연료가스, 증기/응축수)              | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT     |
-| **Main Rack**   | 8 m   | 전기 케이블 + 제어 신호                                | Power Block ↔ Admin Building                                                      |
-| **Utility Rack** | 6 m  | 유틸리티 서비스 (원수, 소화수, 보충수)                 | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower                                            |
-| **Cable Tunnel** | 3 m  | 지하 케이블 경로                                       | *(아직 연결된 건물 없음, 사용자 입력 대기 중)*                                     |
+| 랙                | 폭   | 용도                        | 연결                                                                            |
+| :--------------- | :-- | :------------------------ | :---------------------------------------------------------------------------- |
+| **Pipe Rack**    | 6 m | 공정 배관 (냉각수, 연료가스, 증기/응축수) | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT |
+| **Main Rack**    | 8 m | 전기 케이블 + 제어 신호            | Power Block ↔ Admin Building                                                  |
+| **Utility Rack** | 6 m | 유틸리티 서비스 (원수, 소화수, 보충수)   | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower                                        |
+| **Cable Tunnel** | 3 m | 지하 케이블 경로                 | Powerplan  전기                                                                 |
 
 ### 랙 길이 규칙
 
@@ -94,3 +98,7 @@
 - [ ] **2) 랙 연결** — 임시 정의 완료: 3개 랙, 7개 연결 (위 랙 연결 맵 참조) -> 상세 연결 필요
 - [ ] **3) 배치 우선순위** — 중요도순 건물 목록 (먼저 배치 = 최우선순위)
 - [ ] **4) 수동 배치 목록** — 사용자가 직접 배치하는 건물 (자동 생성 제외)
+
+
+Gate, Wind -> Rack, Road  + added buildings -> need to compare
+

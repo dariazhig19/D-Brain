@@ -28,15 +28,15 @@
 
 ## 🏗️ Phase 03: 3대 거인(The Three Giants) (6개 규칙)
 
-| ID        | 그룹           | 규칙 유형            | 대상                | 임계값    | 페널티           | 조건                         |
-| :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :--------------------------- |
-| **PB-01** | Power Block    | `center_proximity`  | 부지 중심            | 20 m      | 100 pts / m      | 20 m 초과 시에만 적용         |
-| **PB-02** | Power Block    | `boundary_setback`  | 주 도로              | 5 m       | 5000 pts (flat)  | 어떤 모서리든 5 m 미만이면    |
-| **CT-01** | Cooling Tower  | `leeward_edge`      | 풍향                 | 30 m      | 1000 pts (flat)  | 반드시 **풍하측**에 있어야 함 |
-| **CT-02** | Cooling Tower  | `min_distance`      | Admin Building      | 50 m      | 500 pts / m      | 거리가 50 m 미만일 때         |
-| **AD-01** | Admin Building | `boundary_setback`  | 주 도로              | 20 m      | 1000 pts (flat)  | 어떤 모서리든 20 m 미만이면   |
-| **AD-02** | Admin Building | `max_distance`      | Gate House          | 50 m      | 100 pts / m      | 거리가 50 m 초과일 때         |
-| **AD-03** | Admin Building | `windward_edge`     | 풍향                 | 30 m      | 1000 pts (flat)  | 반드시 **풍상측**에 있어야 함 |
+| ID        | 그룹             | 규칙 유형              | 대상             | 임계값  | 페널티             | 조건                 |
+| :-------- | :------------- | :----------------- | :------------- | :--- | :-------------- | :----------------- |
+| **PB-01** | Power Block    | `center_proximity` | 부지 중심          | 20 m | 100 pts / m     | 20 m 초과 시에만 적용     |
+| **PB-02** | Power Block    | `boundary_setback` | 주 도로           | 5 m  | 5000 pts (flat) | 어떤 모서리든 5 m 미만이면   |
+| **CT-01** | Cooling Tower  | `leeward_edge`     | 풍향             | 30 m | 1000 pts (flat) | 반드시 **풍하측**에 있어야 함 |
+| **CT-02** | Cooling Tower  | `min_distance`     | Admin Building | 50 m | 500 pts / m     | 거리가 50 m 미만일 때     |
+| **AD-01** | Admin Building | `boundary_setback` | 주 도로           | 20 m | 1000 pts (flat) | 어떤 모서리든 20 m 미만이면  |
+| **AD-02** | Admin Building | `max_distance`     | Gate House     | 50 m | 100 pts / m     | 거리가 50 m 초과일 때     |
+| **AD-03** | Admin Building | `windward_edge`    | 풍향             | 30 m | 1000 pts (flat) | 반드시 **풍상측**에 있어야 함 |
 
 ---
 

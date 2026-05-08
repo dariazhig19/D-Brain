@@ -112,7 +112,7 @@ def _render_layout(layout, sw, sl, wd, rank):
         if viols.get(g["name"]):
             x, y, w, h = g["x"], g["y"], g["width"], g["height"]
             ax.plot([x, x+w, x+w, x, x], [y, y, y+h, y+h, y],
-                    color='crimson', lw=2.0, linestyle='--', zorder=4)
+                    color='crimson', lw=0.8, linestyle='--', zorder=4)
     # Rack violations
     for rack in layout["racks"]:
         if viols.get(rack["name"]):
@@ -120,7 +120,7 @@ def _render_layout(layout, sw, sl, wd, rank):
                 x1, y1 = p1
                 x2, y2 = p2
                 ax.plot([x1, x2], [y1, y2],
-                        color='crimson', lw=3.0, linestyle='-', zorder=4, alpha=0.7)
+                        color='crimson', lw=1.0, linestyle='-', zorder=4, alpha=0.7)
 
     # Title
     total   = layout["scoring"]["total_penalty"]

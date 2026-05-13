@@ -96,13 +96,15 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 
 ---
 
-## 🔧 Phase 04: New Groups (Expanded Rules)
+## 🔧 Phase 04 & 05: Expanded Rules (30 Total)
 
 ### New Rectangle Groups
 
 | ID        | Group          | Rule Type           | Target              | Threshold | Penalty          | Condition                   |
 | :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
 | **GH-01** | Gate House     | `boundary_setback`  | Primary Road        | 0 m       | 5000 pts (flat)  | Must be on site boundary    |
+| **GIS-01** | GIS            | `boundary_setback`  | Primary Road        | 15 m      | 1000 pts (flat)  | Setback from boundary       |
+| **WH-01** | Warehouse      | `boundary_setback`  | Primary Road        | 15 m      | 1000 pts (flat)  | Setback from boundary       |
 | **LP-01** | LPG/Metering   | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
 | **LP-02** | LPG/Metering   | `min_distance`      | Power Block         | 30 m      | 300 pts / m      | Safe distance from PB       |
 | **FL-01** | Flare          | `leeward_edge`      | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **downwind** edge |
@@ -114,6 +116,14 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 | **WA-02** | Water          | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | Near water treatment        |
 | **WA-03** | Water          | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | Cannot be too far from WWT  |
 
+### Infrastructure (Road) Rules
+
+| ID        | Group          | Rule Type           | Target              | Threshold | Penalty          | Condition                   |
+| :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
+| **RD-01** | Power Block    | `road_proximity`    | Perimeter Road      | 3 m       | 500 pts / m      | Gap between building & road |
+| **RD-02** | Cooling Tower  | `road_proximity`    | Perimeter Road      | 3 m       | 500 pts / m      | Gap between building & road |
+| **RD-03** | Admin Building | `road_proximity`    | Perimeter Road      | 3 m       | 500 pts / m      | Gap between building & road |
+
 ### Polyline Racks — Connection Map
 
 Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
@@ -123,7 +133,7 @@ Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
 | **Pipe Rack** | 6 m | Process piping (cooling water, fuel gas, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT |
 | **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Admin Building |
 | **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower |
-| **Cable Tunnel** | 3 m | Underground cable route | *(No buildings connected yet, waiting for user input)* |
+| **Cable Tunnel** | 3 m | Underground cable route | GIS ↔ Power Block |
 
 ### Rack Length Rules
 
@@ -137,6 +147,7 @@ Rule: each connection should be as short as possible. Penalty = `rack_length × 
 | **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | Shorter = better (control cables) |
 | **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | Water            | 40 pts / m       | Shorter = better (raw water)   |
 | **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |
+| **CT-03** | Cable Tunnel   | `rack_length`  | GIS              | Power Block      | 20 pts / m       | Shorter = better (high voltage) |
 
 ---
 

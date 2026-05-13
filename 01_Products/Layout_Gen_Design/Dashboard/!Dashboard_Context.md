@@ -41,6 +41,15 @@ Main Streamlit application. Currently implements **Phase_04**:
 - Min rules passing slider range dynamically bound to `len(RULES)`.
 - Header updated to "Phase_04: New Groups & Generic Rules".
 
+**Phase_05 Implementations (Infrastructure-First):**
+- Default site dimensions updated: Width=500, Length=270.
+- Phase header updated to "Phase_05: Infrastructure-First Layout Engine".
+- Perimeter road rendered as filled gray corridor (7m wide, 5m setback from boundary).
+- Replaced red dashed road setback with dual-edge road corridor visualization.
+- Renders all 11 groups including new GIS and Warehouse blocks.
+- Imports `ROAD_SETBACK`, `ROAD_WIDTH`, `ROAD_INNER_EDGE` from `Core.Rules`.
+- Imports `build_perimeter_road` from `Core.Main`.
+
 ## Key Design Principles
 - Dashboard calls Core functions only — no geometry/rules logic lives in App.py.
 - Each sidebar control section is clearly commented.
@@ -55,3 +64,4 @@ Main Streamlit application. Currently implements **Phase_04**:
 | [[Daily_Report_20260430]] | `App.py` | X,Y lines update. Added absolute bounded sliders, Wind input, high-res rendering and fixed legend clipping. |
 | [[Daily_Report_20260506]] | `App.py` | Rewrote for Phase 03 generative layout, grid display, rule inspector, and DXF export. |
 | [[Daily_Report_20260507]] | `App.py` | Added rack visualization and dynamic rule inspector. |
+| 2026-05-13 | `App.py` | **Phase 05:** Updated defaults (500×270), road corridor rendering, Phase 05 header, GIS/Warehouse visualization. |

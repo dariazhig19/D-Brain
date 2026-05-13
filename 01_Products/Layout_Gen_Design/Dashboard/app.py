@@ -12,8 +12,8 @@ importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
 importlib.reload(Core.Exporter)
 from Core.Groups import get_all_groups, get_all_racks, draw_group, draw_rack, FOOTPRINTS
-from Core.Rules import evaluate_all_v2, RULES
-from Core.Main import generate_layouts
+from Core.Rules import evaluate_all_v2, RULES, ROAD_SETBACK, ROAD_WIDTH, ROAD_INNER_EDGE
+from Core.Main import generate_layouts, build_perimeter_road
 from Core.Exporter import export_to_dxf
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -31,8 +31,8 @@ div[data-testid="stHorizontalBlock"] > div { padding: 4px; }
 
 # ── Sidebar ────────────────────────────────────────────────────────────────
 st.sidebar.header("Site Information")
-site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 400, step=10)
-site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 300, step=10)
+site_width  = st.sidebar.slider("Plot Width (A)",  100, 1000, 500, step=10)
+site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 270, step=10)
 wind_dir    = st.sidebar.selectbox("Wind Direction",
                                    ["North", "South", "East", "West"], index=2)
 st.sidebar.divider()
@@ -42,7 +42,7 @@ min_passing = st.sidebar.slider("Min rules passing",    1,  len(RULES),  12)
 
 # ── Header ─────────────────────────────────────────────────────────────────
 st.title("PowerPlan AI: Layout Generator")
-st.markdown("### Phase_04: New Groups & Generic Rules")
+st.markdown("### Phase_05: Infrastructure-First Layout Engine")
 st.caption(
     f"Site: **{site_width} x {site_length} m** | Wind: **{wind_dir}** | "
     f"Target: **{n_results} layouts** with **>= {min_passing} / {len(RULES)} rules** passing"
@@ -81,11 +81,31 @@ def _render_layout(layout, sw, sl, wd, rank):
     ax.fill([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='#f0f8ff', zorder=0)
     ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.0)
 
-    # Road setback
-    s = 5
-    if sw > 2*s and sl > 2*s:
-        ax.plot([s, sw-s, sw-s, s, s], [s, s, sl-s, sl-s, s],
-                color='red', linestyle='--', lw=0.6)
+    # Perimeter road corridor (filled gray)
+    s_out = ROAD_SETBACK  # outer edge: 5m from boundary
+    s_in  = ROAD_INNER_EDGE  # inner edge: 12m from boundary
+    if sw > 2*s_in and sl > 2*s_in:
+        # Outer road edge
+        ax.plot([s_out, sw-s_out, sw-s_out, s_out, s_out],
+                [s_out, s_out, sl-s_out, sl-s_out, s_out],
+                color='#999999', linestyle='-', lw=0.6)
+        # Inner road edge
+        ax.plot([s_in, sw-s_in, sw-s_in, s_in, s_in],
+                [s_in, s_in, sl-s_in, sl-s_in, s_in],
+                color='#999999', linestyle='-', lw=0.6)
+        # Fill road corridor (between outer and inner) using 4 rectangles
+        # Bottom road strip
+        ax.fill([s_out, sw-s_out, sw-s_out, s_out],
+                [s_out, s_out, s_in, s_in], color='#e0e0e0', alpha=0.5, zorder=0)
+        # Top road strip
+        ax.fill([s_out, sw-s_out, sw-s_out, s_out],
+                [sl-s_in, sl-s_in, sl-s_out, sl-s_out], color='#e0e0e0', alpha=0.5, zorder=0)
+        # Left road strip
+        ax.fill([s_out, s_in, s_in, s_out],
+                [s_in, s_in, sl-s_in, sl-s_in], color='#e0e0e0', alpha=0.5, zorder=0)
+        # Right road strip
+        ax.fill([sw-s_in, sw-s_out, sw-s_out, sw-s_in],
+                [s_in, s_in, sl-s_in, sl-s_in], color='#e0e0e0', alpha=0.5, zorder=0)
 
     # Wind indicator
     wind_map = {

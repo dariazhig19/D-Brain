@@ -1,11 +1,36 @@
 import random
 import math
 from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS
-from Core.Rules import evaluate_all_v2
+from Core.Rules import evaluate_all_v2, ROAD_SETBACK, ROAD_WIDTH, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
 
 # ── Footprint shortcuts ───────────────────────────────────────────────────
 
 _FP = FOOTPRINTS  # {name: (width, height)}
+
+# ── Road infrastructure ──────────────────────────────────────────────────
+
+def build_perimeter_road(site_w, site_l, setback=ROAD_SETBACK, width=ROAD_WIDTH):
+    """Return the outer and inner edge rectangles of the perimeter fire road.
+    
+    Returns:
+        dict with 'outer' and 'inner' keys, each a list of (x, y) corners.
+        'outer' = road outer edge (setback from boundary)
+        'inner' = road inner edge (setback + road_width from boundary)
+    """
+    outer = [
+        (setback, setback),
+        (site_w - setback, setback),
+        (site_w - setback, site_l - setback),
+        (setback, site_l - setback),
+    ]
+    inner_offset = setback + width
+    inner = [
+        (inner_offset, inner_offset),
+        (site_w - inner_offset, inner_offset),
+        (site_w - inner_offset, site_l - inner_offset),
+        (inner_offset, site_l - inner_offset),
+    ]
+    return {"outer": outer, "inner": inner, "setback": setback, "width": width}
 
 
 # ── Placement helpers ─────────────────────────────────────────────────────
@@ -14,8 +39,8 @@ def _clamp(val, lo, hi):
     return max(lo, min(hi, val))
 
 
-def _rand_pos(site_w, site_l, w, h, margin=5):
-    """Random position within site boundaries with a minimum margin."""
+def _rand_pos(site_w, site_l, w, h, margin=15):
+    """Random position within site boundaries with road-aware margin."""
     x = random.uniform(margin, max(margin, site_w - w - margin))
     y = random.uniform(margin, max(margin, site_l - h - margin))
     return x, y
@@ -52,6 +77,19 @@ def _has_any_overlap(positions):
     return False
 
 
+def _overlaps_road(x, y, w, h, site_w, site_l, road_inner=ROAD_INNER_EDGE):
+    """Check if a building overlaps with the perimeter road corridor.
+    Road corridor is between ROAD_SETBACK and ROAD_INNER_EDGE from each boundary.
+    Returns True if any part of the building is inside the road corridor.
+    """
+    # Building must be fully inside the inner road rectangle
+    if x < road_inner or y < road_inner:
+        return True
+    if x + w > site_w - road_inner or y + h > site_l - road_inner:
+        return True
+    return False
+
+
 def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
     """Check if line segment p1-p2 intersects rectangle (rx, ry, rw, rh)."""
     min_x, max_x = min(p1[0], p2[0]), max(p1[0], p2[0])
@@ -79,139 +117,122 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
     return False
 
 
-# ── Per-group placement strategies ────────────────────────────────────────
+# ── Per-group placement strategies (Phase 05) ─────────────────────────────
+# Placement order:
+#   1. Gate House (FIXED, North Center)
+#   2. GIS (FIXED, North-East)
+#   3. Power Block (center, minimal jitter)
+#   4. Admin Building (near GH + PB)
+#   5. Cooling Tower (leeward edge)
+#   6. WT/WWT (leeward, setback)
+#   7. Water (near WT/WWT)
+#   8. Flare (leeward corner)
+#   9. LPG/Metering (corner, setback)
+#  10. Warehouse (available space)
 
-def _place_power_block(sw, sl):
-    """Power Block: near center with ±25% random variation."""
-    w, h = _FP["Power Block"]
-    cx = (sw - w) / 2 + random.uniform(-sw * 0.15, sw * 0.15)
-    cy = (sl - h) / 2 + random.uniform(-sl * 0.15, sl * 0.15)
-    return _clamp(cx, 5, sw - w - 5), _clamp(cy, 5, sl - h - 5)
-
-
-def _place_cooling_tower(sw, sl, wind_dir):
-    """Cooling Tower: constrained to windward zone (within 25 m of windward edge)."""
-    w, h = _FP["Cooling Tower"]
-    margin = 5
-    depth = random.uniform(5, 25)
-
-    if wind_dir == "East":
-        x = sw - w - depth
-        y = random.uniform(margin, sl - h - margin)
-    elif wind_dir == "West":
-        x = depth
-        y = random.uniform(margin, sl - h - margin)
-    elif wind_dir == "North":
-        x = random.uniform(margin, sw - w - margin)
-        y = sl - h - depth
-    else:  # South
-        x = random.uniform(margin, sw - w - margin)
-        y = depth
-
-    return _clamp(x, 0, sw - w), _clamp(y, 0, sl - h)
-
-
-def _place_admin(sw, sl):
-    """Admin: ≥ 20 m setback AND within 50 m of Gate House (sw/2, 0)."""
-    w, h = _FP["Admin Building"]
-    gate_x, gate_y = sw / 2, 0.0
-    for _ in range(400):
-        x = random.uniform(20, sw - w - 20)
-        y = random.uniform(20, min(sl - h - 20, 65))
-        cx, cy = x + w / 2, y + h / 2
-        if math.dist((cx, cy), (gate_x, gate_y)) <= 50:
-            return x, y
-    return max(20, sw / 2 - w / 2), 20
+_MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
 
 
 def _place_gate_house(sw, sl):
-    """Gate House: on bottom boundary, random horizontal position."""
+    """Gate House: FIXED at North Center (top-middle of site)."""
     w, h = _FP["Gate House"]
-    x = random.uniform(sw * 0.3, sw * 0.7 - w)
-    return x, 0  # sits on the bottom edge
+    x = (sw - w) / 2   # centered horizontally
+    y = sl - h          # flush with top boundary (on site edge per GH-01)
+    return x, y
 
 
+def _place_gis(sw, sl):
+    """GIS: FIXED at North-East corner (top-right)."""
+    w, h = _FP["GIS"]
+    x = sw - w - _MARGIN    # right side, with road clearance
+    y = sl - h - _MARGIN    # top side, with road clearance
+    return x, y
 
 
-
-def _place_lpg(sw, sl):
-    """LPG/Metering: setback ≥ 10 m, away from center (corner placement)."""
-    w, h = _FP["LPG/Metering"]
-    margin = 10
-    # Prefer corners
-    corner = random.choice(["top-left", "top-right", "bottom-left", "bottom-right"])
-    if corner == "top-left":
-        x, y = margin, sl - h - margin
-    elif corner == "top-right":
-        x, y = sw - w - margin, sl - h - margin
-    elif corner == "bottom-left":
-        x, y = margin, margin
-    else:
-        x, y = sw - w - margin, margin
-    # Add some randomness
-    x += random.uniform(-5, 5)
-    y += random.uniform(-5, 5)
-    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+def _place_power_block(sw, sl):
+    """Power Block: near center with ±5% random variation (tight site)."""
+    w, h = _FP["Power Block"]
+    cx = (sw - w) / 2 + random.uniform(-sw * 0.05, sw * 0.05)
+    cy = (sl - h) / 2 + random.uniform(-sl * 0.05, sl * 0.05)
+    return _clamp(cx, _MARGIN, sw - w - _MARGIN), _clamp(cy, _MARGIN, sl - h - _MARGIN)
 
 
-def _place_flare(sw, sl, wind_dir):
-    """Flare: on windward edge, like cooling tower but at the corner."""
-    w, h = _FP["Flare"]
-    margin = 5
-    depth = random.uniform(5, 25)
+def _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y):
+    """Admin: near Gate House AND Power Block (north zone, center-ish)."""
+    w, h = _FP["Admin Building"]
+    pb_w, pb_h = _FP["Power Block"]
+    gh_w, gh_h = _FP["Gate House"]
+    gh_cx, gh_cy = gh_x + gh_w / 2, gh_y + gh_h / 2
+    pb_cx, pb_cy = pb_x + pb_w / 2, pb_y + pb_h / 2
+    
+    for _ in range(500):
+        # Search near the north zone, between GH and PB
+        x = random.uniform(_MARGIN, sw - w - _MARGIN)
+        y = random.uniform(pb_y + pb_h + 5, sl - h - _MARGIN)
+        cx, cy = x + w / 2, y + h / 2
+        d_gh = math.dist((cx, cy), (gh_cx, gh_cy))
+        d_pb = math.dist((cx, cy), (pb_cx, pb_cy))
+        if d_gh <= 80 and d_pb <= 120:
+            return x, y
+    # Fallback: just above Power Block
+    return _clamp(pb_x + pb_w / 2 - w / 2, _MARGIN, sw - w - _MARGIN), \
+           _clamp(pb_y + pb_h + 10, _MARGIN, sl - h - _MARGIN)
 
+
+def _place_cooling_tower(sw, sl, wind_dir):
+    """Cooling Tower: constrained to leeward (downwind) zone.
+    Note: CT is 40w x 183h — very tall and narrow.
+    """
+    w, h = _FP["Cooling Tower"]
+    depth = random.uniform(_MARGIN, _MARGIN + 15)
+
+    # Leeward = opposite of wind direction
     if wind_dir == "East":
-        x = sw - w - depth
-        y = random.choice([random.uniform(margin, margin + 40),
-                           random.uniform(sl - h - 40, sl - h - margin)])
+        x = depth   # left side (downwind)
+        y = random.uniform(_MARGIN, max(_MARGIN, sl - h - _MARGIN))
     elif wind_dir == "West":
-        x = depth
-        y = random.choice([random.uniform(margin, margin + 40),
-                           random.uniform(sl - h - 40, sl - h - margin)])
+        x = sw - w - depth  # right side (downwind)
+        y = random.uniform(_MARGIN, max(_MARGIN, sl - h - _MARGIN))
     elif wind_dir == "North":
-        y = sl - h - depth
-        x = random.choice([random.uniform(margin, margin + 40),
-                           random.uniform(sw - w - 40, sw - w - margin)])
-    else:
-        y = depth
-        x = random.choice([random.uniform(margin, margin + 40),
-                           random.uniform(sw - w - 40, sw - w - margin)])
+        x = random.uniform(_MARGIN, max(_MARGIN, sw - w - _MARGIN))
+        y = depth  # bottom side (downwind)
+    else:  # South
+        x = random.uniform(_MARGIN, max(_MARGIN, sw - w - _MARGIN))
+        y = sl - h - depth  # top side (downwind)
 
-    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, max(_MARGIN, sl - h - _MARGIN))
 
 
 def _place_wt_wwt(sw, sl, wind_dir):
-    """WT/WWT: setback ≥ 10 m, prefer downwind side."""
+    """WT/WWT: setback ≥ 15 m, prefer downwind side."""
     w, h = _FP["WT/WWT"]
-    margin = 10
     # Place on the opposite side of wind direction (downwind)
     if wind_dir == "East":
-        x = random.uniform(margin, sw * 0.3)
+        x = random.uniform(_MARGIN, sw * 0.3)
     elif wind_dir == "West":
-        x = random.uniform(sw * 0.7 - w, sw - w - margin)
+        x = random.uniform(sw * 0.7 - w, sw - w - _MARGIN)
     else:
-        x = random.uniform(margin, sw - w - margin)
+        x = random.uniform(_MARGIN, sw - w - _MARGIN)
 
     if wind_dir == "North":
-        y = random.uniform(margin, sl * 0.3)
+        y = random.uniform(_MARGIN, sl * 0.3)
     elif wind_dir == "South":
-        y = random.uniform(sl * 0.7 - h, sl - h - margin)
+        y = random.uniform(sl * 0.7 - h, sl - h - _MARGIN)
     else:
-        y = random.uniform(margin, sl - h - margin)
+        y = random.uniform(_MARGIN, sl - h - _MARGIN)
 
-    return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin)
+    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
 
 
 def _place_water(sw, sl, ww_x, ww_y):
     """Water: near WT/WWT, within 80 m but at least 10 m away."""
     w, h = _FP["Water"]
     ww_w, ww_h = _FP["WT/WWT"]
-    margin = 10
-    for _ in range(200):
+    for _ in range(300):
         x = ww_x + random.uniform(-60, 60)
         y = ww_y + random.uniform(-60, 60)
-        x = _clamp(x, margin, sw - w - margin)
-        y = _clamp(y, margin, sl - h - margin)
+        x = _clamp(x, _MARGIN, sw - w - _MARGIN)
+        y = _clamp(y, _MARGIN, sl - h - _MARGIN)
         # Check distance
         cx1, cy1 = x + w / 2, y + h / 2
         cx2, cy2 = ww_x + ww_w / 2, ww_y + ww_h / 2
@@ -219,14 +240,79 @@ def _place_water(sw, sl, ww_x, ww_y):
         if 10 <= dist <= 80:
             return x, y
     # Fallback: next to WT/WWT
-    return _clamp(ww_x + ww_w + 10, margin, sw - w - margin), \
-           _clamp(ww_y, margin, sl - h - margin)
+    return _clamp(ww_x + ww_w + 10, _MARGIN, sw - w - _MARGIN), \
+           _clamp(ww_y, _MARGIN, sl - h - _MARGIN)
+
+
+def _place_flare(sw, sl, wind_dir):
+    """Flare: on leeward edge, preferably in a corner. 40x40 bounding box."""
+    w, h = _FP["Flare"]
+    depth = random.uniform(_MARGIN, _MARGIN + 15)
+
+    # Leeward corner placement
+    if wind_dir == "East":
+        x = depth
+        y = random.choice([random.uniform(_MARGIN, _MARGIN + 30),
+                           random.uniform(sl - h - 30, sl - h - _MARGIN)])
+    elif wind_dir == "West":
+        x = sw - w - depth
+        y = random.choice([random.uniform(_MARGIN, _MARGIN + 30),
+                           random.uniform(sl - h - 30, sl - h - _MARGIN)])
+    elif wind_dir == "North":
+        y = depth
+        x = random.choice([random.uniform(_MARGIN, _MARGIN + 30),
+                           random.uniform(sw - w - 30, sw - w - _MARGIN)])
+    else:  # South
+        y = sl - h - depth
+        x = random.choice([random.uniform(_MARGIN, _MARGIN + 30),
+                           random.uniform(sw - w - 30, sw - w - _MARGIN)])
+
+    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
+
+
+def _place_lpg(sw, sl):
+    """LPG/Metering: setback ≥ 15 m, corner placement."""
+    w, h = _FP["LPG/Metering"]
+    # Prefer corners
+    corner = random.choice(["top-left", "top-right", "bottom-left", "bottom-right"])
+    if corner == "top-left":
+        x, y = _MARGIN, sl - h - _MARGIN
+    elif corner == "top-right":
+        x, y = sw - w - _MARGIN, sl - h - _MARGIN
+    elif corner == "bottom-left":
+        x, y = _MARGIN, _MARGIN
+    else:
+        x, y = sw - w - _MARGIN, _MARGIN
+    # Add some randomness
+    x += random.uniform(-5, 5)
+    y += random.uniform(-5, 5)
+    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
+
+
+def _place_warehouse(sw, sl, placed_positions):
+    """Warehouse: find available space, avoid overlaps with placed buildings."""
+    w, h = _FP["Warehouse"]
+    for _ in range(500):
+        x = random.uniform(_MARGIN, sw - w - _MARGIN)
+        y = random.uniform(_MARGIN, sl - h - _MARGIN)
+        # Check overlap with all already-placed buildings
+        overlap = False
+        for name, (px, py) in placed_positions.items():
+            if name in _FP:
+                pw, ph = _FP[name]
+                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=5):
+                    overlap = True
+                    break
+        if not overlap:
+            return x, y
+    # Fallback: bottom-left
+    return _MARGIN, _MARGIN
 
 
 # ── Rack placement ────────────────────────────────────────────────────────
 
 def _place_racks(groups):
-    """Generate rack segments connecting related groups."""
+    """Generate rack segments connecting related groups (Phase 05)."""
     by_name = {g["name"]: g for g in groups}
 
     def _closest_points(g1, g2):
@@ -270,10 +356,16 @@ def _place_racks(groups):
         segment("WT/WWT", "Cooling Tower"),
     ]
 
+    # Cable Tunnel: GIS <-> Power Block
+    cable_tunnel = [
+        segment("GIS", "Power Block"),
+    ]
+
     return {
         "Pipe Rack":    [s for s in pipe_rack if s],
         "Main Rack":    [s for s in main_rack if s],
         "Utility Rack": [s for s in utility_rack if s],
+        "Cable Tunnel": [s for s in cable_tunnel if s],
     }
 
 
@@ -282,33 +374,66 @@ def _place_racks(groups):
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=3000):
     """
-    Constrained random placement engine for all 12 groups (Phase 04).
+    Constrained random placement engine for all groups (Phase 05).
+    Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
-    Each dict: {positions, rack_endpoints, groups, racks, scoring}
+    Each dict: {positions, rack_endpoints, groups, racks, scoring, road}
     """
+    # Build road infrastructure (fixed for all layouts)
+    road = build_perimeter_road(site_width, site_length)
+    
     candidates = []
 
     for _ in range(max_pool):
-        # Place all 9 rectangular groups
-        pb_x, pb_y     = _place_power_block(site_width, site_length)
-        ct_x, ct_y     = _place_cooling_tower(site_width, site_length, wind_dir)
-        adm_x, adm_y   = _place_admin(site_width, site_length)
-        gh_x, gh_y     = _place_gate_house(site_width, site_length)
-        lpg_x, lpg_y   = _place_lpg(site_width, site_length)
-        fl_x, fl_y     = _place_flare(site_width, site_length, wind_dir)
-        ww_x, ww_y     = _place_wt_wwt(site_width, site_length, wind_dir)
-        wa_x, wa_y     = _place_water(site_width, site_length, ww_x, ww_y)
+        # ── Hierarchical placement (Phase 05 order) ──────────────────────
 
-        positions = {
+        # 1. Gate House (FIXED — North Center)
+        gh_x, gh_y = _place_gate_house(site_width, site_length)
+
+        # 2. GIS (FIXED — North-East)
+        gis_x, gis_y = _place_gis(site_width, site_length)
+
+        # 3. Power Block (center, minimal jitter)
+        pb_x, pb_y = _place_power_block(site_width, site_length)
+
+        # 4. Admin Building (near GH + PB)
+        adm_x, adm_y = _place_admin(site_width, site_length, gh_x, gh_y, pb_x, pb_y)
+
+        # 5. Cooling Tower (leeward edge)
+        ct_x, ct_y = _place_cooling_tower(site_width, site_length, wind_dir)
+
+        # 6. WT/WWT (leeward, setback)
+        ww_x, ww_y = _place_wt_wwt(site_width, site_length, wind_dir)
+
+        # 7. Water (near WT/WWT)
+        wa_x, wa_y = _place_water(site_width, site_length, ww_x, ww_y)
+
+        # 8. Flare (leeward corner)
+        fl_x, fl_y = _place_flare(site_width, site_length, wind_dir)
+
+        # 9. LPG/Metering (corner, setback)
+        lpg_x, lpg_y = _place_lpg(site_width, site_length)
+
+        # Build partial positions for warehouse placement
+        partial_positions = {
             "Power Block":    (pb_x, pb_y),
             "Cooling Tower":  (ct_x, ct_y),
             "Admin Building": (adm_x, adm_y),
             "Gate House":     (gh_x, gh_y),
+            "GIS":            (gis_x, gis_y),
             "LPG/Metering":   (lpg_x, lpg_y),
             "Flare":          (fl_x, fl_y),
             "WT/WWT":         (ww_x, ww_y),
             "Water":          (wa_x, wa_y),
+        }
+
+        # 10. Warehouse (available space)
+        wh_x, wh_y = _place_warehouse(site_width, site_length, partial_positions)
+
+        positions = {
+            **partial_positions,
+            "Warehouse": (wh_x, wh_y),
         }
 
         # Reject if any buildings overlap
@@ -346,6 +471,7 @@ def generate_layouts(site_width, site_length, wind_dir,
                 "groups":         groups,
                 "racks":          racks,
                 "scoring":        scoring,
+                "road":           road,
             })
 
         if len(candidates) >= n_results * 15:

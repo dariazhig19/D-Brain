@@ -22,6 +22,15 @@ Entry point and orchestrator. Coordinates calls between Groups and Rules modules
 - Rack placement: straight lines connecting related groups (Power Block→Cooling Tower, etc.).
 - Uses `evaluate_all_v2()` for scoring with 22 rules.
 
+**Phase_05 Implementations:**
+- `build_perimeter_road()` generates a fixed 7m wide perimeter fire road (5m setback from boundary).
+- Hierarchical placement order: GH(fixed N-center) → GIS(fixed NE) → PB(center) → Admin → CT → WT/WWT → Water → Flare → LPG → Warehouse.
+- Gate House and GIS are pinned (not randomized). Power Block has ±5% jitter.
+- All buildings respect road corridor clearance (15m from boundary = 5m setback + 7m road + 3m gap).
+- `_place_warehouse()` uses collision-aware placement against all already-placed buildings.
+- Cable Tunnel rack: GIS ↔ Power Block.
+- Layout output includes `"road"` key with perimeter road geometry.
+
 ### `Geometry.py`
 Handles all spatial/geometric operations: drawing site boundaries, placing building rectangles, computing distances between objects, and checking boundary containment. Uses Matplotlib patches as the rendering primitive. **Status: stub — not yet implemented.**
 
@@ -43,6 +52,15 @@ Translates engineering constraints into Python validation functions.
   - `_eval_pipe_rack_proximity()` — building to rack line distance
 - `evaluate_all_v2()` loops `RULES`, dispatches to matching generic function.
 - 22 total rules (6 Phase 03 + 16 Phase 04).
+
+**Phase_05 Implementations:**
+- Added road infrastructure constants: `ROAD_WIDTH`, `ROAD_SETBACK`, `ROAD_INNER_EDGE`, `MIN_BUILDING_FROM_BOUNDARY`.
+- 2 new evaluator functions:
+  - `_eval_road_proximity()` — building edge to perimeter road inner edge distance
+  - `_eval_boundary_overflow()` — logarithmic penalty for boundary overflow
+- 8 new rules: GIS-01, WH-01, RD-01/02/03, CT-03 (Cable Tunnel GIS↔PB).
+- Total: 30 rules (22 Phase 04 + 8 Phase 05).
+- `_EVALUATORS` dispatch table expanded with `road_proximity` and `boundary_overflow`.
 
 ### `Exporter.py`
 **Phase_03 Implementations:**
@@ -68,6 +86,13 @@ Defines building groups as data structures with dimensions, color codes, and pos
 - `draw_rack(ax, rack)` — renders racks as dashed thick lines with labels.
 - `get_groups()` kept for Phase 03 backward compatibility.
 
+**Phase_05 Implementations:**
+- Updated `FOOTPRINTS` with client-confirmed dimensions (PB 150×150, CT 40×183, etc.).
+- Added 2 new groups: **GIS** (110×51) and **Warehouse** (59×40).
+- Total: 11 rectangular groups.
+- Updated `GROUP_COLORS` for GIS and Warehouse.
+- Updated default positions in `get_all_groups()` for 500×270 site.
+
 ### `RuleNetwork.py` *(New in Phase_04)*
 Standalone script for rule network visualization.
 - Reads `RULES` list from `Rules.py`.
@@ -79,7 +104,7 @@ Standalone script for rule network visualization.
 ## Key Design Principles
 - Core has zero Streamlit imports — it must be callable independently of the dashboard.
 - Scoring is additive: each rule contributes a penalty, lower total = better layout.
-- Phase_04 milestone: Generic rule engine with `RULES` data list mirroring `!Scoring_Logic.md`.
+- Phase_05 milestone: Infrastructure-first placement with perimeter road, hierarchical building order, Cable Tunnel connection.
 
 ## Daily Changes
 
@@ -90,3 +115,4 @@ Standalone script for rule network visualization.
 | [[Daily_Report_20260430]] | `Groups.py` | Implemented Phase 2 logic. Refactored from offsets (dx) to bounded absolute coordinates (x). |
 | [[Daily_Report_20260506]] | `Rules.py`, `Main.py`, `Exporter.py` | Implemented Phase 03: generative engine, rule logic orchestrator, and DXF exporter module. |
 | [[Daily_Report_20260507]] | `Rules.py`, `Groups.py`, `Main.py`, `Exporter.py`, `RuleNetwork.py` | Implemented generic rule dispatch engine and 22-rule constraint list. Expanded catalog to 12 total groups (9 rects, 3 racks). Updated layout generation orchestrator for 12 groups. Added new DXF layer definitions and polyline export logic. Created Pyvis network generation script. |
+| 2026-05-13 | `Groups.py`, `Rules.py`, `Main.py` | **Phase 05:** Updated all building dimensions to client-confirmed values. Added GIS (110×51) and Warehouse (59×40). Added road infrastructure (7m road, 5m setback). Hierarchical placement: GH fixed N-center, GIS fixed NE, PB center. 8 new rules (30 total). Cable Tunnel connects GIS↔PB. |

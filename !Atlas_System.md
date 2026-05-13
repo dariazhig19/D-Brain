@@ -112,10 +112,10 @@ Reusable, project-agnostic knowledge. Nothing product-specific goes here.
 |-----------|---------|----------------|
 | `Generative_Theory/` | Design principles | Notes on generative layout theory, spatial algorithms, academic references. |
 | `Obsidian&Vibe Coding/` | Workflow methodology | Articles and notes on AI-augmented development, Obsidian systems, vibe-coding practices. |
-| `Prompts_Master/` | Prompt engineering | `Prompt_History_Phase_XX.md` — one file per product phase, logging the exact prompts used and their outcomes. |
+| `Prompts_Master/` | Prompt engineering | `Prompt_History.md` — running log of the exact prompts used and their outcomes, sectioned by phase. May split into per-phase files (`Prompt_History_Phase_XX.md`) if the log grows large. |
 | `Templates/` | Vault templates | Reusable note templates. Currently: `Daily_Report_Template.md`. |
 
-**Naming rule for prompt files**: `Prompt_History_Phase_XX.md` — mirrors the product's phase numbering.
+**Naming rule for prompt files**: Default to a single `Prompt_History.md` with phase headings. When splitting, use `Prompt_History_Phase_XX.md` mirroring the product's phase numbering.
 
 ---
 
@@ -133,6 +133,7 @@ Stores generated and reference materials that support products but are not produ
 | Subfolder | Purpose | What Goes Here |
 |-----------|---------|----------------|
 | `Daily/` | Daily reports | `Daily_Report_YYYYMMDD.md` — one file per workday. |
+| `Meeting_Notes/` | Meeting records | `YYYYMMDD_미팅.md` — one file per meeting, capturing discussion points, decisions, and follow-ups. |
 
 ---
 
@@ -141,8 +142,15 @@ The underlying logic, automation, and historical storage of the system.
 
 | Subfolder | Purpose | What Goes Here |
 |-----------|---------|----------------|
-| `Agents/` | AI Configuration | System instructions, custom skills, and agent-specific settings. |
+| `Agents/` | AI Configuration | One subfolder per agent provider (`Claude/`, `Gemini/`) for provider-specific settings and instructions, plus a shared `Skills/` folder for cross-provider automations. |
 | `Archive/` | Historical Versions | Completed development cycles, deprecated versions, old prototypes. No active editing. |
+
+#### Agents/ Subfolder Structure
+| Subfolder | Purpose | What Goes Here |
+|-----------|---------|----------------|
+| `Claude/` | Claude-specific config | Claude Code settings, system prompts, and configuration overrides scoped to Claude. |
+| `Gemini/` | Gemini-specific config | `Instructions.md` and the `.gemini/` directory for Gemini agent rules. |
+| `Skills/` | Cross-agent automation | Custom skills usable by any agent. One folder per skill, each containing `SKILL.md`. |
 
 #### Agent Skills (Automation)
 Custom skills in `99_System/Agents/Skills/` extend the system's capabilities.

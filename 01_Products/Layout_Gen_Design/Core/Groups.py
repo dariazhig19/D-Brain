@@ -12,6 +12,8 @@ GROUP_COLORS = {
     "Flare":          "#e67e22",   # dark orange
     "WT/WWT":         "#3498db",   # light blue
     "Water":          "#1abc9c",   # teal
+    "GIS":            "#2c3e50",   # dark navy
+    "Warehouse":      "#d35400",   # burnt orange
 }
 
 RACK_COLORS = {
@@ -28,10 +30,10 @@ def get_groups(site_width, site_length, pb_x=None, pb_y=None, ct_x=None, ct_y=No
     Define the 3 main building groups with their dimensions and default positions.
     Positions are calculated based on site dimensions, or use explicitly provided absolute coordinates.
     """
-    # Footprint dimensions (estimated in meters)
-    pw_w, pw_h = 120, 80   # Power Block footprint
-    ct_w, ct_h = 60,  80   # Cooling Tower footprint
-    adm_w, adm_h = 50, 40  # Admin Building footprint
+    # Footprint dimensions (confirmed in meters, Phase 05)
+    pw_w, pw_h = 150, 150  # Power Block footprint
+    ct_w, ct_h = 40,  183  # Cooling Tower footprint
+    adm_w, adm_h = 30, 25  # Admin Building footprint
 
     return [
         {   # Power Block — centered on site
@@ -63,15 +65,17 @@ def get_groups(site_width, site_length, pb_x=None, pb_y=None, ct_x=None, ct_y=No
 
 # ── Phase 04: Full group catalog ──────────────────────────────────────────
 
-# Footprint dimensions (width × height in metres)
+# Footprint dimensions (width × height in metres) — Phase 05 confirmed
 FOOTPRINTS = {
-    "Power Block":    (120, 80),
-    "Cooling Tower":  (60,  80),
-    "Admin Building": (50,  40),
-    "Gate House":     (12,   8),
+    "Power Block":    (150, 150),
+    "Cooling Tower":  (40,  183),
+    "Admin Building": (30,  25),
+    "Gate House":     (12,  12),
+    "GIS":            (110, 51),
+    "Warehouse":      (59,  40),
     "LPG/Metering":   (40,  30),
-    "Flare":          (20,  20),
-    "WT/WWT":         (50,  40),
+    "Flare":          (40,  40),
+    "WT/WWT":         (81,  56),
     "Water":          (40,  40),
 }
 
@@ -83,13 +87,15 @@ RACK_WIDTHS = {
     "Cable Tunnel": 3,
 }
 
-# ── Color Palette ─────────────────────────────────────────────────────────
+# ── Color Palette (Phase 04/05) ───────────────────────────────────────────
 
 GROUP_COLORS = {
     "Power Block":    "#4a90d9",
     "Cooling Tower":  "#7ed6a0",
     "Admin Building": "#f5a623",
     "Gate House":     "#9b59b6",
+    "GIS":            "#2c3e50",
+    "Warehouse":      "#d35400",
     "LPG/Metering":   "#f1c40f",
     "Flare":          "#e74c3c",
     "WT/WWT":         "#34495e",
@@ -106,7 +112,7 @@ RACK_COLORS = {
 
 def get_all_groups(site_width, site_length, positions=None):
     """
-    Return all 9 rectangle groups for Phase 04.
+    Return all 11 rectangle groups for Phase 05.
 
     Args:
         site_width  : float — plot width in metres
@@ -120,16 +126,18 @@ def get_all_groups(site_width, site_length, positions=None):
     if positions is None:
         positions = {}
 
-    # Default positions (reasonable starting placement)
+    # Default positions for 500 x 270 site (Phase 05)
     defaults = {
-        "Power Block":    ((site_width - 120) / 2, (site_length - 80) / 2),
-        "Cooling Tower":  (site_width - 60 - 10,   (site_length - 80) / 2),
-        "Admin Building": (20,                      20),
-        "Gate House":     (site_width / 2 - 6,       0),
-        "LPG/Metering":   (20,                      site_length - 30 - 20),
-        "Flare":          (site_width - 20 - 20,    site_length - 20 - 20),
-        "WT/WWT":         (20,                      site_length / 2 - 20),
-        "Water":          (20,                      site_length / 2 + 30),
+        "Power Block":    ((site_width - 150) / 2, (site_length - 150) / 2),
+        "Cooling Tower":  (site_width - 40 - 15,   (site_length - 183) / 2),
+        "Admin Building": (site_width / 2 - 15,     site_length - 25 - 30),
+        "Gate House":     (site_width / 2 - 6,      site_length - 12),
+        "GIS":            (site_width - 110 - 15,   site_length - 51 - 15),
+        "Warehouse":      (15,                      15),
+        "LPG/Metering":   (15,                      site_length - 30 - 15),
+        "Flare":          (site_width - 40 - 15,    15),
+        "WT/WWT":         (15,                      site_length / 2 - 28),
+        "Water":          (15,                      site_length / 2 + 35),
     }
 
     groups = []

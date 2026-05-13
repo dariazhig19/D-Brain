@@ -36,6 +36,14 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 270, step=10)
 wind_dir    = st.sidebar.selectbox("Wind Direction",
                                    ["North", "South", "East", "West"], index=2)
 st.sidebar.divider()
+st.sidebar.header("Fixed Anchors")
+gate_house_side = st.sidebar.selectbox("Gate House edge",
+                                       ["N", "S", "E", "W"], index=0,
+                                       help="Which site edge anchors the Gate House (flush with boundary).")
+gis_corner      = st.sidebar.selectbox("GIS corner",
+                                       ["NE", "NW", "SE", "SW"], index=0,
+                                       help="Which site corner anchors the GIS.")
+st.sidebar.divider()
 st.sidebar.header("Generation Settings")
 n_results   = st.sidebar.slider("Layouts to generate", 5, 100, 10, step=5)
 min_passing = st.sidebar.slider("Min rules passing",    1,  len(RULES),  12)
@@ -59,6 +67,8 @@ if do_generate:
             site_width, site_length, wind_dir,
             n_results=n_results,
             min_rules_passing=min_passing,
+            gate_house_side=gate_house_side,
+            gis_corner=gis_corner,
         )
     st.session_state["results"] = results
     st.session_state["params"]  = (site_width, site_length, wind_dir)

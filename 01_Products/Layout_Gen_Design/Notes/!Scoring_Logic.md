@@ -69,12 +69,30 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 - **Pipe Rack Width:** 6,000 mm or 2,000 mm (as per Excel).
 
 ### Placement Priorities & Logic
-1. **Gate House:** Positioned at **North Center** (Top Middle).
-2. **Power Block:** Positioned at **Site Center**.
-3. **Admin Building:** Near Gate House and Power Block.
-4. **GIS:** Positioned at **North-East** (Top Right).
-5. **Racks:** Power Block must connect to **WT/WWT & Water Block** via Pipe Rack.
-6. **Others:** Distributed based on Wind Direction and Rack/Road efficiency.
+
+Buildings are placed sequentially in the order below. Each step uses `_try_place_collision_aware` with 50–100 retries; if a step fails the entire candidate is discarded. **Earlier = more layout influence.**
+
+| #   | Building           | Position Rule                                                | Rotation              | Rationale                                                          |
+| :-: | :----------------- | :----------------------------------------------------------- | :-------------------- | :----------------------------------------------------------------- |
+| 1   | **Gate House**     | **FIXED** — N-center, flush with top boundary                | Fixed (square)        | Anchors site entrance (rule GH-01: must sit on site edge)          |
+| 2   | **GIS**            | **FIXED** — NE corner, 15 m from boundary                    | Fixed                 | Pinned to grid-tie corner so cable tunnel to PB is short           |
+| 3   | **Power Block**    | Site center, ±5 % jitter                                     | None (square 150×150) | Heart of plant — minimizes total rack distance to every utility    |
+| 4   | **Admin Building** | North zone between GH and PB (d_GH ≤ 80 m, d_PB ≤ 120 m)     | Random 90°            | Near gate for human entry, near PB for operations                  |
+| 5   | **Cooling Tower**  | Leeward edge (opposite wind dir), depth 15–30 m              | Random 90°            | Plumes must blow away from site                                    |
+| 6   | **WT/WWT**         | Leeward third of site, ≥ 15 m setback                        | Random 90°            | Odors stay downwind                                                |
+| 7   | **Water**          | Adjacent to WT/WWT (right/left/top/bottom), no overlap       | None (square)         | Hydraulically tied to WT/WWT                                       |
+| 8   | **Flare**          | Leeward corner, 15–30 m depth                                | None (square)         | Heat radiation away from buildings                                 |
+| 9   | **LPG/Metering**   | Random corner, ≥ 15 m setback                                | Random 90°            | Hazardous-area separation                                          |
+| 10  | **Warehouse**      | Any remaining gap, ≥ 5 m clear of all placed buildings       | Random 90°            | Lowest priority — fills leftover space                             |
+
+**Three tiers:**
+- **Pinned anchors (1–2)** — code-driven fixtures, always succeed, rotation fixed.
+- **Heart + connections (3–4)** — Power Block centers the layout; Admin keys off both fixed and central anchors.
+- **Wind-sensitive (5–8) and hazardous (9)** — placed via wind direction + corner heuristics. Warehouse (10) absorbs slack.
+
+**Rotation:** non-square, non-fixed buildings randomly take 0° or 90°. Square footprints (PB, Water, Flare, GH) and pinned buildings (GH, GIS) are never rotated.
+
+**Racks** (placed after all buildings): Power Block must connect to Cooling Tower, LPG/Metering, and WT/WWT via Pipe Rack; to Admin via Main Rack; WT/WWT connects to Water and Cooling Tower via Utility Rack; GIS connects to Power Block via Cable Tunnel.
 
 ---
 

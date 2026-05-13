@@ -1,5 +1,18 @@
 import math
 
+# ── Road Infrastructure Constants (Phase 05) ──────────────────────────────────
+ROAD_WIDTH       = 7      # All roads are 7m wide
+ROAD_SETBACK     = 5      # Perimeter road edge is 5m from site boundary
+ROAD_TO_BUILDING = 3      # Min 3m from road inner edge to building
+ROAD_TO_RACK     = 2      # Min 2m from road to rack
+RACK_TO_BLOCK    = 2.5    # Min 2.5m from rack to building
+
+# Inner edge of perimeter road = ROAD_SETBACK + ROAD_WIDTH = 12m from boundary
+ROAD_INNER_EDGE  = ROAD_SETBACK + ROAD_WIDTH  # 12m
+
+# Minimum building distance from boundary = road inner edge + gap
+MIN_BUILDING_FROM_BOUNDARY = ROAD_INNER_EDGE + ROAD_TO_BUILDING  # 15m
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _center(group):
@@ -304,6 +317,18 @@ RULES = [
     # Utility Rack connections
     {"id": "UR-01", "type": "rack_length", "group": "WT/WWT",        "target": "Water",          "rack": "Utility Rack", "penalty_rate": 40, "penalty_mode": "linear"},
     {"id": "UR-02", "type": "rack_length", "group": "WT/WWT",        "target": "Cooling Tower",  "rack": "Utility Rack", "penalty_rate": 30, "penalty_mode": "linear"},
+    # Cable Tunnel connection (GIS ↔ Power Block)
+    {"id": "CT-03", "type": "rack_length", "group": "GIS",           "target": "Power Block",    "rack": "Cable Tunnel", "penalty_rate": 20, "penalty_mode": "linear"},
+
+    # ── Phase 05 new rules ────────────────────────────────────────────
+    # GIS
+    {"id": "GIS-01", "type": "boundary_setback", "group": "GIS",       "target": "Primary Road",   "threshold": 15,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    # Warehouse
+    {"id": "WH-01", "type": "boundary_setback", "group": "Warehouse",  "target": "Primary Road",   "threshold": 15,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    # Road proximity rules (building must be >= 3m from road inner edge = >= 15m from boundary)
+    {"id": "RD-01", "type": "road_proximity", "group": "Power Block",    "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
+    {"id": "RD-02", "type": "road_proximity", "group": "Cooling Tower",  "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
+    {"id": "RD-03", "type": "road_proximity", "group": "Admin Building", "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
 ]
 
 
@@ -460,6 +485,65 @@ def _eval_rack_length(rule, group, target_group, **_):
     )
 
 
+def _eval_road_proximity(rule, group, site_width, site_length, **_):
+    """Distance from building edge to nearest perimeter road inner edge.
+    Road inner edge = ROAD_SETBACK + ROAD_WIDTH = 12m from boundary.
+    Building must be >= threshold (3m) from road inner edge.
+    Linear penalty on shortfall.
+    """
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    road_inner = ROAD_INNER_EDGE  # 12m from boundary
+
+    # Distance from each building edge to the nearest road inner edge
+    dist_left   = x - road_inner
+    dist_bottom = y - road_inner
+    dist_right  = (site_width - (x + w)) - road_inner
+    dist_top    = (site_length - (y + h)) - road_inner
+
+    min_dist = min(dist_left, dist_bottom, dist_right, dist_top)
+    edges = {"left": dist_left, "bottom": dist_bottom, "right": dist_right, "top": dist_top}
+    closest_edge = min(edges, key=edges.get)
+
+    shortfall = max(0.0, rule["threshold"] - min_dist)
+    penalty = shortfall * rule["penalty_rate"]
+    passed = shortfall == 0
+    return _result(
+        rule["id"], f"{rule['group']}: Road Gap", rule["group"],
+        passed, penalty,
+        f"Road gap OK ({min_dist:.1f} m from {closest_edge} road) \u2713" if passed else f"Too close to {closest_edge} road: {min_dist:.1f} m (need \u2265 {rule['threshold']} m)",
+        measured=f"Closest road edge ({closest_edge}): {min_dist:.1f} m",
+        threshold=f"\u2265 {rule['threshold']} m from road inner edge",
+        calc=f"Shortfall: {rule['threshold']} \u2212 {min_dist:.1f} = {shortfall:.1f} m \u00d7 {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if shortfall > 0 else "0 pts (OK)",
+    )
+
+
+def _eval_boundary_overflow(rule, group, site_width, site_length, **_):
+    """Check if building extends past site boundary.
+    Logarithmic penalty to discourage but not hard-reject overflow.
+    """
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    overflow_left   = max(0.0, -x)
+    overflow_bottom = max(0.0, -y)
+    overflow_right  = max(0.0, (x + w) - site_width)
+    overflow_top    = max(0.0, (y + h) - site_length)
+    total_overflow  = overflow_left + overflow_bottom + overflow_right + overflow_top
+
+    if total_overflow > 0:
+        penalty = rule["penalty_rate"] * math.log(1 + total_overflow)
+    else:
+        penalty = 0
+
+    passed = total_overflow == 0
+    return _result(
+        rule["id"], f"{rule['group']}: Boundary Overflow", rule["group"],
+        passed, penalty,
+        f"Within boundaries \u2713" if passed else f"Overflows boundary by {total_overflow:.1f} m total",
+        measured=f"Total overflow: {total_overflow:.1f} m",
+        threshold="0 m (should stay within boundary)",
+        calc=f"{rule['penalty_rate']} \u00d7 ln(1 + {total_overflow:.1f}) = {penalty:,.0f} pts" if total_overflow > 0 else "0 pts (OK)",
+    )
+
+
 # ── Evaluator dispatch table ──────────────────────────────────────────────
 
 _EVALUATORS = {
@@ -471,6 +555,8 @@ _EVALUATORS = {
     "max_distance":        _eval_max_distance,
     "pipe_rack_proximity": _eval_pipe_rack_proximity,
     "rack_length":         _eval_rack_length,
+    "road_proximity":      _eval_road_proximity,
+    "boundary_overflow":   _eval_boundary_overflow,
 }
 
 
@@ -533,6 +619,12 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
             if group is None:
                 continue
             r = evaluator(rule, group, site_width, site_length, wind_dir)
+        elif rule_type in ("road_proximity", "boundary_overflow"):
+            # Road/boundary rules — same signature as boundary_setback
+            group = by_name.get(rule["group"])
+            if group is None:
+                continue
+            r = evaluator(rule, group, site_width, site_length)
         else:
             # Single-building rules (center_proximity, boundary_setback)
             group = by_name.get(rule["group"])

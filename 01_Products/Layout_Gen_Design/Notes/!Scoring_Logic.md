@@ -19,6 +19,8 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | `leeward_edge`        | `_eval_leeward_edge()`      | Is building on the downwind (leeward) side?        | Flat         |
 | `rack_length`         | `_eval_rack_length()`       | Edge-to-edge distance between two connected buildings | Linear     |
 | `pipe_rack_proximity` | `_eval_pipe_rack_proximity()` | Distance from building edge to nearest rack line | Linear       |
+| `road_proximity`      | `_eval_road_proximity()`    | Distance from building/rack to nearest road      | Linear       |
+| `boundary_overflow`   | `_eval_boundary_overflow()` | Penalty for buildings exceeding site boundaries   | Logarithmic  |
 
 **Penalty Modes:**
 - **Linear** = `excess_or_shortfall × penalty_rate` (proportional to violation severity)
@@ -37,6 +39,42 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | **AD-01** | Admin Building | `boundary_setback`  | Primary Road        | 20 m      | 1000 pts (flat)  | If any edge < 20 m          |
 | **AD-02** | Admin Building | `max_distance`      | Gate House          | 50 m      | 100 pts / m      | If distance > 50 m          |
 | **AD-03** | Admin Building | `windward_edge`     | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **upwind** edge   |
+
+---
+
+## 📐 Building Dimensions & Constraints (mm)
+
+| Building/Block | Dimensions (W x L) | Notes |
+| :--- | :--- | :--- |
+| **Power Block** | 150,000 x 150,000 | Site Center Anchor |
+| **Cooling Tower** | 40,000 x 183,000 | Includes aux equipment from Excel |
+| **Admin Building** | 30,000 x 25,000 | Include parking area |
+| **Gate House** | 12,000 x 12,000 | Include parking; North Center |
+| **GIS** | 110,000 x 51,000 | North-East position |
+| **Flare** | Ø 40,000 | Flare Stack only (KO Drum separate) |
+| **WT/WWT** | 81,000 x 56,000 | Includes aux equipment from Excel |
+| **Warehouse** | 59,000 x 40,000 | Include parking area |
+| **Water Block** | 37,000 (RAW) / 10,000 (Demi) | Various tanks inside |
+
+---
+
+## 🛣️ Phase 05: Infrastructure & Connectivity
+
+### Infrastructure Constraints
+- **Road Width:** 7,000 mm (all roads)
+- **Perimeter Fire Road:** Edge must be 5,000 mm from Site Boundary.
+- **Road-to-Building:** Min. 3,000 mm distance.
+- **Road-to-Rack:** Min. 2,000 mm distance.
+- **Rack-to-Block:** Min. 2,500 mm distance.
+- **Pipe Rack Width:** 6,000 mm or 2,000 mm (as per Excel).
+
+### Placement Priorities & Logic
+1. **Gate House:** Positioned at **North Center** (Top Middle).
+2. **Power Block:** Positioned at **Site Center**.
+3. **Admin Building:** Near Gate House and Power Block.
+4. **GIS:** Positioned at **North-East** (Top Right).
+5. **Racks:** Power Block must connect to **WT/WWT & Water Block** via Pipe Rack.
+6. **Others:** Distributed based on Wind Direction and Rack/Road efficiency.
 
 ---
 
@@ -90,7 +128,7 @@ Rule: each connection should be as short as possible. Penalty = `rack_length × 
 
 ## Pending Info From User
 
-- [ ] **1) Building sizes** — confirm or update dimensions for each group
-- [x] **2) Rack connections** — defined: 3 racks, 7 connections (see Rack Connection Map above)
-- [ ] **3) Placement priority** — ordered list of buildings by importance (placed first = highest priority)
-- [ ] **4) Manual placement list** — buildings that the user places manually (not auto-generated)
+- [x] **1) Building sizes** — Dimensions updated for 10 main groups.
+- [x] **2) Rack connections** — Defined: PB to WT/WWT/Water.
+- [x] **3) Placement priority** — Ordered: GH(N-Center), PB(Center), Admin(Near GH/PB), GIS(NE).
+- [ ] **4) Excel-based equipment list** — Need to integrate specific aux equipment dimensions from Excel for CT/WWT.

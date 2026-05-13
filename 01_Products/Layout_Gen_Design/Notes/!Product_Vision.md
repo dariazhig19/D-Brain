@@ -3,7 +3,7 @@
 
 **Project Goal:**
 
-Automate the generation of power plant Plot Plans. Develop a system to optimize the placement of 60+ buildings on a site based on engineering constraints and rules.
+Automate the generation of power plant Plot Plans. Develop a system to optimize the placement of 60+ buildings on a site based on engineering constraints and rules. The goal is to achieve a compact layout within narrow sites, with flexibility to exceed boundaries if necessary. All results will be verified against existing drawings to ensure real-world viability.
 
 ## 🛠 Tech Stack (Vibe Coding)
 
@@ -20,6 +20,7 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 2. **Smart Grouping:** Place major clusters (Power Block, Cooling Tower, Admin) according to rules.
 3. **Automated Scoring:** Real-time validation of distances (e.g., "Admin must be 50m away from Cooling Tower").
 4. **Generative Layouts:** Run multiple iterations to find the optimal arrangement with the highest score.
+5. **Real-world Verification:** Compare generated layouts with existing project drawings to validate tool accuracy.
 
 
 ## 📈 Development Roadmap (Phased Plan)
@@ -53,11 +54,12 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 
 ### Phase_05: Advanced Routing & Sequential Placement
 
-- [ ] **Add Roads:** Implement Primary Road (ring road, 5m setback) and Inner Road (around Power Block).
-- [ ] **Dashboard Interface:** Update visual layout and controls.
-- [ ] **Advanced Rack Logic:** Refactor rack routing so that 1 rack acts as a main spine connecting multiple buildings.
-- [ ] **Hierarchical Placement Logic:** Change layout generator to place the 3 main blocks sequentially, starting with anchoring the Power Block.
-- [ ] **Rule Network:** Stop updating `RuleNetwork.py` and `Rule_Network.html` (no longer needed for Phase 05 and beyond).
-- [ ] **Building Rotation:** Add building rotation randomizing to the generative engine.
+- [ ] **Infrastructure-First Design:** Prioritize the placement of Roads and Pipe Racks as the primary constraints.
+- [ ] **Road Network:** Implement a 7m wide perimeter fire road (5m setback from boundary) and internal roads (3m distance from buildings).
+- [ ] **Advanced Rack Logic:** Implement Pipe Rack routing with 2.5m clearance from blocks and 2m from roads.
+- [ ] **Hierarchical Placement Logic:** Anchor the Power Block at the site center (500m x 270m) and place the Gate House at the North Center.
+- [ ] **GIS & Admin Placement:** Position GIS at the North-East and Admin Building near the Gate House/Power Block.
+- [ ] **Building Rotation & Boundary Flexibility:** Add rotation and allow boundary overflow for extremely tight sites.
+- [ ] **Verification:** Validate generated outputs against reference drawings.
 
 ## 📍 Current Status: **Phase_04 Completed, Moving to Phase_05 (Generative Optimization & Sub-Clusters)**

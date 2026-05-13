@@ -379,14 +379,33 @@ def _place_racks(groups):
         "Cable Tunnel": [s for s in cable_tunnel if s],
     }
 
+# ── Collision-aware placement ─────────────────────────────────────────────
+def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200):
+    """Try to place a building using place_fn, checking against already-placed buildings.
+    Returns (x, y) or None if no valid placement found.
+    """
+    w, h = _FP[name]
+    for _ in range(max_attempts):
+        x, y = place_fn()
+        # Check overlap against all placed buildings
+        overlap = False
+        for pname, (px, py) in placed.items():
+            if pname in _FP:
+                pw, ph = _FP[pname]
+                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=_OVERLAP_GAP):
+                    overlap = True
+                    break
+        if not overlap:
+            return x, y
+    return None
 
-# ── Main generator ────────────────────────────────────────────────────────
 
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
+    Each building is placed sequentially with collision checks against all prior buildings.
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
     Each dict: {positions, rack_endpoints, groups, racks, scoring, road}
@@ -395,59 +414,70 @@ def generate_layouts(site_width, site_length, wind_dir,
     road = build_perimeter_road(site_width, site_length)
     
     candidates = []
+    sw, sl = site_width, site_length
 
     for _ in range(max_pool):
-        # ── Hierarchical placement (Phase 05 order) ──────────────────────
+        placed = {}
 
-        # 1. Gate House (FIXED — North Center)
-        gh_x, gh_y = _place_gate_house(site_width, site_length)
+        # 1. Gate House (FIXED — North Center) — always succeeds
+        gh_x, gh_y = _place_gate_house(sw, sl)
+        placed["Gate House"] = (gh_x, gh_y)
 
-        # 2. GIS (FIXED — North-East)
-        gis_x, gis_y = _place_gis(site_width, site_length)
+        # 2. GIS (FIXED — North-East) — always succeeds
+        gis_x, gis_y = _place_gis(sw, sl)
+        placed["GIS"] = (gis_x, gis_y)
 
-        # 3. Power Block (center, minimal jitter)
-        pb_x, pb_y = _place_power_block(site_width, site_length)
+        # 3. Power Block (center, minimal jitter) — collision-aware
+        result = _try_place_collision_aware(sw, sl, "Power Block", placed,
+                    lambda: _place_power_block(sw, sl), max_attempts=50)
+        if result is None: continue
+        placed["Power Block"] = result
 
-        # 4. Admin Building (near GH + PB)
-        adm_x, adm_y = _place_admin(site_width, site_length, gh_x, gh_y, pb_x, pb_y)
+        # 4. Admin Building (near GH + PB) — collision-aware
+        pb_x, pb_y = placed["Power Block"]
+        result = _try_place_collision_aware(sw, sl, "Admin Building", placed,
+                    lambda: _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y), max_attempts=50)
+        if result is None: continue
+        placed["Admin Building"] = result
 
-        # 5. Cooling Tower (leeward edge)
-        ct_x, ct_y = _place_cooling_tower(site_width, site_length, wind_dir)
+        # 5. Cooling Tower (leeward edge) — collision-aware
+        result = _try_place_collision_aware(sw, sl, "Cooling Tower", placed,
+                    lambda: _place_cooling_tower(sw, sl, wind_dir), max_attempts=100)
+        if result is None: continue
+        placed["Cooling Tower"] = result
 
-        # 6. WT/WWT (leeward, setback)
-        ww_x, ww_y = _place_wt_wwt(site_width, site_length, wind_dir)
+        # 6. WT/WWT (leeward, setback) — collision-aware
+        result = _try_place_collision_aware(sw, sl, "WT/WWT", placed,
+                    lambda: _place_wt_wwt(sw, sl, wind_dir), max_attempts=100)
+        if result is None: continue
+        placed["WT/WWT"] = result
 
-        # 7. Water (near WT/WWT)
-        wa_x, wa_y = _place_water(site_width, site_length, ww_x, ww_y)
+        # 7. Water (near WT/WWT) — collision-aware
+        ww_x, ww_y = placed["WT/WWT"]
+        result = _try_place_collision_aware(sw, sl, "Water", placed,
+                    lambda: _place_water(sw, sl, ww_x, ww_y), max_attempts=100)
+        if result is None: continue
+        placed["Water"] = result
 
-        # 8. Flare (leeward corner)
-        fl_x, fl_y = _place_flare(site_width, site_length, wind_dir)
+        # 8. Flare (leeward corner) — collision-aware
+        result = _try_place_collision_aware(sw, sl, "Flare", placed,
+                    lambda: _place_flare(sw, sl, wind_dir), max_attempts=100)
+        if result is None: continue
+        placed["Flare"] = result
 
-        # 9. LPG/Metering (corner, setback)
-        lpg_x, lpg_y = _place_lpg(site_width, site_length)
+        # 9. LPG/Metering (corner, setback) — collision-aware
+        result = _try_place_collision_aware(sw, sl, "LPG/Metering", placed,
+                    lambda: _place_lpg(sw, sl), max_attempts=100)
+        if result is None: continue
+        placed["LPG/Metering"] = result
 
-        # Build partial positions for warehouse placement
-        partial_positions = {
-            "Power Block":    (pb_x, pb_y),
-            "Cooling Tower":  (ct_x, ct_y),
-            "Admin Building": (adm_x, adm_y),
-            "Gate House":     (gh_x, gh_y),
-            "GIS":            (gis_x, gis_y),
-            "LPG/Metering":   (lpg_x, lpg_y),
-            "Flare":          (fl_x, fl_y),
-            "WT/WWT":         (ww_x, ww_y),
-            "Water":          (wa_x, wa_y),
-        }
+        # 10. Warehouse (available space) — collision-aware
+        wh_x, wh_y = _place_warehouse(sw, sl, placed)
+        placed["Warehouse"] = (wh_x, wh_y)
 
-        # 10. Warehouse (available space)
-        wh_x, wh_y = _place_warehouse(site_width, site_length, partial_positions)
+        positions = dict(placed)
 
-        positions = {
-            **partial_positions,
-            "Warehouse": (wh_x, wh_y),
-        }
-
-        # Reject if any buildings overlap
+        # Final overlap sanity check
         if _has_any_overlap(positions):
             continue
 

@@ -93,17 +93,25 @@ def _render_layout(layout, sw, sl, wd, rank):
     ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.0)
 
     # Perimeter road corridor — drawn from polylines on the layout's road dict.
-    # Fill = outer polyline filled gray, inner polyline punched out with site bg.
+    # Fall back to closing the corner rectangles if polylines aren't present
+    # (e.g. cached layouts generated before deformation support).
     road = layout.get("road", {})
     outer_pl = road.get("outer_polyline")
     inner_pl = road.get("inner_polyline")
+    if not (outer_pl and inner_pl):
+        outer_corners = road.get("outer")
+        inner_corners = road.get("inner")
+        if outer_corners and inner_corners:
+            outer_pl = list(outer_corners) + [outer_corners[0]]
+            inner_pl = list(inner_corners) + [inner_corners[0]]
     if outer_pl and inner_pl:
         ox, oy = zip(*outer_pl)
         ix, iy = zip(*inner_pl)
-        ax.fill(ox, oy, color='#e0e0e0', alpha=0.5, zorder=0)
-        ax.fill(ix, iy, color='#f0f8ff', alpha=1.0, zorder=0)
-        ax.plot(ox, oy, color='#999999', linestyle='-', lw=0.6)
-        ax.plot(ix, iy, color='#999999', linestyle='-', lw=0.6)
+        # Layer: outer fill above site bg, inner fill punches it back to bg color
+        ax.fill(ox, oy, color='#cccccc', zorder=0.5)
+        ax.fill(ix, iy, color='#f0f8ff', zorder=0.6)
+        ax.plot(ox, oy, color='#666666', lw=0.8, zorder=0.7)
+        ax.plot(ix, iy, color='#666666', lw=0.8, zorder=0.7)
 
     # Wind indicator
     wind_map = {

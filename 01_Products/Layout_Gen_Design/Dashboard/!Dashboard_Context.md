@@ -47,8 +47,11 @@ Main Streamlit application. Currently implements **Phase_04**:
 - Perimeter road rendered as filled gray corridor (7m wide, 5m setback from boundary).
 - Replaced red dashed road setback with dual-edge road corridor visualization.
 - Renders all 11 groups including new GIS and Warehouse blocks.
-- Imports `ROAD_SETBACK`, `ROAD_WIDTH`, `ROAD_INNER_EDGE` from `Core.Rules`.
-- Imports `build_perimeter_road` from `Core.Main`.
+
+**Phase_05 step 2 Implementations:**
+- New sidebar section **Fixed Anchors**: `Gate House edge` selectbox (`N/S/E/W`) and `GIS corner` selectbox (`NE/NW/SE/SW`). Passed to `generate_layouts(..., gate_house_side, gis_corner)`.
+- Road rendering rewritten to read `outer_polyline` and `inner_polyline` from `layout["road"]` (drawn by `Core.Roads.deform_around_buildings`). Allows non-rectangular roads (e.g., deformed around Gate House).
+- Imports simplified — road constants no longer needed in App.py; `build_perimeter_road` import dropped.
 
 ## Key Design Principles
 - Dashboard calls Core functions only — no geometry/rules logic lives in App.py.
@@ -65,3 +68,5 @@ Main Streamlit application. Currently implements **Phase_04**:
 | [[Daily_Report_20260506]] | `App.py` | Rewrote for Phase 03 generative layout, grid display, rule inspector, and DXF export. |
 | [[Daily_Report_20260507]] | `App.py` | Added rack visualization and dynamic rule inspector. |
 | 2026-05-13 | `App.py` | **Phase 05:** Updated defaults (500×270), road corridor rendering, Phase 05 header, GIS/Warehouse visualization. |
+| 2026-05-13 | `App.py` | **Phase 05.2:** Added "Fixed Anchors" sidebar section with Gate House edge + GIS corner selectboxes. |
+| 2026-05-13 | `App.py` | **Phase 05 step 2:** Rewrote road rendering to consume `outer_polyline`/`inner_polyline` from layout dict (deformable roads). Dropped unused imports. |

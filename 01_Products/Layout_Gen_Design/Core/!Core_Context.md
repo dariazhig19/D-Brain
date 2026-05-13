@@ -23,16 +23,26 @@ Entry point and orchestrator. Coordinates calls between Groups and Rules modules
 - Uses `evaluate_all_v2()` for scoring with 22 rules.
 
 **Phase_05 Implementations:**
-- `build_perimeter_road()` generates a fixed 7m wide perimeter fire road (5m setback from boundary).
-- Hierarchical placement order: GH(fixed N-center) → GIS(fixed NE) → PB(center) → Admin → CT → WT/WWT → Water → Flare → LPG → Warehouse.
+- `build_perimeter_road()` (now in `Roads.py`) generates a 7m wide perimeter fire road (5m setback from boundary).
+- Hierarchical placement order: GH(fixed user-chosen edge) → GIS(fixed user-chosen corner) → PB(center) → Admin → CT → WT/WWT → Water → Flare → LPG → Warehouse.
 - Gate House and GIS are pinned (not randomized). Power Block has ±5% jitter.
 - All buildings respect road corridor clearance (15m from boundary = 5m setback + 7m road + 3m gap).
 - `_place_warehouse()` uses collision-aware placement against all already-placed buildings.
 - Cable Tunnel rack: GIS ↔ Power Block.
 - Layout output includes `"road"` key with perimeter road geometry.
+- **Building rotation (random 0°/90°):** placement tuples now `(x, y, rotated)`. Non-square, non-fixed buildings randomly rotate. Fixed/pinned buildings (GH, GIS) and square footprints (PB, Water, Flare) never rotate. Helpers: `_dims(name, rotated)`, `_maybe_rotate(name)`.
+- **Fixed-anchor inputs:** `generate_layouts(..., gate_house_side="N", gis_corner="NE")`. GH accepts `N/S/E/W`; GIS accepts `NE/NW/SE/SW`. Defaults preserve prior behavior.
+- **Road deformation (step 2 minimal):** after `build_perimeter_road`, `Main.py` calls `deform_around_buildings(road, [Gate House], …)` from `Roads.py`. The resulting road dict carries `outer_polyline`/`inner_polyline`. Only Gate House drives deformation for now; other boundary-hugging buildings come later.
 
 ### `Geometry.py`
 Handles all spatial/geometric operations: drawing site boundaries, placing building rectangles, computing distances between objects, and checking boundary containment. Uses Matplotlib patches as the rendering primitive. **Status: stub — not yet implemented.**
+
+### `Roads.py` *(New, Phase_05 step 2)*
+Owns road infrastructure: dimensional constants and geometry generation.
+- **Constants** (migrated out of `Rules.py`): `ROAD_WIDTH=7`, `ROAD_SETBACK=5`, `ROAD_TO_BUILDING=3`, `ROAD_TO_RACK=2`, `RACK_TO_BLOCK=2.5`, `ROAD_INNER_EDGE=12`, `MIN_BUILDING_FROM_BOUNDARY=15`.
+- `build_perimeter_road(site_w, site_l)` — migrated from `Main.py`. Returns dict with `outer`/`inner` rectangle corners.
+- `deform_around_buildings(road, buildings, site_w, site_l)` — bends the perimeter road inward around buildings that intrude into the corridor. Currently handles the **north (top) edge only** (Phase_05 step 2 minimal). Adds `outer_polyline` and `inner_polyline` closed-loop point lists to the road dict; corridor width preserved at `ROAD_WIDTH`.
+- Other 3 edges (S/E/W) remain rectangular — to be expanded in future steps.
 
 ### `Rules.py`
 Translates engineering constraints into Python validation functions.
@@ -54,7 +64,7 @@ Translates engineering constraints into Python validation functions.
 - 22 total rules (6 Phase 03 + 16 Phase 04).
 
 **Phase_05 Implementations:**
-- Added road infrastructure constants: `ROAD_WIDTH`, `ROAD_SETBACK`, `ROAD_INNER_EDGE`, `MIN_BUILDING_FROM_BOUNDARY`.
+- Road infrastructure constants moved to `Roads.py`. `Rules.py` now imports `ROAD_INNER_EDGE` from `Roads.py` for `_eval_road_proximity`.
 - 2 new evaluator functions:
   - `_eval_road_proximity()` — building edge to perimeter road inner edge distance
   - `_eval_boundary_overflow()` — logarithmic penalty for boundary overflow
@@ -92,6 +102,7 @@ Defines building groups as data structures with dimensions, color codes, and pos
 - Total: 11 rectangular groups.
 - Updated `GROUP_COLORS` for GIS and Warehouse.
 - Updated default positions in `get_all_groups()` for 500×270 site.
+- `get_all_groups()` accepts 3-tuple `(x, y, rotated)` positions; when `rotated=True`, swaps `(width, height)` for 90° rotation. Group dicts now include `rotated` key.
 
 ### `RuleNetwork.py` *(New in Phase_04)*
 Standalone script for rule network visualization.
@@ -116,3 +127,6 @@ Standalone script for rule network visualization.
 | [[Daily_Report_20260506]] | `Rules.py`, `Main.py`, `Exporter.py` | Implemented Phase 03: generative engine, rule logic orchestrator, and DXF exporter module. |
 | [[Daily_Report_20260507]] | `Rules.py`, `Groups.py`, `Main.py`, `Exporter.py`, `RuleNetwork.py` | Implemented generic rule dispatch engine and 22-rule constraint list. Expanded catalog to 12 total groups (9 rects, 3 racks). Updated layout generation orchestrator for 12 groups. Added new DXF layer definitions and polyline export logic. Created Pyvis network generation script. |
 | 2026-05-13 | `Groups.py`, `Rules.py`, `Main.py` | **Phase 05:** Updated all building dimensions to client-confirmed values. Added GIS (110×51) and Warehouse (59×40). Added road infrastructure (7m road, 5m setback). Hierarchical placement: GH fixed N-center, GIS fixed NE, PB center. 8 new rules (30 total). Cable Tunnel connects GIS↔PB. |
+| 2026-05-13 | `Main.py`, `Groups.py` | **Phase 05.1:** Added random 0°/90° rotation for non-square, non-fixed buildings. Placement tuples now `(x, y, rotated)`. `get_all_groups()` swaps W/H when rotated. |
+| 2026-05-13 | `Main.py`, `App.py` | **Phase 05.2:** Added `gate_house_side` (N/S/E/W) and `gis_corner` (NE/NW/SE/SW) inputs to `generate_layouts`; wired to new sidebar "Fixed Anchors" section. |
+| 2026-05-13 | `Roads.py`, `Rules.py`, `Main.py`, `App.py` | **Phase 05 step 2:** New `Core/Roads.py` module owns road constants + geometry. Migrated `build_perimeter_road` out of `Main.py` and constants out of `Rules.py`. Added `deform_around_buildings()` — bends top edge inward around Gate House (other edges TBD). Road dict now carries `outer_polyline`/`inner_polyline`. App.py road drawing rewritten to read polylines from layout dict. |

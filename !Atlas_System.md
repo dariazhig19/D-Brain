@@ -193,3 +193,5 @@ Custom skills in `99_System/Agents/Skills/` extend the system's capabilities.
 | Context   | `!Context.md` folder reference files                          |
 | Research  | Learning materials in `02_Library/Obsidian&Vibe Coding/`      |
 | Skill     | Custom agent skills in `99_System/Agents/Skills/`             |
+| Meeting   | Meeting records in `04_Reports/Meeting_Notes/`                |
+| Agent     | Agent-provider configs in `99_System/Agents/{Claude,Gemini}/` |

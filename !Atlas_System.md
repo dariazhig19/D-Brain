@@ -74,7 +74,7 @@ Every product folder contains these subfolders:
 | `Core/` | Python engine logic | `.py` files (geometry, rules, orchestration). No UI code. One `!Core_Context.md` tracking file. |
 | `Dashboard/` | Streamlit UI layer | `App.py` and any UI helpers. Calls Core functions only. One `!Dashboard_Context.md` tracking file. |
 | `Data/` | Input data files | `.xlsx`, `.json`, `.csv` engineering requirements and reference data. |
-| `Notes/` | Strategy & vision | `!Product_Vision.md` (roadmap), `!Scoring_Logic.md` (scoring rules), `Overview.canvas` (big picture map). |
+| `Notes/` | Strategy & vision | `!Product_Vision.md` (roadmap), `!Scoring_Logic.md` (scoring rules), `Overview.canvas` (big picture map), optional supplementary visualizations (e.g., `Rule_Network.html`). |
 | `Pipeline/` | Step-by-step dev log | One subfolder per phase. See Pipeline rules below. |
 
 #### Pipeline Subfolder Rules
@@ -82,11 +82,11 @@ Every product folder contains these subfolders:
 
 | Subfolder | Purpose | What Goes Here |
 |-----------|---------|----------------|
-| `!Prototype/` | Early-stage ideas | Concept notes, workflow comparisons, initial reasoning before coding starts. |
-| `Phase_01/`, `Phase_02/`, … | One folder per phase | **Exactly two files per phase**: a `.md` note describing the phase goals and decisions, and a `.png` image showing the visual output of that phase. |
+| `!Prototype/` | Early-stage ideas | Concept notes (e.g., `Main Ideas.md`), workflow comparisons, initial reasoning before coding starts. |
+| `Phase_01/`, `Phase_02/`, … | One folder per phase | **At minimum**: a `.md` note describing the phase goals/decisions and a `.png` image of the phase's visual output. Additional versioned snapshots (e.g., `Dashboard_V3.png`, `CAD Output_V1.png`) and supplementary notes (e.g., `Task.md`, `Explanation of Rule Logic.md`) are allowed when they document iteration within the phase. |
 
 **Naming rule for phase folders**: `Phase_XX` where XX is zero-padded (01, 02, 03…).
-**Files inside a phase folder**: `Phase XX Notes.md` + `Phase XX Output Example.png`.
+**Canonical files inside a phase folder**: `Phase XX Notes.md` + `Phase XX Output Example.png` (preferred). Legacy `Phase_XX_Plan.md` is also accepted for phases authored before this convention was finalized.
 
 #### Core/ Note Rules
 - `!Core_Context.md` must always reflect current file status and design principles.

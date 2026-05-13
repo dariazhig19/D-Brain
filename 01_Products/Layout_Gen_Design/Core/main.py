@@ -160,19 +160,42 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 _MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
 
 
-def _place_gate_house(sw, sl):
-    """Gate House: FIXED at North Center — rotation also fixed."""
+def _place_gate_house(sw, sl, side="N"):
+    """Gate House: FIXED at chosen edge, centered along that edge, flush
+    with the site boundary (per GH-01). Rotation also fixed.
+
+    side: "N" | "S" | "E" | "W" — which edge to anchor on. Default "N".
+    """
     w, h = _FP["Gate House"]
-    x = (sw - w) / 2   # centered horizontally
-    y = sl - h          # flush with top boundary (on site edge per GH-01)
+    if side == "N":
+        x, y = (sw - w) / 2, sl - h
+    elif side == "S":
+        x, y = (sw - w) / 2, 0
+    elif side == "E":
+        x, y = sw - w, (sl - h) / 2
+    elif side == "W":
+        x, y = 0, (sl - h) / 2
+    else:
+        raise ValueError(f"gate_house_side must be N/S/E/W, got {side!r}")
     return x, y, False
 
 
-def _place_gis(sw, sl):
-    """GIS: FIXED at North-East corner — rotation also fixed."""
+def _place_gis(sw, sl, corner="NE"):
+    """GIS: FIXED at chosen corner with road-margin clearance. Rotation fixed.
+
+    corner: "NE" | "NW" | "SE" | "SW". Default "NE".
+    """
     w, h = _FP["GIS"]
-    x = sw - w - _MARGIN    # right side, with road clearance
-    y = sl - h - _MARGIN    # top side, with road clearance
+    if corner == "NE":
+        x, y = sw - w - _MARGIN, sl - h - _MARGIN
+    elif corner == "NW":
+        x, y = _MARGIN,           sl - h - _MARGIN
+    elif corner == "SE":
+        x, y = sw - w - _MARGIN, _MARGIN
+    elif corner == "SW":
+        x, y = _MARGIN,           _MARGIN
+    else:
+        raise ValueError(f"gis_corner must be NE/NW/SE/SW, got {corner!r}")
     return x, y, False
 
 
@@ -445,11 +468,16 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 
 
 def generate_layouts(site_width, site_length, wind_dir,
-                     n_results=10, min_rules_passing=10, max_pool=5000):
+                     n_results=10, min_rules_passing=10, max_pool=5000,
+                     gate_house_side="N", gis_corner="NE"):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
     Each building is placed sequentially with collision checks against all prior buildings.
+
+    Args:
+        gate_house_side : "N" | "S" | "E" | "W" — which edge anchors Gate House.
+        gis_corner      : "NE" | "NW" | "SE" | "SW" — which corner anchors GIS.
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
     Each dict: {positions, rack_endpoints, groups, racks, scoring, road}
@@ -463,12 +491,12 @@ def generate_layouts(site_width, site_length, wind_dir,
     for _ in range(max_pool):
         placed = {}
 
-        # 1. Gate House (FIXED — North Center) — always succeeds
-        gh_x, gh_y, _ = _place_gate_house(sw, sl)
+        # 1. Gate House (FIXED — user-chosen edge) — always succeeds
+        gh_x, gh_y, _ = _place_gate_house(sw, sl, side=gate_house_side)
         placed["Gate House"] = (gh_x, gh_y, False)
 
-        # 2. GIS (FIXED — North-East) — always succeeds
-        gis_x, gis_y, _ = _place_gis(sw, sl)
+        # 2. GIS (FIXED — user-chosen corner) — always succeeds
+        gis_x, gis_y, _ = _place_gis(sw, sl, corner=gis_corner)
         placed["GIS"] = (gis_x, gis_y, False)
 
         # 3. Power Block (center, minimal jitter) — collision-aware

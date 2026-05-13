@@ -117,11 +117,12 @@ def get_all_groups(site_width, site_length, positions=None):
     Args:
         site_width  : float — plot width in metres
         site_length : float — plot length in metres
-        positions   : dict  — optional {group_name: (x, y)} overrides.
-                      If None or missing for a group, uses default position.
+        positions   : dict  — optional {group_name: (x, y) or (x, y, rotated)} overrides.
+                      `rotated=True` swaps (width, height) → 90° rotation.
+                      If None or missing for a group, uses default position (unrotated).
 
     Returns:
-        list of group dicts with keys: name, x, y, width, height, color
+        list of group dicts with keys: name, x, y, width, height, color, rotated
     """
     if positions is None:
         positions = {}
@@ -141,15 +142,19 @@ def get_all_groups(site_width, site_length, positions=None):
     }
 
     groups = []
-    for name, (w, h) in FOOTPRINTS.items():
-        x, y = positions.get(name, defaults[name])
+    for name, (fw, fh) in FOOTPRINTS.items():
+        pos = positions.get(name, defaults[name])
+        x, y = pos[0], pos[1]
+        rotated = pos[2] if len(pos) >= 3 else False
+        w, h = (fh, fw) if rotated else (fw, fh)
         groups.append({
-            "name":   name,
-            "x":      x,
-            "y":      y,
-            "width":  w,
-            "height": h,
-            "color":  GROUP_COLORS[name],
+            "name":    name,
+            "x":       x,
+            "y":       y,
+            "width":   w,
+            "height":  h,
+            "color":   GROUP_COLORS[name],
+            "rotated": rotated,
         })
     return groups
 

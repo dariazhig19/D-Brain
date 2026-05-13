@@ -46,6 +46,32 @@ def _rand_pos(site_w, site_l, w, h, margin=15):
     return x, y
 
 
+# ── Rotation helpers ──────────────────────────────────────────────────────
+
+def _dims(name, rotated):
+    """Return (w, h) for a footprint, swapped if rotated 90°."""
+    w, h = _FP[name]
+    return (h, w) if rotated else (w, h)
+
+
+def _maybe_rotate(name):
+    """Random 0°/90° flag. Square footprints always return False (no-op)."""
+    w, h = _FP[name]
+    if w == h:
+        return False
+    return random.random() < 0.5
+
+
+def _pos_xy(val):
+    """Extract (x, y) from a placed-entry tuple (handles 2- or 3-tuple)."""
+    return val[0], val[1]
+
+
+def _pos_rot(val):
+    """Extract rotation flag from a placed-entry tuple (default False)."""
+    return val[2] if len(val) >= 3 else False
+
+
 # ── Overlap detection ─────────────────────────────────────────────────────
 
 _OVERLAP_GAP = 1  # minimum gap (metres) between any two buildings (reduced for tight sites)
@@ -62,13 +88,14 @@ def _rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2, gap=_OVERLAP_GAP):
 def _has_any_overlap(positions):
     """
     Check if any pair of placed rectangles overlaps.
-    positions: dict {name: (x, y)}  — uses FOOTPRINTS for width/height.
+    positions: dict {name: (x, y) or (x, y, rotated)}  — uses FOOTPRINTS for width/height.
     Returns True if ANY overlap exists.
     """
     items = []
-    for name, (x, y) in positions.items():
+    for name, val in positions.items():
         if name in _FP:
-            w, h = _FP[name]
+            x, y = _pos_xy(val)
+            w, h = _dims(name, _pos_rot(val))
             items.append((x, y, w, h))
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
@@ -134,37 +161,39 @@ _MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
 
 
 def _place_gate_house(sw, sl):
-    """Gate House: FIXED at North Center (top-middle of site)."""
+    """Gate House: FIXED at North Center — rotation also fixed."""
     w, h = _FP["Gate House"]
     x = (sw - w) / 2   # centered horizontally
     y = sl - h          # flush with top boundary (on site edge per GH-01)
-    return x, y
+    return x, y, False
 
 
 def _place_gis(sw, sl):
-    """GIS: FIXED at North-East corner (top-right)."""
+    """GIS: FIXED at North-East corner — rotation also fixed."""
     w, h = _FP["GIS"]
     x = sw - w - _MARGIN    # right side, with road clearance
     y = sl - h - _MARGIN    # top side, with road clearance
-    return x, y
+    return x, y, False
 
 
 def _place_power_block(sw, sl):
-    """Power Block: near center with ±5% random variation (tight site)."""
+    """Power Block: near center with ±5% random variation (tight site).
+    Square footprint, so rotation is a no-op."""
     w, h = _FP["Power Block"]
     cx = (sw - w) / 2 + random.uniform(-sw * 0.05, sw * 0.05)
     cy = (sl - h) / 2 + random.uniform(-sl * 0.05, sl * 0.05)
-    return _clamp(cx, _MARGIN, sw - w - _MARGIN), _clamp(cy, _MARGIN, sl - h - _MARGIN)
+    return _clamp(cx, _MARGIN, sw - w - _MARGIN), _clamp(cy, _MARGIN, sl - h - _MARGIN), False
 
 
 def _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y):
     """Admin: near Gate House AND Power Block (north zone, center-ish)."""
-    w, h = _FP["Admin Building"]
-    pb_w, pb_h = _FP["Power Block"]
-    gh_w, gh_h = _FP["Gate House"]
+    rotated = _maybe_rotate("Admin Building")
+    w, h = _dims("Admin Building", rotated)
+    pb_w, pb_h = _FP["Power Block"]   # square
+    gh_w, gh_h = _FP["Gate House"]    # square
     gh_cx, gh_cy = gh_x + gh_w / 2, gh_y + gh_h / 2
     pb_cx, pb_cy = pb_x + pb_w / 2, pb_y + pb_h / 2
-    
+
     for _ in range(500):
         # Search near the north zone, between GH and PB
         x = random.uniform(_MARGIN, sw - w - _MARGIN)
@@ -173,17 +202,19 @@ def _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y):
         d_gh = math.dist((cx, cy), (gh_cx, gh_cy))
         d_pb = math.dist((cx, cy), (pb_cx, pb_cy))
         if d_gh <= 80 and d_pb <= 120:
-            return x, y
+            return x, y, rotated
     # Fallback: just above Power Block
-    return _clamp(pb_x + pb_w / 2 - w / 2, _MARGIN, sw - w - _MARGIN), \
-           _clamp(pb_y + pb_h + 10, _MARGIN, sl - h - _MARGIN)
+    return (_clamp(pb_x + pb_w / 2 - w / 2, _MARGIN, sw - w - _MARGIN),
+            _clamp(pb_y + pb_h + 10, _MARGIN, sl - h - _MARGIN),
+            rotated)
 
 
 def _place_cooling_tower(sw, sl, wind_dir):
     """Cooling Tower: constrained to leeward (downwind) zone.
-    Note: CT is 40w x 183h — very tall and narrow.
+    Native footprint is 40w x 183h — very tall and narrow. May rotate 90°.
     """
-    w, h = _FP["Cooling Tower"]
+    rotated = _maybe_rotate("Cooling Tower")
+    w, h = _dims("Cooling Tower", rotated)
     depth = random.uniform(_MARGIN, _MARGIN + 15)
 
     # Leeward = opposite of wind direction
@@ -200,12 +231,15 @@ def _place_cooling_tower(sw, sl, wind_dir):
         x = random.uniform(_MARGIN, max(_MARGIN, sw - w - _MARGIN))
         y = sl - h - depth  # top side (downwind)
 
-    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, max(_MARGIN, sl - h - _MARGIN))
+    return (_clamp(x, _MARGIN, sw - w - _MARGIN),
+            _clamp(y, _MARGIN, max(_MARGIN, sl - h - _MARGIN)),
+            rotated)
 
 
 def _place_wt_wwt(sw, sl, wind_dir):
-    """WT/WWT: setback ≥ 15 m, prefer downwind side."""
-    w, h = _FP["WT/WWT"]
+    """WT/WWT: setback ≥ 15 m, prefer downwind side. May rotate 90°."""
+    rotated = _maybe_rotate("WT/WWT")
+    w, h = _dims("WT/WWT", rotated)
     # Place on the opposite side of wind direction (downwind)
     if wind_dir == "East":
         x = random.uniform(_MARGIN, sw * 0.3)
@@ -221,13 +255,15 @@ def _place_wt_wwt(sw, sl, wind_dir):
     else:
         y = random.uniform(_MARGIN, sl - h - _MARGIN)
 
-    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
+    return (_clamp(x, _MARGIN, sw - w - _MARGIN),
+            _clamp(y, _MARGIN, sl - h - _MARGIN),
+            rotated)
 
 
-def _place_water(sw, sl, ww_x, ww_y):
-    """Water: near WT/WWT, adjacent but non-overlapping."""
-    w, h = _FP["Water"]
-    ww_w, ww_h = _FP["WT/WWT"]
+def _place_water(sw, sl, ww_x, ww_y, ww_rotated):
+    """Water: near WT/WWT, adjacent but non-overlapping. Water is square (no rotation)."""
+    w, h = _FP["Water"]   # square
+    ww_w, ww_h = _dims("WT/WWT", ww_rotated)
     # Try placing adjacent to WT/WWT (right, left, top, bottom)
     candidates = [
         (ww_x + ww_w + 5, ww_y),              # right of WT/WWT
@@ -241,7 +277,7 @@ def _place_water(sw, sl, ww_x, ww_y):
         cy = _clamp(cy, _MARGIN, sl - h - _MARGIN)
         # Verify non-overlap with WT/WWT
         if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
-            return cx, cy
+            return cx, cy, False
     # Fallback with randomness
     for _ in range(200):
         x = ww_x + random.uniform(-80, 80)
@@ -249,14 +285,15 @@ def _place_water(sw, sl, ww_x, ww_y):
         x = _clamp(x, _MARGIN, sw - w - _MARGIN)
         y = _clamp(y, _MARGIN, sl - h - _MARGIN)
         if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
-            return x, y
+            return x, y, False
     # Last resort
-    return _clamp(ww_x + ww_w + 10, _MARGIN, sw - w - _MARGIN), \
-           _clamp(ww_y, _MARGIN, sl - h - _MARGIN)
+    return (_clamp(ww_x + ww_w + 10, _MARGIN, sw - w - _MARGIN),
+            _clamp(ww_y, _MARGIN, sl - h - _MARGIN),
+            False)
 
 
 def _place_flare(sw, sl, wind_dir):
-    """Flare: on leeward edge, preferably in a corner. 40x40 bounding box."""
+    """Flare: on leeward edge, preferably in a corner. 40x40 square (no rotation)."""
     w, h = _FP["Flare"]
     depth = random.uniform(_MARGIN, _MARGIN + 15)
 
@@ -278,12 +315,13 @@ def _place_flare(sw, sl, wind_dir):
         x = random.choice([random.uniform(_MARGIN, _MARGIN + 30),
                            random.uniform(sw - w - 30, sw - w - _MARGIN)])
 
-    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
+    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN), False
 
 
 def _place_lpg(sw, sl):
-    """LPG/Metering: setback ≥ 15 m, corner placement."""
-    w, h = _FP["LPG/Metering"]
+    """LPG/Metering: setback ≥ 15 m, corner placement. May rotate 90°."""
+    rotated = _maybe_rotate("LPG/Metering")
+    w, h = _dims("LPG/Metering", rotated)
     # Prefer corners
     corner = random.choice(["top-left", "top-right", "bottom-left", "bottom-right"])
     if corner == "top-left":
@@ -297,27 +335,32 @@ def _place_lpg(sw, sl):
     # Add some randomness
     x += random.uniform(-5, 5)
     y += random.uniform(-5, 5)
-    return _clamp(x, _MARGIN, sw - w - _MARGIN), _clamp(y, _MARGIN, sl - h - _MARGIN)
+    return (_clamp(x, _MARGIN, sw - w - _MARGIN),
+            _clamp(y, _MARGIN, sl - h - _MARGIN),
+            rotated)
 
 
 def _place_warehouse(sw, sl, placed_positions):
-    """Warehouse: find available space, avoid overlaps with placed buildings."""
-    w, h = _FP["Warehouse"]
+    """Warehouse: find available space, avoid overlaps with placed buildings.
+    May rotate 90°."""
     for _ in range(500):
+        rotated = _maybe_rotate("Warehouse")
+        w, h = _dims("Warehouse", rotated)
         x = random.uniform(_MARGIN, sw - w - _MARGIN)
         y = random.uniform(_MARGIN, sl - h - _MARGIN)
         # Check overlap with all already-placed buildings
         overlap = False
-        for name, (px, py) in placed_positions.items():
+        for name, pval in placed_positions.items():
             if name in _FP:
-                pw, ph = _FP[name]
+                px, py = _pos_xy(pval)
+                pw, ph = _dims(name, _pos_rot(pval))
                 if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=5):
                     overlap = True
                     break
         if not overlap:
-            return x, y
-    # Fallback: bottom-left
-    return _MARGIN, _MARGIN
+            return x, y, rotated
+    # Fallback: bottom-left, unrotated
+    return _MARGIN, _MARGIN, False
 
 
 # ── Rack placement ────────────────────────────────────────────────────────
@@ -382,21 +425,22 @@ def _place_racks(groups):
 # ── Collision-aware placement ─────────────────────────────────────────────
 def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200):
     """Try to place a building using place_fn, checking against already-placed buildings.
-    Returns (x, y) or None if no valid placement found.
+    place_fn must return (x, y, rotated). Returns (x, y, rotated) or None.
     """
-    w, h = _FP[name]
     for _ in range(max_attempts):
-        x, y = place_fn()
+        x, y, rotated = place_fn()
+        w, h = _dims(name, rotated)
         # Check overlap against all placed buildings
         overlap = False
-        for pname, (px, py) in placed.items():
+        for pname, pval in placed.items():
             if pname in _FP:
-                pw, ph = _FP[pname]
+                px, py = _pos_xy(pval)
+                pw, ph = _dims(pname, _pos_rot(pval))
                 if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=_OVERLAP_GAP):
                     overlap = True
                     break
         if not overlap:
-            return x, y
+            return x, y, rotated
     return None
 
 
@@ -420,12 +464,12 @@ def generate_layouts(site_width, site_length, wind_dir,
         placed = {}
 
         # 1. Gate House (FIXED — North Center) — always succeeds
-        gh_x, gh_y = _place_gate_house(sw, sl)
-        placed["Gate House"] = (gh_x, gh_y)
+        gh_x, gh_y, _ = _place_gate_house(sw, sl)
+        placed["Gate House"] = (gh_x, gh_y, False)
 
         # 2. GIS (FIXED — North-East) — always succeeds
-        gis_x, gis_y = _place_gis(sw, sl)
-        placed["GIS"] = (gis_x, gis_y)
+        gis_x, gis_y, _ = _place_gis(sw, sl)
+        placed["GIS"] = (gis_x, gis_y, False)
 
         # 3. Power Block (center, minimal jitter) — collision-aware
         result = _try_place_collision_aware(sw, sl, "Power Block", placed,
@@ -434,7 +478,7 @@ def generate_layouts(site_width, site_length, wind_dir,
         placed["Power Block"] = result
 
         # 4. Admin Building (near GH + PB) — collision-aware
-        pb_x, pb_y = placed["Power Block"]
+        pb_x, pb_y = placed["Power Block"][:2]
         result = _try_place_collision_aware(sw, sl, "Admin Building", placed,
                     lambda: _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y), max_attempts=50)
         if result is None: continue
@@ -453,9 +497,9 @@ def generate_layouts(site_width, site_length, wind_dir,
         placed["WT/WWT"] = result
 
         # 7. Water (near WT/WWT) — collision-aware
-        ww_x, ww_y = placed["WT/WWT"]
+        ww_x, ww_y, ww_rotated = placed["WT/WWT"]
         result = _try_place_collision_aware(sw, sl, "Water", placed,
-                    lambda: _place_water(sw, sl, ww_x, ww_y), max_attempts=100)
+                    lambda: _place_water(sw, sl, ww_x, ww_y, ww_rotated), max_attempts=100)
         if result is None: continue
         placed["Water"] = result
 
@@ -472,8 +516,8 @@ def generate_layouts(site_width, site_length, wind_dir,
         placed["LPG/Metering"] = result
 
         # 10. Warehouse (available space) — collision-aware
-        wh_x, wh_y = _place_warehouse(sw, sl, placed)
-        placed["Warehouse"] = (wh_x, wh_y)
+        wh_x, wh_y, wh_rotated = _place_warehouse(sw, sl, placed)
+        placed["Warehouse"] = (wh_x, wh_y, wh_rotated)
 
         positions = dict(placed)
 

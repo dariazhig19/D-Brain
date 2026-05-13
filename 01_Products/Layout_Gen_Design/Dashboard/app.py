@@ -6,14 +6,16 @@ import matplotlib.pyplot as plt
 import io, base64, math
 
 import importlib
-import Core.Groups, Core.Rules, Core.Main, Core.Exporter
+import Core.Groups, Core.Roads, Core.Rules, Core.Main, Core.Exporter
 importlib.reload(Core.Groups)
+importlib.reload(Core.Roads)
 importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
 importlib.reload(Core.Exporter)
 from Core.Groups import get_all_groups, get_all_racks, draw_group, draw_rack, FOOTPRINTS
-from Core.Rules import evaluate_all_v2, RULES, ROAD_SETBACK, ROAD_WIDTH, ROAD_INNER_EDGE
-from Core.Main import generate_layouts, build_perimeter_road
+from Core.Roads import ROAD_SETBACK, ROAD_INNER_EDGE
+from Core.Rules import RULES
+from Core.Main import generate_layouts
 from Core.Exporter import export_to_dxf
 
 plt.rcParams['font.family'] = 'Malgun Gothic'

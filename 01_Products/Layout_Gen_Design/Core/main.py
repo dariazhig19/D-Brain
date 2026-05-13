@@ -1,36 +1,12 @@
 import random
 import math
 from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS
-from Core.Rules import evaluate_all_v2, ROAD_SETBACK, ROAD_WIDTH, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
+from Core.Roads import build_perimeter_road, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
+from Core.Rules import evaluate_all_v2
 
 # ── Footprint shortcuts ───────────────────────────────────────────────────
 
 _FP = FOOTPRINTS  # {name: (width, height)}
-
-# ── Road infrastructure ──────────────────────────────────────────────────
-
-def build_perimeter_road(site_w, site_l, setback=ROAD_SETBACK, width=ROAD_WIDTH):
-    """Return the outer and inner edge rectangles of the perimeter fire road.
-    
-    Returns:
-        dict with 'outer' and 'inner' keys, each a list of (x, y) corners.
-        'outer' = road outer edge (setback from boundary)
-        'inner' = road inner edge (setback + road_width from boundary)
-    """
-    outer = [
-        (setback, setback),
-        (site_w - setback, setback),
-        (site_w - setback, site_l - setback),
-        (setback, site_l - setback),
-    ]
-    inner_offset = setback + width
-    inner = [
-        (inner_offset, inner_offset),
-        (site_w - inner_offset, inner_offset),
-        (site_w - inner_offset, site_l - inner_offset),
-        (inner_offset, site_l - inner_offset),
-    ]
-    return {"outer": outer, "inner": inner, "setback": setback, "width": width}
 
 
 # ── Placement helpers ─────────────────────────────────────────────────────

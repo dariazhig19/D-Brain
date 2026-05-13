@@ -1,17 +1,6 @@
 import math
 
-# ── Road Infrastructure Constants (Phase 05) ──────────────────────────────────
-ROAD_WIDTH       = 7      # All roads are 7m wide
-ROAD_SETBACK     = 5      # Perimeter road edge is 5m from site boundary
-ROAD_TO_BUILDING = 3      # Min 3m from road inner edge to building
-ROAD_TO_RACK     = 2      # Min 2m from road to rack
-RACK_TO_BLOCK    = 2.5    # Min 2.5m from rack to building
-
-# Inner edge of perimeter road = ROAD_SETBACK + ROAD_WIDTH = 12m from boundary
-ROAD_INNER_EDGE  = ROAD_SETBACK + ROAD_WIDTH  # 12m
-
-# Minimum building distance from boundary = road inner edge + gap
-MIN_BUILDING_FROM_BOUNDARY = ROAD_INNER_EDGE + ROAD_TO_BUILDING  # 15m
+from Core.Roads import ROAD_INNER_EDGE  # used by _eval_road_proximity
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 

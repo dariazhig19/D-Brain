@@ -28,17 +28,12 @@
             "id": "d1bff7cf6a0db9fc",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "image",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 10175.25230036775,
-                  "y": 1800.4148568235703,
-                  "zoom": -1.2585829491656078
-                }
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png"
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-image",
+              "title": "Dashboard_V5"
             }
           },
           {
@@ -146,7 +141,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -156,7 +151,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Overview"
+              "title": "Backlinks for Dashboard_V5"
             }
           },
           {
@@ -235,8 +230,12 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "e5504c0efb6af567",
+  "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05",
     "04_Reports/Daily/Daily_Report_20260513.md",
@@ -250,13 +249,11 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "04_Reports/Meeting_Notes/20260508_미팅.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "04_Reports/Meeting_Notes",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Rules Visualisation.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png",
@@ -278,7 +275,6 @@
     "04_Reports/Daily/Daily_Report_20260506.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase_03_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
-    "99_System/Agents/Skills/Topic_Shift_Backup/SKILL.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png"

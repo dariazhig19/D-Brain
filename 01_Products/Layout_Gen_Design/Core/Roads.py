@@ -86,8 +86,11 @@ def deform_around_buildings(road, buildings, site_w, site_l, gap=ROAD_TO_BUILDIN
         bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
         bx_left  = max(setback + width, bx - gap)
         bx_right = min(site_w - setback - width, bx + bw + gap)
-        bulge_inner_y = max(0.0, by - gap)        # how deep the road dips
-        bulge_outer_y = bulge_inner_y + width     # road keeps its width
+        # On the top edge, the road's OUTER edge sits closer to the boundary
+        # (higher y) and is what must clear the building by `gap`. The inner
+        # edge follows it `width` further south. The whole road shifts together.
+        bulge_outer_y = max(0.0, by - gap)
+        bulge_inner_y = bulge_outer_y - width
         top_inner_pts += [
             (bx_left,  inner_top_y),
             (bx_left,  bulge_inner_y),

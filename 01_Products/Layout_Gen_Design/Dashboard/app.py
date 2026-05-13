@@ -13,7 +13,6 @@ importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
 importlib.reload(Core.Exporter)
 from Core.Groups import get_all_groups, get_all_racks, draw_group, draw_rack, FOOTPRINTS
-from Core.Roads import ROAD_SETBACK, ROAD_INNER_EDGE
 from Core.Rules import RULES
 from Core.Main import generate_layouts
 from Core.Exporter import export_to_dxf
@@ -93,31 +92,18 @@ def _render_layout(layout, sw, sl, wd, rank):
     ax.fill([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='#f0f8ff', zorder=0)
     ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.0)
 
-    # Perimeter road corridor (filled gray)
-    s_out = ROAD_SETBACK  # outer edge: 5m from boundary
-    s_in  = ROAD_INNER_EDGE  # inner edge: 12m from boundary
-    if sw > 2*s_in and sl > 2*s_in:
-        # Outer road edge
-        ax.plot([s_out, sw-s_out, sw-s_out, s_out, s_out],
-                [s_out, s_out, sl-s_out, sl-s_out, s_out],
-                color='#999999', linestyle='-', lw=0.6)
-        # Inner road edge
-        ax.plot([s_in, sw-s_in, sw-s_in, s_in, s_in],
-                [s_in, s_in, sl-s_in, sl-s_in, s_in],
-                color='#999999', linestyle='-', lw=0.6)
-        # Fill road corridor (between outer and inner) using 4 rectangles
-        # Bottom road strip
-        ax.fill([s_out, sw-s_out, sw-s_out, s_out],
-                [s_out, s_out, s_in, s_in], color='#e0e0e0', alpha=0.5, zorder=0)
-        # Top road strip
-        ax.fill([s_out, sw-s_out, sw-s_out, s_out],
-                [sl-s_in, sl-s_in, sl-s_out, sl-s_out], color='#e0e0e0', alpha=0.5, zorder=0)
-        # Left road strip
-        ax.fill([s_out, s_in, s_in, s_out],
-                [s_in, s_in, sl-s_in, sl-s_in], color='#e0e0e0', alpha=0.5, zorder=0)
-        # Right road strip
-        ax.fill([sw-s_in, sw-s_out, sw-s_out, sw-s_in],
-                [s_in, s_in, sl-s_in, sl-s_in], color='#e0e0e0', alpha=0.5, zorder=0)
+    # Perimeter road corridor — drawn from polylines on the layout's road dict.
+    # Fill = outer polyline filled gray, inner polyline punched out with site bg.
+    road = layout.get("road", {})
+    outer_pl = road.get("outer_polyline")
+    inner_pl = road.get("inner_polyline")
+    if outer_pl and inner_pl:
+        ox, oy = zip(*outer_pl)
+        ix, iy = zip(*inner_pl)
+        ax.fill(ox, oy, color='#e0e0e0', alpha=0.5, zorder=0)
+        ax.fill(ix, iy, color='#f0f8ff', alpha=1.0, zorder=0)
+        ax.plot(ox, oy, color='#999999', linestyle='-', lw=0.6)
+        ax.plot(ix, iy, color='#999999', linestyle='-', lw=0.6)
 
     # Wind indicator
     wind_map = {

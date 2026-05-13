@@ -1,7 +1,7 @@
 import random
 import math
 from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS
-from Core.Roads import build_perimeter_road, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
+from Core.Roads import build_perimeter_road, deform_around_buildings, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
 from Core.Rules import evaluate_all_v2
 
 # ── Footprint shortcuts ───────────────────────────────────────────────────
@@ -458,11 +458,20 @@ def generate_layouts(site_width, site_length, wind_dir,
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
     Each dict: {positions, rack_endpoints, groups, racks, scoring, road}
     """
-    # Build road infrastructure (fixed for all layouts)
-    road = build_perimeter_road(site_width, site_length)
-    
-    candidates = []
     sw, sl = site_width, site_length
+
+    # Build perimeter road and deform around the Gate House (step 2 minimal —
+    # only GH is considered; other boundary-hugging buildings come later).
+    road = build_perimeter_road(sw, sl)
+    gh_x, gh_y, _ = _place_gate_house(sw, sl, side=gate_house_side)
+    gh_w, gh_h = _FP["Gate House"]
+    road = deform_around_buildings(
+        road,
+        [{"x": gh_x, "y": gh_y, "width": gh_w, "height": gh_h}],
+        sw, sl,
+    )
+
+    candidates = []
 
     for _ in range(max_pool):
         placed = {}

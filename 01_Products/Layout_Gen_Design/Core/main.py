@@ -48,7 +48,7 @@ def _rand_pos(site_w, site_l, w, h, margin=15):
 
 # ── Overlap detection ─────────────────────────────────────────────────────
 
-_OVERLAP_GAP = 2  # minimum gap (metres) between any two buildings
+_OVERLAP_GAP = 1  # minimum gap (metres) between any two buildings (reduced for tight sites)
 
 
 def _rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2, gap=_OVERLAP_GAP):
@@ -225,21 +225,32 @@ def _place_wt_wwt(sw, sl, wind_dir):
 
 
 def _place_water(sw, sl, ww_x, ww_y):
-    """Water: near WT/WWT, within 80 m but at least 10 m away."""
+    """Water: near WT/WWT, adjacent but non-overlapping."""
     w, h = _FP["Water"]
     ww_w, ww_h = _FP["WT/WWT"]
-    for _ in range(300):
-        x = ww_x + random.uniform(-60, 60)
-        y = ww_y + random.uniform(-60, 60)
+    # Try placing adjacent to WT/WWT (right, left, top, bottom)
+    candidates = [
+        (ww_x + ww_w + 5, ww_y),              # right of WT/WWT
+        (ww_x - w - 5, ww_y),                  # left of WT/WWT
+        (ww_x, ww_y + ww_h + 5),               # above WT/WWT
+        (ww_x, ww_y - h - 5),                  # below WT/WWT
+        (ww_x + ww_w + 5, ww_y + ww_h - h),    # right-top aligned
+    ]
+    for cx, cy in candidates:
+        cx = _clamp(cx, _MARGIN, sw - w - _MARGIN)
+        cy = _clamp(cy, _MARGIN, sl - h - _MARGIN)
+        # Verify non-overlap with WT/WWT
+        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
+            return cx, cy
+    # Fallback with randomness
+    for _ in range(200):
+        x = ww_x + random.uniform(-80, 80)
+        y = ww_y + random.uniform(-80, 80)
         x = _clamp(x, _MARGIN, sw - w - _MARGIN)
         y = _clamp(y, _MARGIN, sl - h - _MARGIN)
-        # Check distance
-        cx1, cy1 = x + w / 2, y + h / 2
-        cx2, cy2 = ww_x + ww_w / 2, ww_y + ww_h / 2
-        dist = math.dist((cx1, cy1), (cx2, cy2))
-        if 10 <= dist <= 80:
+        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
             return x, y
-    # Fallback: next to WT/WWT
+    # Last resort
     return _clamp(ww_x + ww_w + 10, _MARGIN, sw - w - _MARGIN), \
            _clamp(ww_y, _MARGIN, sl - h - _MARGIN)
 
@@ -372,7 +383,7 @@ def _place_racks(groups):
 # ── Main generator ────────────────────────────────────────────────────────
 
 def generate_layouts(site_width, site_length, wind_dir,
-                     n_results=10, min_rules_passing=10, max_pool=3000):
+                     n_results=10, min_rules_passing=10, max_pool=5000):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.

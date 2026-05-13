@@ -32,9 +32,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": -279.65584506617785,
-                  "y": 905.9982828194666,
-                  "zoom": -0.2585829491656079
+                  "x": 10175.25230036775,
+                  "y": 1800.4148568235703,
+                  "zoom": -1.2585829491656078
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -235,8 +235,10 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "d1bff7cf6a0db9fc",
+  "active": "e5504c0efb6af567",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05",
     "04_Reports/Daily/Daily_Report_20260513.md",
     "01_Products/Layout_Gen_Design/Notes/Daily_Report_20260513.md",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Roads.cpython-314.pyc",
@@ -269,7 +271,6 @@
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.css",
     "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.css",
     "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.complete.min.js",
-    "01_Products/Layout_Gen_Design/lib/bindings/utils.js",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
     "!Atlas_System.md",
@@ -278,7 +279,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase_03_Plan.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "99_System/Agents/Skills/Topic_Shift_Backup/SKILL.md",
-    "99_System/Agents/Skills/Session_Wrapup/SKILL.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png"

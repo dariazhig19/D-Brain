@@ -28,14 +28,17 @@
             "id": "d1bff7cf6a0db9fc",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": -279.65584506617785,
+                  "y": 905.9982828194666,
+                  "zoom": -0.2585829491656079
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Core_Context"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -143,7 +146,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -153,7 +156,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for !Core_Context"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -234,8 +237,8 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
-    "04_Reports/Daily/Daily_Report_20260429.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
+    "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",

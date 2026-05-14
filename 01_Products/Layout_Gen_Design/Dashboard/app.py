@@ -75,6 +75,39 @@ if do_generate:
     st.session_state["params"]  = (site_width, site_length, wind_dir)
 
 # ── Render helpers ─────────────────────────────────────────────────────────
+def _offset_loop(pts, dist):
+    """Offset a closed polyline outward by ``dist`` metres using vertex normals.
+
+    Returns (outer_pts, inner_pts). Assumes counter-clockwise traversal — the
+    A* perimeter loop is generated CCW by ``_ring_waypoints``. Naive offsetting
+    without miter handling; fine for the gently-curving roads A* produces, but
+    can self-intersect on sharp corners.
+    """
+    n = len(pts)
+    outer, inner = [], []
+    for i in range(n):
+        prev_x, prev_y = pts[(i - 1) % n]
+        x, y           = pts[i]
+        next_x, next_y = pts[(i + 1) % n]
+        e1x, e1y = x - prev_x, y - prev_y
+        e2x, e2y = next_x - x, next_y - y
+        # Rotate each edge vector 90° CW to get the outward normal under CCW
+        # traversal (pointing away from the loop interior).
+        n1x, n1y =  e1y, -e1x
+        n2x, n2y =  e2y, -e2x
+        l1 = math.hypot(n1x, n1y) + 1e-9
+        l2 = math.hypot(n2x, n2y) + 1e-9
+        nx = n1x / l1 + n2x / l2
+        ny = n1y / l1 + n2y / l2
+        nl = math.hypot(nx, ny) + 1e-9
+        nx, ny = nx / nl, ny / nl
+        outer.append((x + dist * nx, y + dist * ny))
+        inner.append((x - dist * nx, y - dist * ny))
+    outer.append(outer[0])
+    inner.append(inner[0])
+    return outer, inner
+
+
 def _fig_to_b64(fig, dpi=100):
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
@@ -92,18 +125,22 @@ def _render_layout(layout, sw, sl, wd, rank):
     ax.fill([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='#f0f8ff', zorder=0)
     ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.0)
 
-    # Perimeter road corridor — drawn from polylines on the layout's road dict.
-    # Fall back to closing the corner rectangles if polylines aren't present
-    # (e.g. cached layouts generated before deformation support).
+    # Perimeter road corridor — A* loops carry a single centerline that we
+    # offset by ±width/2 to recreate the corridor. Legacy layouts still
+    # carry pre-built outer/inner polylines from deform_around_buildings.
     road = layout.get("road", {})
-    outer_pl = road.get("outer_polyline")
-    inner_pl = road.get("inner_polyline")
-    if not (outer_pl and inner_pl):
-        outer_corners = road.get("outer")
-        inner_corners = road.get("inner")
-        if outer_corners and inner_corners:
-            outer_pl = list(outer_corners) + [outer_corners[0]]
-            inner_pl = list(inner_corners) + [inner_corners[0]]
+    outer_pl = inner_pl = None
+    if road.get("mode") == "astar" and road.get("loop_world"):
+        outer_pl, inner_pl = _offset_loop(road["loop_world"], road["width"] / 2)
+    else:
+        outer_pl = road.get("outer_polyline")
+        inner_pl = road.get("inner_polyline")
+        if not (outer_pl and inner_pl):
+            outer_corners = road.get("outer")
+            inner_corners = road.get("inner")
+            if outer_corners and inner_corners:
+                outer_pl = list(outer_corners) + [outer_corners[0]]
+                inner_pl = list(inner_corners) + [inner_corners[0]]
     if outer_pl and inner_pl:
         ox, oy = zip(*outer_pl)
         ix, iy = zip(*inner_pl)

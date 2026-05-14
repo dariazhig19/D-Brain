@@ -12,7 +12,7 @@ coexist:
 """
 
 from Core.Grid import Grid
-from Core.Pathfind import astar
+from Core.Pathfind import astar, build_passable, snap_to_passable
 
 
 # ── Constants (metres) ────────────────────────────────────────────────────
@@ -202,7 +202,25 @@ def build_road_network(site_w, site_l, buildings, *,
     grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
     grid.mark_setback(ROAD_SETBACK)
 
-    waypoints = _ring_waypoints(grid, ROAD_SETBACK, n_per_edge)
+    # Precompute the eroded passability map once for the whole loop — replaces
+    # the per-state 3x3 corridor check inside A* with an O(1) array lookup.
+    passable = build_passable(grid, width_cells)
+
+    # Snap each waypoint to the nearest passable cell. Buildings flush with
+    # the boundary (e.g. Gate House) overlap the default waypoint positions;
+    # without this, A* would return None on every candidate.
+    raw_waypoints = _ring_waypoints(grid, ROAD_SETBACK, n_per_edge)
+    waypoints = []
+    for wp in raw_waypoints:
+        snapped = snap_to_passable(passable, wp, max_radius=30)
+        if snapped is None:
+            return None
+        waypoints.append(snapped)
+    # Drop consecutive duplicates that snapping may produce.
+    waypoints = [w for k, w in enumerate(waypoints)
+                 if k == 0 or w != waypoints[k - 1]]
+    if len(waypoints) < 4:
+        return None
 
     loop_cells = []
     for k in range(len(waypoints)):
@@ -210,7 +228,8 @@ def build_road_network(site_w, site_l, buildings, *,
         b = waypoints[(k + 1) % len(waypoints)]
         segment = astar(grid, a, b,
                         turn_penalty=turn_penalty,
-                        width_cells=width_cells)
+                        width_cells=width_cells,
+                        passable=passable)
         if segment is None:
             return None
         # Drop the segment's last cell — next segment's first cell repeats it.

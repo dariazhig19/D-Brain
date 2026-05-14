@@ -9,6 +9,8 @@ import heapq
 import math
 from itertools import count
 
+import numpy as np
+
 
 # 8-connected neighbours: (di, dj, step_cost)
 _NEIGHBORS = [
@@ -28,6 +30,8 @@ def _octile(a, b):
 def _passable(grid, i, j, width_cells):
     """A cell is passable only if a (2*width_cells+1) square centred on it
     is entirely inside the grid and unblocked. Enforces road width.
+
+    Slow path used only when no precomputed passability array is supplied.
     """
     for di in range(-width_cells, width_cells + 1):
         for dj in range(-width_cells, width_cells + 1):
@@ -36,10 +40,59 @@ def _passable(grid, i, j, width_cells):
     return True
 
 
+def build_passable(grid, width_cells):
+    """Vectorised morphological erosion of the grid's free space.
+
+    Returns a ``numpy.bool_`` array shaped like ``grid.blocked`` where ``True``
+    means a corridor of half-width ``width_cells`` fits centred on that cell.
+    Compute once per layout, reuse across many :func:`astar` calls.
+    """
+    free = ~grid.blocked
+    if width_cells <= 0:
+        return free.copy()
+    nc, nr = free.shape
+    passable = free.copy()
+    for di in range(-width_cells, width_cells + 1):
+        for dj in range(-width_cells, width_cells + 1):
+            if di == 0 and dj == 0:
+                continue
+            shifted = np.zeros_like(free)
+            li = nc - abs(di)
+            lj = nr - abs(dj)
+            # shifted[a, b] = free[a + di, b + dj]; out-of-bounds stays False.
+            shifted[max(0, -di):max(0, -di) + li,
+                    max(0, -dj):max(0, -dj) + lj] = \
+                free[max(0, di):max(0, di) + li,
+                     max(0, dj):max(0, dj) + lj]
+            passable &= shifted
+    return passable
+
+
+def snap_to_passable(passable, ij, max_radius=20):
+    """Find the nearest passable cell to ``ij`` within ``max_radius`` cells
+    (Chebyshev distance). Returns ``ij`` unchanged if already passable, or
+    ``None`` if nothing passable lies within the radius.
+    """
+    nc, nr = passable.shape
+    i0, j0 = ij
+    if 0 <= i0 < nc and 0 <= j0 < nr and passable[i0, j0]:
+        return ij
+    for r in range(1, max_radius + 1):
+        for di in range(-r, r + 1):
+            for dj in range(-r, r + 1):
+                if max(abs(di), abs(dj)) != r:
+                    continue
+                ci, cj = i0 + di, j0 + dj
+                if 0 <= ci < nc and 0 <= cj < nr and passable[ci, cj]:
+                    return (ci, cj)
+    return None
+
+
 def astar(grid, start_ij, goal_ij, *,
           turn_penalty=0.5,
           width_cells=1,
-          allow_diagonal=True):
+          allow_diagonal=True,
+          passable=None):
     """A* search on an occupancy Grid with turn penalty and width check.
 
     Args:
@@ -51,14 +104,28 @@ def astar(grid, start_ij, goal_ij, *,
         width_cells:    Required clear half-width around every cell on the
                         path. ``width_cells=1`` enforces a 3-cell corridor.
         allow_diagonal: If False, restrict to 4-connected (cardinal) moves.
+        passable:       Optional precomputed bool array from
+                        :func:`build_passable`. When supplied, replaces the
+                        per-state width check with an O(1) array lookup —
+                        the hot-path optimisation for many A* calls on the
+                        same grid.
 
     Returns:
         List of (i, j) cells from start to goal (inclusive), or ``None``
         if no path exists.
     """
-    if not _passable(grid, *start_ij, width_cells):
+    if passable is not None:
+        nc, nr = passable.shape
+        def _is_pass(ij):
+            i, j = ij
+            return 0 <= i < nc and 0 <= j < nr and bool(passable[i, j])
+    else:
+        def _is_pass(ij):
+            return _passable(grid, ij[0], ij[1], width_cells)
+
+    if not _is_pass(start_ij):
         return None
-    if not _passable(grid, *goal_ij, width_cells):
+    if not _is_pass(goal_ij):
         return None
 
     moves = _NEIGHBORS if allow_diagonal else [m for m in _NEIGHBORS if m[2] == 1.0]
@@ -89,7 +156,7 @@ def astar(grid, start_ij, goal_ij, *,
 
         for di, dj, step in moves:
             n = (cell[0] + di, cell[1] + dj)
-            if not _passable(grid, *n, width_cells):
+            if not _is_pass(n):
                 continue
             ndir = (di, dj)
             extra = turn_penalty if (pdir is not None and ndir != pdir) else 0.0

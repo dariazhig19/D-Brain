@@ -1,10 +1,19 @@
 """Road infrastructure for PowerPlan AI layouts.
 
 Owns the geometry and dimensional constants for the perimeter fire road and
-the spacing rules between roads, buildings, and racks. Phase 05 ships only
-the rectangular perimeter ring; later phases will add deformation around
-buildings and internal connector roads.
+the spacing rules between roads, buildings, and racks. Two road builders
+coexist:
+
+* :func:`build_perimeter_road` + :func:`deform_around_buildings` — rectangular
+  ring with rectangular bulges (Phase 05 step 2; only handles the north edge).
+* :func:`build_road_network` — grid-based A* routing that handles all four
+  edges naturally and produces a smooth closed loop around any number of
+  intruding buildings.
 """
+
+from Core.Grid import Grid
+from Core.Pathfind import astar
+
 
 # ── Constants (metres) ────────────────────────────────────────────────────
 
@@ -120,3 +129,102 @@ def deform_around_buildings(road, buildings, site_w, site_l, gap=ROAD_TO_BUILDIN
     )
 
     return {**road, "outer_polyline": outer_polyline, "inner_polyline": inner_polyline}
+
+
+# ── Grid-based A* road network ────────────────────────────────────────────
+
+def _ring_waypoints(grid, margin_m, n_per_edge):
+    """Sample ``n_per_edge`` cell waypoints along each side of a rectangle
+    that sits just inside the setback ring. Returns a clockwise list.
+
+    Waypoints are pushed one cell inside the setback so they are guaranteed
+    to satisfy the width-aware passability check during A*.
+    """
+    cs = grid.cell_size
+    # World coords of the inner-setback rectangle, pulled in by one cell so
+    # the (2*width+1) corridor around each waypoint stays inside the grid.
+    x0 = margin_m + cs
+    y0 = margin_m + cs
+    x1 = grid.site_w - margin_m - cs
+    y1 = grid.site_l - margin_m - cs
+
+    def lerp(a, b, t):
+        return a + (b - a) * t
+
+    pts = []
+    for k in range(n_per_edge):   # bottom edge L→R
+        t = k / n_per_edge
+        pts.append((lerp(x0, x1, t), y0))
+    for k in range(n_per_edge):   # right edge B→T
+        t = k / n_per_edge
+        pts.append((x1, lerp(y0, y1, t)))
+    for k in range(n_per_edge):   # top edge R→L
+        t = k / n_per_edge
+        pts.append((lerp(x1, x0, t), y1))
+    for k in range(n_per_edge):   # left edge T→B
+        t = k / n_per_edge
+        pts.append((lerp(y0, y1, 0) if False else x0, lerp(y1, y0, t)))
+
+    return [grid.world_to_cell(x, y) for (x, y) in pts]
+
+
+def build_road_network(site_w, site_l, buildings, *,
+                       cell_size=2.5,
+                       n_per_edge=6,
+                       turn_penalty=0.5,
+                       width_cells=1):
+    """Construct a closed-loop perimeter road by A* on an occupancy grid.
+
+    Builds a :class:`Grid`, blocks buildings (inflated by ``ROAD_TO_BUILDING``)
+    and the setback strip, then routes the road between waypoints arranged
+    around the inside of the setback ring. The concatenated path forms a
+    closed loop that deforms inward around any building that intrudes — and
+    handles all four edges uniformly, unlike :func:`deform_around_buildings`.
+
+    Args:
+        site_w, site_l: site dimensions in metres.
+        buildings:      iterable of dicts with ``x``, ``y``, ``width``, ``height``.
+        cell_size:      grid resolution in metres (default 2.5).
+        n_per_edge:     waypoints per side of the loop (default 6 → 24 total).
+        turn_penalty:   smoothing prior passed to :func:`astar`.
+        width_cells:    half-width of required clear corridor. ``1`` ⇒ 3-cell
+                        corridor ≈ 7.5 m, slightly above the 7 m road spec.
+
+    Returns:
+        Dict with the same shape as :func:`build_perimeter_road` plus:
+            ``loop_cells``  list of (i, j) cell indices, closed
+            ``loop_world``  list of (x, y) world coords, closed
+            ``grid``        the occupancy Grid (reusable by rack routing)
+            ``mode``        ``'astar'``
+        Returns ``None`` if any segment fails to find a path.
+    """
+    grid = Grid(site_w, site_l, cell_size=cell_size)
+    grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
+    grid.mark_setback(ROAD_SETBACK)
+
+    waypoints = _ring_waypoints(grid, ROAD_SETBACK, n_per_edge)
+
+    loop_cells = []
+    for k in range(len(waypoints)):
+        a = waypoints[k]
+        b = waypoints[(k + 1) % len(waypoints)]
+        segment = astar(grid, a, b,
+                        turn_penalty=turn_penalty,
+                        width_cells=width_cells)
+        if segment is None:
+            return None
+        # Drop the segment's last cell — next segment's first cell repeats it.
+        loop_cells.extend(segment[:-1] if k < len(waypoints) - 1 else segment)
+
+    loop_world = [grid.cell_to_world(i, j) for (i, j) in loop_cells]
+
+    return {
+        "outer":         None,
+        "inner":         None,
+        "setback":       ROAD_SETBACK,
+        "width":         ROAD_WIDTH,
+        "loop_cells":    loop_cells,
+        "loop_world":    loop_world,
+        "grid":          grid,
+        "mode":          "astar",
+    }

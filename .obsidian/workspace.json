@@ -232,6 +232,7 @@
   },
   "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/Pathfind.py",
     "01_Products/Layout_Gen_Design/Core/Grid.py",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
     "02_Library/Generative_Theory/He_GlobalMapper_Arbitrary-Shaped_Urban_Layout_Generation_ICCV_2023_paper.pdf",
@@ -269,7 +270,6 @@
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Notes/Rule_Network.html",
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.min.js",
-    "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.css",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
     "!Atlas_System.md",

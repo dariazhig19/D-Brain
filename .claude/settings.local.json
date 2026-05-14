@@ -3,7 +3,20 @@
     "allow": [
       "Bash(python -c \"import ast; ast.parse\\(open\\('Core/Main.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('Dashboard/App.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:link.springer.com)",
+      "WebFetch(domain:www.sciopen.com)",
+      "WebFetch(domain:www.nature.com)",
+      "WebFetch(domain:www.sciencedirect.com)",
+      "WebFetch(domain:openaccess.thecvf.com)",
+      "WebFetch(domain:www.researchgate.net)",
+      "WebFetch(domain:www.semanticscholar.org)",
+      "WebFetch(domain:www.cs.purdue.edu)",
+      "WebFetch(domain:www.tandfonline.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.repository.cam.ac.uk)"
     ]
   }
 }

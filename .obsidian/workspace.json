@@ -30,10 +30,10 @@
             "state": {
               "type": "image",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png"
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png"
               },
               "icon": "lucide-image",
-              "title": "Dashboard_V5"
+              "title": "Phase 05 Output Example"
             }
           },
           {
@@ -141,7 +141,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -151,7 +151,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Dashboard_V5"
+              "title": "Backlinks for Phase 05 Output Example"
             }
           },
           {
@@ -230,12 +230,14 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "d1bff7cf6a0db9fc",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "02_Library/Generative_Theory/He_GlobalMapper_Arbitrary-Shaped_Urban_Layout_Generation_ICCV_2023_paper.pdf",
+    "02_Library/Generative_Theory/Unconfirmed 515388.crdownload",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05",
     "04_Reports/Daily/Daily_Report_20260513.md",
@@ -267,7 +269,6 @@
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.min.js",
     "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.css",
     "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.css",
-    "01_Products/Layout_Gen_Design/lib/tom-select/tom-select.complete.min.js",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
     "!Atlas_System.md",

@@ -75,12 +75,11 @@ class Grid:
         """Block the outer ring of cells whose centres lie within ``margin_m``
         of the site boundary. Used to keep the road inside the setback zone.
         """
-        for i in range(self.ncols):
-            for j in range(self.nrows):
-                cx, cy = self.cell_to_world(i, j)
-                if (cx < margin_m or cy < margin_m or
-                        cx > self.site_w - margin_m or cy > self.site_l - margin_m):
-                    self.blocked[i, j] = True
+        xs = (np.arange(self.ncols) + 0.5) * self.cell_size
+        ys = (np.arange(self.nrows) + 0.5) * self.cell_size
+        x_mask = (xs < margin_m) | (xs > self.site_w - margin_m)
+        y_mask = (ys < margin_m) | (ys > self.site_l - margin_m)
+        self.blocked |= x_mask[:, None] | y_mask[None, :]
 
     # ── Debug ─────────────────────────────────────────────────────────────
 

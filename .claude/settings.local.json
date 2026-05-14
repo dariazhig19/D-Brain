@@ -16,7 +16,9 @@
       "WebFetch(domain:www.cs.purdue.edu)",
       "WebFetch(domain:www.tandfonline.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:www.repository.cam.ac.uk)"
+      "WebFetch(domain:www.repository.cam.ac.uk)",
+      "Bash(pdftotext --version)",
+      "Bash(pdftotext -layout \"x:/CST본부 \\(구 기술지원부 폴더\\)/15. 다리아/D-Brain/02_Library/Generative_Theory/He_GlobalMapper_Arbitrary-Shaped_Urban_Layout_Generation_ICCV_2023_paper.pdf\" -)"
     ]
   }
 }

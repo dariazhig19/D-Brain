@@ -28,12 +28,17 @@
             "id": "d1bff7cf6a0db9fc",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png"
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": -56,
+                  "y": 718.5,
+                  "zoom": 0
+                }
               },
-              "icon": "lucide-image",
-              "title": "Phase 05 Output Example"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -141,7 +146,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -151,7 +156,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Phase 05 Output Example"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -230,8 +235,11 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Pathfind.cpython-314.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Grid.cpython-314.pyc",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
     "01_Products/Layout_Gen_Design/Core/Pathfind.py",
     "01_Products/Layout_Gen_Design/Core/Grid.py",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
@@ -240,7 +248,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05",
     "04_Reports/Daily/Daily_Report_20260513.md",
@@ -268,8 +275,6 @@
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-    "01_Products/Layout_Gen_Design/Notes/Rule_Network.html",
-    "01_Products/Layout_Gen_Design/lib/vis-9.1.2/vis-network.min.js",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
     "!Atlas_System.md",

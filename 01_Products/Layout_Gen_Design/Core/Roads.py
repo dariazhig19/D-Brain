@@ -163,7 +163,7 @@ def _ring_waypoints(grid, margin_m, n_per_edge):
         pts.append((lerp(x1, x0, t), y1))
     for k in range(n_per_edge):   # left edge T→B
         t = k / n_per_edge
-        pts.append((lerp(y0, y1, 0) if False else x0, lerp(y1, y0, t)))
+        pts.append((x0, lerp(y1, y0, t)))
 
     return [grid.world_to_cell(x, y) for (x, y) in pts]
 

@@ -62,4 +62,8 @@ Automate the generation of power plant Plot Plans. Develop a system to optimize 
 - [x] **Building Rotation & Boundary Flexibility:** Add rotation and allow boundary overflow for extremely tight sites.
 - [ ] **Verification:** Validate generated outputs against reference drawings.
 
-## 📍 Current Status: **Phase 05 Step 2 Completed (Road Deformation & Hierarchical Placement)**
+## 📍 Current Status: **Phase 05 Layout & Generative Logic Refinement Completed**
+- Retired LPG/Metering block.
+- Implemented true circular geometries for Flare and RAW Water Tank.
+- Tuned A* pathfinder grid to strictly enforce a 9m road footprint and 6m clearance buffer on a 1.0m grid resolution.
+- Expanded generative boundaries to allow inland leeward placements for Cooling Tower.

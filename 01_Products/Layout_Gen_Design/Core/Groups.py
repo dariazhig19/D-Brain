@@ -74,9 +74,16 @@ FOOTPRINTS = {
     "GIS":            (110, 51),
     "Warehouse":      (90,  55),   # 59x40 building + 100 cars parking (~2500 sqm)
     "LPG/Metering":   (40,  30),   # Unchanged
-    "Flare":          (60,  40),   # Ø40 Flare Stack + space for KO Drum
+    "Flare":          (40,  40),   # Ø40 Flare Stack
     "WT/WWT":         (100, 80),   # 81x56 WT/WWT building + space for Clarifiers, Tanks
-    "Water":          (70,  50),   # Ø37 Raw Tank + (x2) Ø10 Demi Tanks + space for Pumps
+    "RAW Water Tank": (37,  37),   # Ø37 Raw Tank
+    "Demi Water Tank":(25,  12),   # (x2) Ø10 Demi Tanks side-by-side
+}
+
+# Rendering Shapes
+SHAPES = {
+    "Flare": "circle",
+    "RAW Water Tank": "circle"
 }
 
 # Rack metadata (width in metres = physical corridor width)
@@ -99,7 +106,8 @@ GROUP_COLORS = {
     "LPG/Metering":   "#f1c40f",
     "Flare":          "#e74c3c",
     "WT/WWT":         "#34495e",
-    "Water":          "#00bcd4",
+    "RAW Water Tank": "#00bcd4",
+    "Demi Water Tank":"#00bcd4",
 }
 
 RACK_COLORS = {
@@ -214,7 +222,8 @@ def get_all_groups(site_width, site_length, positions=None):
         "LPG/Metering":   (15,                      site_length - 30 - 15),
         "Flare":          (site_width - 40 - 15,    15),
         "WT/WWT":         (15,                      site_length / 2 - 28),
-        "Water":          (15,                      site_length / 2 + 35),
+        "RAW Water Tank": (15,                      site_length / 2 + 35),
+        "Demi Water Tank":(15 + 40,                 site_length / 2 + 35),
     }
 
     groups = []
@@ -280,26 +289,45 @@ def get_all_racks(groups, rack_segments=None):
 
 def draw_group(ax, group):
     """
-    Render a group block as a colored rectangle using coordinate lines (ax.plot).
+    Render a group block as a colored shape. Supports rectangles and circles.
     """
     x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    name = group["name"]
+    color = group["color"]
     
-    # 5-point closed contour
-    gx = [x,   x+w, x+w, x,   x]
-    gy = [y,   y,   y+h, y+h, y]
+    shape = SHAPES.get(name, "rectangle")
     
-    # Fill with transparency
-    ax.fill(gx, gy, color=group["color"], alpha=0.5, zorder=1)
-    
-    # Border line
-    ax.plot(gx, gy, color="black", linewidth=0.8, zorder=2)
-    
-    # Wrap text if there are spaces or slashes
-    name_str = group["name"].replace(" ", "\n").replace("/", "/\n")
-    
-    # Group label in the center
-    ax.text(x + w/2, y + h/2, name_str,
-            ha='center', va='center', fontsize=7, fontweight='bold', zorder=3)
+    if shape == "circle":
+        # Draw as a circle using width as diameter
+        radius = w / 2
+        cx, cy = x + radius, y + radius
+        import matplotlib.patches as patches
+        
+        # Fill
+        circle_fill = patches.Circle((cx, cy), radius, facecolor=color, alpha=0.5, zorder=1)
+        ax.add_patch(circle_fill)
+        # Outline
+        circle_line = patches.Circle((cx, cy), radius, fill=False, edgecolor=color, lw=1.2, zorder=2)
+        ax.add_patch(circle_line)
+    else:
+        # 5-point closed contour (Rectangle)
+        gx = [x,   x+w, x+w, x,   x]
+        gy = [y,   y,   y+h, y+h, y]
+        
+        # Fill with transparency
+        ax.fill(gx, gy, color=color, alpha=0.5, zorder=1)
+        # Edge lines
+        ax.plot(gx, gy, color=color, lw=1.2, zorder=2)
+
+    # Label in center
+    cx, cy = x + w / 2, y + h / 2
+    # Add rotation indicator if applicable
+    label = f"{name}"
+    if group.get("rotated"):
+        label += " (R)"
+    ax.text(cx, cy, label, color='white', fontsize=6,
+            fontweight='bold', ha='center', va='center', zorder=3,
+            bbox=dict(facecolor='#333333', alpha=0.8, edgecolor='none', pad=1))
 
 
 def draw_rack(ax, rack):

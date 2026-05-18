@@ -225,10 +225,10 @@ def _place_cooling_tower(sw, sl, wind_dir, margin):
 
 
 def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, placed, margin):
-    """WT/WWT: near Water, adjacent but non-overlapping. May rotate."""
+    """WT/WWT: near RAW Water Tank, adjacent but non-overlapping. May rotate."""
     rotated = _maybe_rotate("WT/WWT")
     w, h = _dims("WT/WWT", rotated)
-    ww_w, ww_h = _dims("Water", water_rotated)
+    ww_w, ww_h = _dims("RAW Water Tank", water_rotated)
     
     candidates = [
         (water_x + ww_w + 3, water_y),
@@ -247,7 +247,7 @@ def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, placed, margin):
             if pname in _FP:
                 px, py = _pos_xy(pval)
                 pw, ph = _dims(pname, _pos_rot(pval))
-                current_gap = 3 if pname == "Water" else _OVERLAP_GAP
+                current_gap = 3 if pname == "RAW Water Tank" else _OVERLAP_GAP
                 if _rects_overlap(cx, cy, w, h, px, py, pw, ph, gap=current_gap):
                     return False, cx, cy
         return True, cx, cy
@@ -261,6 +261,51 @@ def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, placed, margin):
     for _ in range(500):
         x = water_x + random.uniform(-150, 150)
         y = water_y + random.uniform(-150, 150)
+        valid, cx, cy = _is_valid(x, y)
+        if valid:
+            return cx, cy, rotated
+            
+    return None
+
+
+def _place_demi_water(sw, sl, raw_x, raw_y, raw_rotated, placed, margin):
+    """Demi Water Tank: near RAW Water Tank, adjacent but non-overlapping. May rotate."""
+    rotated = _maybe_rotate("Demi Water Tank")
+    w, h = _dims("Demi Water Tank", rotated)
+    raw_w, raw_h = _dims("RAW Water Tank", raw_rotated)
+    
+    candidates = [
+        (raw_x + raw_w + 3, raw_y),
+        (raw_x - w - 3, raw_y),
+        (raw_x, raw_y + raw_h + 3),
+        (raw_x, raw_y - h - 3),
+        (raw_x + raw_w + 3, raw_y + raw_h - h),
+        (raw_x - w - 3, raw_y + raw_h - h),
+    ]
+    random.shuffle(candidates)
+    
+    def _is_valid(cx, cy):
+        cx = _clamp(cx, margin, sw - w - margin)
+        cy = _clamp(cy, margin, sl - h - margin)
+        for pname, pval in placed.items():
+            if pname in _FP:
+                px, py = _pos_xy(pval)
+                pw, ph = _dims(pname, _pos_rot(pval))
+                # Allow tighter gap for clustering around RAW Water Tank
+                current_gap = 3 if pname == "RAW Water Tank" else _OVERLAP_GAP
+                if _rects_overlap(cx, cy, w, h, px, py, pw, ph, gap=current_gap):
+                    return False, cx, cy
+        return True, cx, cy
+
+    for x, y in candidates:
+        valid, cx, cy = _is_valid(x, y)
+        if valid:
+            return cx, cy, rotated
+            
+    # Fallback with randomness
+    for _ in range(500):
+        x = raw_x + random.uniform(-150, 150)
+        y = raw_y + random.uniform(-150, 150)
         valid, cx, cy = _is_valid(x, y)
         if valid:
             return cx, cy, rotated
@@ -453,9 +498,13 @@ def generate_layouts(site_width, site_length, wind_dir,
         gis_x, gis_y, gis_rot = _place_anchor(sw, sl, "GIS", gis_edge, gis_ratio, gis_offset)
         placed["GIS"] = (gis_x, gis_y, gis_rot)
         
-        # 3. Water (FIXED)
-        water_x, water_y, water_rot = _place_anchor(sw, sl, "Water", water_edge, water_ratio, water_offset)
-        placed["Water"] = (water_x, water_y, water_rot)
+        # 3. RAW Water Tank (FIXED)
+        water_x, water_y, water_rot = _place_anchor(sw, sl, "RAW Water Tank", water_edge, water_ratio, water_offset)
+        placed["RAW Water Tank"] = (water_x, water_y, water_rot)
+        
+        # 3.5 Demi Water Tank (Cluster around RAW Water)
+        demi = _place_demi_water(sw, sl, water_x, water_y, water_rot, placed, boundary_margin)
+        if demi: placed["Demi Water Tank"] = demi
 
         # 4. Power Block (center, minimal jitter) — collision-aware
         result = _try_place_collision_aware(sw, sl, "Power Block", placed,
@@ -476,7 +525,7 @@ def generate_layouts(site_width, site_length, wind_dir,
         if result is None: continue
         placed["Cooling Tower"] = result
 
-        # 7. WT/WWT (adjacent to Water) — self-aware collision
+        # 7. WT/WWT (adjacent to RAW Water Tank) — self-aware collision
         result = _place_wt_wwt(sw, sl, water_x, water_y, water_rot, placed, boundary_margin)
         if result is None: continue
         placed["WT/WWT"] = result
@@ -576,4 +625,9 @@ def generate_layouts(site_width, site_length, wind_dir,
                 diverse.append(c)
 
     diverse.sort(key=lambda c: c["scoring"]["total_penalty"])
+    
+    # Filter out LPG/Metering from final output so it doesn't render in the dashboard
+    for layout in diverse:
+        layout["groups"] = [g for g in layout["groups"] if g["name"] != "LPG/Metering"]
+        
     return diverse[:n_results]

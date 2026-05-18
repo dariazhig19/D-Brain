@@ -53,6 +53,8 @@ gis_corner      = st.sidebar.selectbox("GIS corner",
                                        help="Which site corner anchors the GIS.")
 st.sidebar.divider()
 st.sidebar.header("Generation Settings")
+boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, step=5,
+                                    help="Minimum distance from buildings to the plot boundary. Negative values allow overlapping the boundary.")
 n_results   = st.sidebar.slider("Layouts to generate", 5, 100, 10, step=5)
 min_passing = st.sidebar.slider("Min rules passing",    1,  len(RULES),  12)
 
@@ -79,6 +81,7 @@ if do_generate:
             gate_ratio=gate_ratio,
             gh_position=gh_position,
             gis_corner=gis_corner,
+            boundary_margin=boundary_margin,
         )
     st.session_state["results"] = results
     st.session_state["params"]  = (site_width, site_length, wind_dir)

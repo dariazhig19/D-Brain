@@ -8,7 +8,7 @@ toggleable overlays so the A* road logic can be inspected cell-by-cell.
 """
 
 import streamlit as st
-import sys, os
+import sys, os, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
@@ -54,6 +54,11 @@ boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, st
                                     help="Minimum distance from buildings to the plot boundary. Negative values allow overlapping the boundary.")
 min_passing = st.sidebar.slider("Min rules passing", 1, len(RULES), 1,
                                 help="Keep low for road testing — high values may fail to find a layout.")
+fix_seed = st.sidebar.checkbox("Fix building positions (seed)", value=True,
+                               help="When ON, the same site + gate + GIS + seed produces the same buildings every click. "
+                                    "Lets you iterate on road logic against a stable layout.")
+seed_val = st.sidebar.number_input("Random seed", min_value=0, max_value=10_000, value=42, step=1,
+                                   disabled=not fix_seed)
 
 st.sidebar.divider()
 st.sidebar.header("Overlays")
@@ -78,6 +83,8 @@ with btn_col:
     do_generate = st.button("Generate Layout", use_container_width=True, type="primary")
 
 if do_generate:
+    if fix_seed:
+        random.seed(int(seed_val))
     with st.spinner("Generating one layout..."):
         results = generate_layouts(
             site_width, site_length, wind_dir,

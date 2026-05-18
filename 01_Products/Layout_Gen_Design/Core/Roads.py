@@ -134,14 +134,14 @@ def deform_around_buildings(road, buildings, site_w, site_l, gap=ROAD_TO_BUILDIN
 # ── Grid-based A* internal road network ───────────────────────────────────
 
 def build_road_network(site_w, site_l, buildings, gate_point, *,
-                       cell_size=2.0,
+                       cell_size=1.0,
                        turn_penalty=0.5):
     """Build an internal road network connecting the site gate to all
     building entrances via A* on an occupancy grid.
 
     Buildings are marked on the grid with a 6m inflation buffer
-    (``ROAD_TO_BUILDING``). A* runs with ``width_cells=2`` to enforce
-    a physical 5-cell (10m) road footprint.
+    (``ROAD_TO_BUILDING``). A* runs with ``width_cells=4`` to enforce
+    a physical 9-cell (9m) road footprint.
 
     Args:
         site_w, site_l: site dimensions in metres.
@@ -161,8 +161,8 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     grid = Grid(site_w, site_l, cell_size=cell_size)
     grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
 
-    # Erodes the free space to ensure a 10m wide road footprint (5 cells) fits.
-    width_cells = 2
+    # Erodes the free space to ensure a 9m wide road footprint (9 cells) fits.
+    width_cells = 4
     passable = build_passable(grid, width_cells)
 
     gate_cell = grid.world_to_cell(*gate_point)

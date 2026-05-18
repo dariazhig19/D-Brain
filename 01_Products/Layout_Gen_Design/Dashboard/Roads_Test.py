@@ -25,6 +25,7 @@ importlib.reload(Core.Main)
 from Core.Groups import draw_group, draw_rack
 from Core.Rules import RULES
 from Core.Main import generate_layouts
+from Core.Roads import build_road_network
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -78,25 +79,66 @@ st.caption(
     f"Min rules **{min_passing}/{len(RULES)}**"
 )
 
-_, btn_col, _ = st.columns([2, 3, 2])
-with btn_col:
-    do_generate = st.button("Generate Layout", use_container_width=True, type="primary")
+btn_col1, btn_col2 = st.columns([3, 2])
+with btn_col1:
+    do_generate = st.button("Generate Layout", use_container_width=True, type="primary",
+                             help="Use cached buildings if seed+params match; else re-roll buildings.")
+with btn_col2:
+    do_reroll = st.button("Re-roll buildings", use_container_width=True,
+                           help="Force a fresh building layout (ignores cache).")
 
-if do_generate:
-    if fix_seed:
-        random.seed(int(seed_val))
-    with st.spinner("Generating one layout..."):
-        results = generate_layouts(
-            site_width, site_length, wind_dir,
-            n_results=1,
-            min_rules_passing=min_passing,
-            gate_side=gate_side,
-            gate_ratio=gate_ratio,
-            gh_position=gh_position,
-            gis_corner=gis_corner,
-            boundary_margin=boundary_margin,
-        )
-    st.session_state["layout"] = results[0] if results else None
+# Signature of inputs that determine the BUILDING layout. The road network
+# depends on these plus the Roads/Pathfind/Grid code, so we always recompute
+# roads even when reusing cached buildings.
+bldg_sig = (
+    site_width, site_length, wind_dir,
+    gate_side, gate_ratio, gh_position,
+    gis_corner, boundary_margin, min_passing,
+    int(seed_val) if fix_seed else None,
+)
+
+if do_generate or do_reroll:
+    cached_sig    = st.session_state.get("bldg_sig")
+    cached_layout = st.session_state.get("layout")
+    reuse_buildings = (
+        do_generate
+        and not do_reroll
+        and fix_seed
+        and cached_sig == bldg_sig
+        and cached_layout is not None
+    )
+
+    if reuse_buildings:
+        # Same params + same seed — keep cached buildings, recompute roads
+        # so edits to Roads.py / Pathfind.py / Grid.py take effect.
+        with st.spinner("Recomputing roads on cached buildings..."):
+            layout = cached_layout
+            new_road = build_road_network(
+                site_width, site_length, layout["groups"], layout["gate_point"]
+            )
+            if new_road is not None:
+                layout = {**layout, "road": new_road}
+                st.session_state["layout"] = layout
+            else:
+                st.warning("Road network unreachable for the cached buildings — try Re-roll.")
+    else:
+        if fix_seed and not do_reroll:
+            random.seed(int(seed_val))
+        with st.spinner("Generating one layout..."):
+            results = generate_layouts(
+                site_width, site_length, wind_dir,
+                n_results=1,
+                min_rules_passing=min_passing,
+                gate_side=gate_side,
+                gate_ratio=gate_ratio,
+                gh_position=gh_position,
+                gis_corner=gis_corner,
+                boundary_margin=boundary_margin,
+            )
+        layout_new = results[0] if results else None
+        st.session_state["layout"]   = layout_new
+        st.session_state["bldg_sig"] = bldg_sig if layout_new is not None else None
+
     st.session_state["params"] = (site_width, site_length, wind_dir)
 
 layout = st.session_state.get("layout")

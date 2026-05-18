@@ -132,8 +132,7 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 #   8. Flare (leeward corner)
 #   9. LPG/Metering (corner, setback)
 #  10. Warehouse (available space)
-
-_MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
+_MARGIN = -20  # Allow up to 20m overlap outside the plot boundary (negative margin)
 
 
 def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"):
@@ -155,29 +154,29 @@ def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"
     gap = 2  # small gap between gate opening and Gate House
 
     if gate_side == "N":
-        # Gate on top edge. GH sits inside, _MARGIN from top boundary.
-        y = sl - _MARGIN - h
+        # Gate on top edge. GH sits flush with top boundary.
+        y = sl - h
         if gh_position == "right":
             x = gate_x + gap
         else:
             x = gate_x - w - gap
     elif gate_side == "S":
-        # Gate on bottom edge. GH sits inside, _MARGIN from bottom boundary.
-        y = _MARGIN
+        # Gate on bottom edge. GH sits flush with bottom boundary.
+        y = 0
         if gh_position == "right":
             x = gate_x + gap
         else:
             x = gate_x - w - gap
     elif gate_side == "E":
-        # Gate on right edge. GH sits inside, _MARGIN from right boundary.
-        x = sw - _MARGIN - w
+        # Gate on right edge. GH sits flush with right boundary.
+        x = sw - w
         if gh_position == "right":
             y = gate_y - h - gap
         else:
             y = gate_y + gap
     elif gate_side == "W":
-        # Gate on left edge. GH sits inside, _MARGIN from left boundary.
-        x = _MARGIN
+        # Gate on left edge. GH sits flush with left boundary.
+        x = 0
         if gh_position == "right":
             y = gate_y + gap
         else:
@@ -185,9 +184,9 @@ def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"
     else:
         raise ValueError(f"gate_side must be N/S/E/W, got {gate_side!r}")
 
-    # Clamp to ensure GH stays within plot with _MARGIN from all boundaries
-    x = _clamp(x, _MARGIN, sw - w - _MARGIN)
-    y = _clamp(y, _MARGIN, sl - h - _MARGIN)
+    # Clamp to allow GH to stay within plot (gh_margin = 0)
+    x = _clamp(x, 0, sw - w)
+    y = _clamp(y, 0, sl - h)
     return x, y, False
 
 
@@ -197,14 +196,15 @@ def _place_gis(sw, sl, corner="NE"):
     corner: "NE" | "NW" | "SE" | "SW". Default "NE".
     """
     w, h = _FP["GIS"]
+    gis_margin = 0  # Allow flush with boundary
     if corner == "NE":
-        x, y = sw - w - _MARGIN, sl - h - _MARGIN
+        x, y = sw - w - gis_margin, sl - h - gis_margin
     elif corner == "NW":
-        x, y = _MARGIN,           sl - h - _MARGIN
+        x, y = gis_margin,           sl - h - gis_margin
     elif corner == "SE":
-        x, y = sw - w - _MARGIN, _MARGIN
+        x, y = sw - w - gis_margin, gis_margin
     elif corner == "SW":
-        x, y = _MARGIN,           _MARGIN
+        x, y = gis_margin,           gis_margin
     else:
         raise ValueError(f"gis_corner must be NE/NW/SE/SW, got {corner!r}")
     return x, y, False

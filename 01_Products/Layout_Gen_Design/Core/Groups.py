@@ -69,12 +69,12 @@ def get_groups(site_width, site_length, pb_x=None, pb_y=None, ct_x=None, ct_y=No
 FOOTPRINTS = {
     "Power Block":    (150, 150),
     "Cooling Tower":  (40,  183),
-    "Admin Building": (50,  40),   # 30x25 building + 50 cars parking (~1250 sqm)
-    "Gate House":     (20,  20),   # 12x12 building + 10 cars parking (~250 sqm)
+    "Admin Building": (30,  25),   # 30x25 building only (no parking padding)
+    "Gate House":     (12,  12),   # 12x12 building only (no parking padding)
     "GIS":            (110, 51),
-    "Warehouse":      (90,  55),   # 59x40 building + 100 cars parking (~2500 sqm)
+    "Warehouse":      (59,  40),   # 59x40 building only (no parking padding)
     "Flare":          (40,  40),   # Ø40 Flare Stack
-    "WT/WWT":         (100, 80),   # 81x56 WT/WWT building + space for Clarifiers, Tanks
+    "WT/WWT":         (81,  56),   # 81x56 WT/WWT building only
     "RAW Water Tank": (37,  37),   # Ø37 Raw Tank
     "Demi Water Tank":(25,  12),   # (x2) Ø10 Demi Tanks side-by-side
 }

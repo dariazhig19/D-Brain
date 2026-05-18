@@ -58,10 +58,10 @@ gis_edge   = st.sidebar.selectbox("Edge (GIS)", ["N", "S", "E", "W"], index=1)
 gis_ratio  = st.sidebar.slider("Position (GIS)", 0.0, 1.0, 0.8, step=0.05)
 gis_offset = st.sidebar.slider("Offset (GIS)", 0, 50, 0, step=1)
 
-st.sidebar.subheader("Water Anchor")
-water_edge   = st.sidebar.selectbox("Edge (Water)", ["N", "S", "E", "W"], index=2)
-water_ratio  = st.sidebar.slider("Position (Water)", 0.0, 1.0, 0.2, step=0.05)
-water_offset = st.sidebar.slider("Offset (Water)", 0, 50, 0, step=1)
+st.sidebar.subheader("RAW Water Tank Anchor")
+water_edge   = st.sidebar.selectbox("Edge (RAW Water)", ["N", "S", "E", "W"], index=2)
+water_ratio  = st.sidebar.slider("Position (RAW Water)", 0.0, 1.0, 0.2, step=0.05)
+water_offset = st.sidebar.slider("Offset (RAW Water)", 0, 50, 0, step=1)
 
 st.sidebar.divider()
 st.sidebar.header("Generation")
@@ -92,7 +92,7 @@ st.caption(
     f"Gate **{gate_side}@{gate_ratio:.2f}** | "
     f"GH **{gh_edge}@{gh_ratio:.2f}/{gh_offset}m** | "
     f"GIS **{gis_edge}@{gis_ratio:.2f}/{gis_offset}m** | "
-    f"Water **{water_edge}@{water_ratio:.2f}/{water_offset}m** | "
+    f"RAW Water **{water_edge}@{water_ratio:.2f}/{water_offset}m** | "
     f"Min rules **{min_passing}/{len(RULES)}**"
 )
 

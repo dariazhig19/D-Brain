@@ -69,14 +69,14 @@ def get_groups(site_width, site_length, pb_x=None, pb_y=None, ct_x=None, ct_y=No
 FOOTPRINTS = {
     "Power Block":    (150, 150),
     "Cooling Tower":  (40,  183),
-    "Admin Building": (30,  25),
-    "Gate House":     (12,  12),
+    "Admin Building": (50,  40),   # 30x25 building + 50 cars parking (~1250 sqm)
+    "Gate House":     (20,  20),   # 12x12 building + 10 cars parking (~250 sqm)
     "GIS":            (110, 51),
-    "Warehouse":      (59,  40),
-    "LPG/Metering":   (40,  30),
-    "Flare":          (40,  40),
-    "WT/WWT":         (81,  56),
-    "Water":          (40,  40),
+    "Warehouse":      (90,  55),   # 59x40 building + 100 cars parking (~2500 sqm)
+    "LPG/Metering":   (40,  30),   # Unchanged
+    "Flare":          (60,  40),   # Ø40 Flare Stack + space for KO Drum
+    "WT/WWT":         (100, 80),   # 81x56 WT/WWT building + space for Clarifiers, Tanks
+    "Water":          (70,  50),   # Ø37 Raw Tank + (x2) Ø10 Demi Tanks + space for Pumps
 }
 
 # Rack metadata (width in metres = physical corridor width)

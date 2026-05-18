@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/test_entrances.py",
     "00_Input/2026-05-14 - Session Report.md",
     "streamlit",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Pathfind.cpython-314.pyc",
@@ -279,7 +280,6 @@
     "!Me.md",
     "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
-    "04_Reports/Daily/Daily_Report_20260506.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png",

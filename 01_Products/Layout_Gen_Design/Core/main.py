@@ -153,7 +153,7 @@ def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"
     """
     w, h = _FP["Gate House"]
     gate_x, gate_y = compute_gate_point(gate_side, gate_ratio, sw, sl)
-    gap = 2  # small gap between gate opening and Gate House
+    gap = 10  # gap of 10m between gate opening and Gate House
 
     if gate_side == "N":
         y = sl - h - anchor_offset

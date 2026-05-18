@@ -17,7 +17,7 @@ from Core.Pathfind import astar, snap_to_passable, build_passable
 
 # ── Constants (metres) ────────────────────────────────────────────────────
 
-ROAD_WIDTH       = 7      # All roads are 7m wide
+ROAD_WIDTH       = 8      # All roads are 7m wide
 ROAD_SETBACK     = 5      # Perimeter road outer edge is 5m from site boundary
 ROAD_TO_BUILDING = 6      # Min gap from road inner edge to building
 ROAD_TO_RACK     = 2      # Min gap from road to rack

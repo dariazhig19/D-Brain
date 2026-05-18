@@ -78,8 +78,9 @@ def _has_any_overlap(positions):
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
             n1, n2 = names[i], names[j]
-            # Exception: Water vs WT/WWT can have 3m gap instead of _OVERLAP_GAP
-            if (n1 == "Water" and n2 == "WT/WWT") or (n1 == "WT/WWT" and n2 == "Water"):
+            # Exception: RAW Water Tank vs WT/WWT/Demi can have 3m gap instead of _OVERLAP_GAP
+            if ((n1 == "RAW Water Tank" and n2 in ("WT/WWT", "Demi Water Tank")) or
+                (n2 == "RAW Water Tank" and n1 in ("WT/WWT", "Demi Water Tank"))):
                 current_gap = 3
             else:
                 current_gap = _OVERLAP_GAP
@@ -189,11 +190,11 @@ def _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y, margin):
         cx, cy = x + w / 2, y + h / 2
         d_gh = math.dist((cx, cy), (gh_cx, gh_cy))
         d_pb = math.dist((cx, cy), (pb_cx, pb_cy))
-        if d_gh <= 80 and d_pb <= 120:
+        if d_gh <= 150 and d_pb <= 150:
             return x, y, rotated
-    # Fallback: just above Power Block
-    return (_clamp(pb_x + pb_w / 2 - w / 2, margin, sw - w - margin),
-            _clamp(pb_y + pb_h + 10, margin, sl - h - margin),
+    # Fallback: random position near Power Block
+    return (_clamp(pb_x + pb_w / 2 - w / 2 + random.uniform(-50, 50), margin, sw - w - margin),
+            _clamp(pb_y + pb_h + random.uniform(10, 50), margin, sl - h - margin),
             rotated)
 
 
@@ -425,9 +426,9 @@ def _place_racks(groups):
         segment("Power Block", "Admin Building"),
     ]
 
-    # Utility Rack: WT/WWT <-> Water, Cooling Tower
+    # Utility Rack: WT/WWT <-> RAW Water Tank, Cooling Tower
     utility_rack = [
-        segment("WT/WWT", "Water"),
+        segment("WT/WWT", "RAW Water Tank"),
         segment("WT/WWT", "Cooling Tower"),
     ]
 
@@ -457,8 +458,9 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
             if pname in _FP:
                 px, py = _pos_xy(pval)
                 pw, ph = _dims(pname, _pos_rot(pval))
-                # Exception: Water vs WT/WWT can have 3m gap instead of _OVERLAP_GAP
-                if (name == "Water" and pname == "WT/WWT") or (name == "WT/WWT" and pname == "Water"):
+                # Exception: RAW Water Tank vs WT/WWT/Demi can have 3m gap instead of _OVERLAP_GAP
+                if ((name == "RAW Water Tank" and pname in ("WT/WWT", "Demi Water Tank")) or
+                    (pname == "RAW Water Tank" and name in ("WT/WWT", "Demi Water Tank"))):
                     current_gap = 3
                 else:
                     current_gap = _OVERLAP_GAP

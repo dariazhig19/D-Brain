@@ -418,11 +418,11 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000,
-                     gate_side="N", gate_ratio=0.5, 
+                     gate_side="N", gate_ratio=0.5,
                      gh_edge="N", gh_ratio=0.5, gh_offset=0,
                      gis_edge="N", gis_ratio=0.8, gis_offset=0,
                      water_edge="N", water_ratio=0.2, water_offset=0,
-                     boundary_margin=15):
+                     boundary_margin=15, candidate_pool_size=None):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
@@ -539,7 +539,8 @@ def generate_layouts(site_width, site_length, wind_dir,
                 "gate_point":     gate_point,
             })
 
-        if len(candidates) >= n_results * 15:
+        target_pool = candidate_pool_size if candidate_pool_size is not None else n_results * 15
+        if len(candidates) >= target_pool:
             break
 
     candidates.sort(key=lambda c: c["scoring"]["total_penalty"])

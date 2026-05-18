@@ -149,6 +149,8 @@ if do_generate or do_reroll:
                 site_width, site_length, wind_dir,
                 n_results=1,
                 min_rules_passing=min_passing,
+                max_pool=300,
+                candidate_pool_size=1,
                 gate_side=gate_side,
                 gate_ratio=gate_ratio,
                 gh_edge=gh_edge,

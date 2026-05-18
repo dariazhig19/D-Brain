@@ -224,39 +224,48 @@ def _place_cooling_tower(sw, sl, wind_dir, margin):
             rotated)
 
 
-def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, margin):
+def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, placed, margin):
     """WT/WWT: near Water, adjacent but non-overlapping. May rotate."""
     rotated = _maybe_rotate("WT/WWT")
     w, h = _dims("WT/WWT", rotated)
     ww_w, ww_h = _dims("Water", water_rotated)
     
-    # Try placing adjacent to Water (right, left, top, bottom)
     candidates = [
         (water_x + ww_w + 3, water_y),
         (water_x - w - 3, water_y),
         (water_x, water_y + ww_h + 3),
         (water_x, water_y - h - 3),
         (water_x + ww_w + 3, water_y + ww_h - h),
+        (water_x - w - 3, water_y + ww_h - h),
     ]
-    for cx, cy in candidates:
+    random.shuffle(candidates)
+    
+    def _is_valid(cx, cy):
         cx = _clamp(cx, margin, sw - w - margin)
         cy = _clamp(cy, margin, sl - h - margin)
-        if not _rects_overlap(cx, cy, w, h, water_x, water_y, ww_w, ww_h, gap=3):
+        for pname, pval in placed.items():
+            if pname in _FP:
+                px, py = _pos_xy(pval)
+                pw, ph = _dims(pname, _pos_rot(pval))
+                current_gap = 3 if pname == "Water" else _OVERLAP_GAP
+                if _rects_overlap(cx, cy, w, h, px, py, pw, ph, gap=current_gap):
+                    return False, cx, cy
+        return True, cx, cy
+
+    for x, y in candidates:
+        valid, cx, cy = _is_valid(x, y)
+        if valid:
             return cx, cy, rotated
-    
-    # Fallback with randomness
-    for _ in range(200):
-        x = water_x + random.uniform(-80, 80)
-        y = water_y + random.uniform(-80, 80)
-        x = _clamp(x, margin, sw - w - margin)
-        y = _clamp(y, margin, sl - h - margin)
-        if not _rects_overlap(x, y, w, h, water_x, water_y, ww_w, ww_h, gap=3):
-            return x, y, rotated
             
-    # Last resort
-    return (_clamp(water_x + ww_w + 8, margin, sw - w - margin),
-            _clamp(water_y, margin, sl - h - margin),
-            rotated)
+    # Fallback with randomness
+    for _ in range(500):
+        x = water_x + random.uniform(-150, 150)
+        y = water_y + random.uniform(-150, 150)
+        valid, cx, cy = _is_valid(x, y)
+        if valid:
+            return cx, cy, rotated
+            
+    return None
 
 
 def _place_flare(sw, sl, wind_dir, margin):
@@ -467,9 +476,8 @@ def generate_layouts(site_width, site_length, wind_dir,
         if result is None: continue
         placed["Cooling Tower"] = result
 
-        # 7. WT/WWT (adjacent to Water) — collision-aware
-        result = _try_place_collision_aware(sw, sl, "WT/WWT", placed,
-                    lambda: _place_wt_wwt(sw, sl, water_x, water_y, water_rot, boundary_margin), max_attempts=100)
+        # 7. WT/WWT (adjacent to Water) — self-aware collision
+        result = _place_wt_wwt(sw, sl, water_x, water_y, water_rot, placed, boundary_margin)
         if result is None: continue
         placed["WT/WWT"] = result
 

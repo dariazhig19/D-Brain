@@ -13,7 +13,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
 from matplotlib import cm, colors as mcolors
-import numpy as np
 
 import importlib
 import Core.Groups, Core.Roads, Core.Rules, Core.Main, Core.Grid, Core.Pathfind
@@ -23,10 +22,9 @@ importlib.reload(Core.Groups)
 importlib.reload(Core.Roads)
 importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
-from Core.Groups import draw_group, draw_rack, compute_gate_point
+from Core.Groups import draw_group, draw_rack
 from Core.Rules import RULES
 from Core.Main import generate_layouts
-from Core.Roads import ROAD_TO_BUILDING
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -52,6 +50,8 @@ gis_corner  = st.sidebar.selectbox("GIS corner", ["NE", "NW", "SE", "SW"], index
 
 st.sidebar.divider()
 st.sidebar.header("Generation")
+boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, step=5,
+                                    help="Minimum distance from buildings to the plot boundary. Negative values allow overlapping the boundary.")
 min_passing = st.sidebar.slider("Min rules passing", 1, len(RULES), 1,
                                 help="Keep low for road testing — high values may fail to find a layout.")
 
@@ -63,7 +63,6 @@ show_paths   = st.sidebar.checkbox("A* path cells",       value=True)
 show_smooth  = st.sidebar.checkbox("Smoothed road lines", value=True)
 show_snaps   = st.sidebar.checkbox("Gate/entrance snap cells", value=True)
 show_racks   = st.sidebar.checkbox("Racks",               value=True)
-show_labels  = st.sidebar.checkbox("Building labels",     value=True)
 show_entrances = st.sidebar.checkbox("Entrance points",   value=True)
 
 # ── Header ─────────────────────────────────────────────────────────────────
@@ -88,6 +87,7 @@ if do_generate:
             gate_ratio=gate_ratio,
             gh_position=gh_position,
             gis_corner=gis_corner,
+            boundary_margin=boundary_margin,
         )
     st.session_state["layout"] = results[0] if results else None
     st.session_state["params"] = (site_width, site_length, wind_dir)
@@ -164,15 +164,9 @@ if show_racks:
     for rack in layout["racks"]:
         draw_rack(ax, rack)
 
-# Buildings
+# Buildings (draw_group already renders the name label in the centre)
 for g in layout["groups"]:
     draw_group(ax, g)
-    if show_labels:
-        cx = g["x"] + g["width"] / 2
-        cy = g["y"] + g["height"] / 2
-        ax.text(cx, cy, g["name"], fontsize=7, ha='center', va='center',
-                color='white', fontweight='bold', zorder=4,
-                bbox=dict(boxstyle='round,pad=0.15', facecolor='black', alpha=0.35, edgecolor='none'))
 
 # Entrance points (red dots) + snap cells
 if show_entrances:

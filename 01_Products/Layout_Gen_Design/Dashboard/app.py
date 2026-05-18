@@ -43,6 +43,9 @@ gate_side = st.sidebar.selectbox("Gate edge",
                                   help="Which site boundary edge the gate (plot entrance) is on.")
 gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05,
                                 help="0.0 = left/bottom end, 0.5 = center, 1.0 = right/top end.")
+gh_position = st.sidebar.selectbox("Gate House side",
+                                    ["right", "left"], index=0,
+                                    help="Place Gate House to the right or left of the gate (looking from outside into the plot).")
 st.sidebar.divider()
 st.sidebar.header("Fixed Anchors")
 gis_corner      = st.sidebar.selectbox("GIS corner",
@@ -74,6 +77,7 @@ if do_generate:
             min_rules_passing=min_passing,
             gate_side=gate_side,
             gate_ratio=gate_ratio,
+            gh_position=gh_position,
             gis_corner=gis_corner,
         )
     st.session_state["results"] = results

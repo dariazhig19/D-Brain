@@ -276,7 +276,7 @@ RULES = [
     # ── Phase 03 rules (re-declared as data) ──────────────────────────────
     {"id": "PB-01", "type": "center_proximity", "group": "Power Block",    "target": "Plot Center",    "threshold": 20,  "penalty_rate": 100,  "penalty_mode": "linear"},
     {"id": "PB-02", "type": "boundary_setback", "group": "Power Block",    "target": "Primary Road",   "threshold": 5,   "penalty_rate": 5000, "penalty_mode": "flat"},
-    {"id": "CT-01", "type": "leeward_edge",     "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "CT-01", "type": "leeward_edge",     "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 120, "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
     {"id": "CT-03", "type": "parallel_to_short_edge", "group": "Cooling Tower", "target": "Plot Short Edge", "threshold": 0, "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "AD-01", "type": "boundary_setback", "group": "Admin Building", "target": "Primary Road",   "threshold": 20,  "penalty_rate": 1000, "penalty_mode": "flat"},

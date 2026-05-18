@@ -204,21 +204,19 @@ def _place_cooling_tower(sw, sl, wind_dir, margin):
     """
     rotated = _maybe_rotate("Cooling Tower")
     w, h = _dims("Cooling Tower", rotated)
-    depth = random.uniform(margin, margin + 15)
-
-    # Leeward = opposite of wind direction
+    # Leeward = opposite of wind direction. Search the outer 40% of the site.
     if wind_dir == "East":
-        x = depth   # left side (downwind)
+        x = random.uniform(margin, sw * 0.4)   # left zone (downwind)
         y = random.uniform(margin, max(margin, sl - h - margin))
     elif wind_dir == "West":
-        x = sw - w - depth  # right side (downwind)
+        x = random.uniform(sw * 0.6, sw - w - margin)  # right zone (downwind)
         y = random.uniform(margin, max(margin, sl - h - margin))
     elif wind_dir == "North":
         x = random.uniform(margin, max(margin, sw - w - margin))
-        y = depth  # bottom side (downwind)
+        y = random.uniform(margin, sl * 0.4)  # bottom zone (downwind)
     else:  # South
         x = random.uniform(margin, max(margin, sw - w - margin))
-        y = sl - h - depth  # top side (downwind)
+        y = random.uniform(sl * 0.6, sl - h - margin)  # top zone (downwind)
 
     return (_clamp(x, margin, sw - w - margin),
             _clamp(y, margin, max(margin, sl - h - margin)),

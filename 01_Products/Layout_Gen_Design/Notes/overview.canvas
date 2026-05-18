@@ -38,7 +38,7 @@
 		{"id":"51c804810c918d6e","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V1.png","x":3057,"y":-56,"width":399,"height":204},
 		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3617,"y":-56,"width":495,"height":204},
 		{"id":"3b19a4d665993430","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png","x":11600,"y":-180,"width":400,"height":400},
-		{"id":"9d4b42815ae1a626","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png","x":11220,"y":257,"width":400,"height":223}
+		{"id":"9d4b42815ae1a626","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png","x":11140,"y":-71,"width":400,"height":223}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

@@ -58,6 +58,16 @@ def _rect_edge_distance(g1, g2):
     return math.sqrt(dx * dx + dy * dy)
 
 
+def _point_to_rect_distance(px, py, group):
+    """Shortest distance from a point to the closest edge of a rectangle.
+    Returns 0 if the point lies inside the rectangle.
+    """
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    dx = max(x - px, 0, px - (x + w))
+    dy = max(y - py, 0, py - (y + h))
+    return math.sqrt(dx * dx + dy * dy)
+
+
 def _result(id_, name, group, passed, penalty, message, measured, threshold, calc):
     """Standardized rule result dict."""
     return {
@@ -275,6 +285,7 @@ RULES = [
     # ── Phase 04 new rules ────────────────────────────────────────────────
     # Gate House
     {"id": "GH-01", "type": "boundary_setback", "group": "Gate House",     "target": "Primary Road",   "threshold": 0,   "penalty_rate": 5000, "penalty_mode": "flat"},
+    {"id": "GH-02", "type": "gate_distance",    "group": "Gate House",     "target": "Site Gate",      "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
 
 
 
@@ -506,6 +517,32 @@ def _eval_road_proximity(rule, group, site_width, site_length, **_):
     )
 
 
+def _eval_gate_distance(rule, group, gate_point, **_):
+    """Minimum distance from the building rectangle to the site gate point.
+    Linear penalty on shortfall below the threshold.
+    """
+    if gate_point is None:
+        return _result(
+            rule["id"], f"{rule['group']} ↔ {rule['target']}: Min Dist", rule["group"],
+            True, 0,
+            "Skipped (no gate_point supplied)",
+            measured="n/a", threshold=f"≥ {rule['threshold']} m", calc="0 pts (skipped)",
+        )
+    gx, gy = gate_point
+    distance = _point_to_rect_distance(gx, gy, group)
+    shortfall = max(0.0, rule["threshold"] - distance)
+    penalty = shortfall * rule["penalty_rate"]
+    passed = shortfall == 0
+    return _result(
+        rule["id"], f"{rule['group']} ↔ {rule['target']}: Min Dist", rule["group"],
+        passed, penalty,
+        f"{distance:.1f} m from gate ✓" if passed else f"Too close to gate: {distance:.1f} m (need ≥ {rule['threshold']} m)",
+        measured=f"{distance:.1f} m (edge-to-point)",
+        threshold=f"≥ {rule['threshold']} m from gate",
+        calc=f"Shortfall: {rule['threshold']} − {distance:.1f} = {shortfall:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if shortfall > 0 else "0 pts (OK)",
+    )
+
+
 def _eval_boundary_overflow(rule, group, site_width, site_length, **_):
     """Check if building extends past site boundary.
     Logarithmic penalty to discourage but not hard-reject overflow.
@@ -546,12 +583,13 @@ _EVALUATORS = {
     "rack_length":         _eval_rack_length,
     "road_proximity":      _eval_road_proximity,
     "boundary_overflow":   _eval_boundary_overflow,
+    "gate_distance":       _eval_gate_distance,
 }
 
 
 # ── Phase 04 Master Evaluator ─────────────────────────────────────────────
 
-def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
+def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir, gate_point=None):
     """
     Run all rules from the RULES data list using generic evaluators.
 
@@ -561,6 +599,8 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
         site_width  : float — plot width in metres
         site_length : float — plot length in metres
         wind_dir    : str   — "North" | "South" | "East" | "West"
+        gate_point  : (x, y) world coordinate of the site gate — required for
+                      rules of type "gate_distance".
 
     Returns:
         {
@@ -614,6 +654,11 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir):
             if group is None:
                 continue
             r = evaluator(rule, group, site_width, site_length)
+        elif rule_type == "gate_distance":
+            group = by_name.get(rule["group"])
+            if group is None:
+                continue
+            r = evaluator(rule, group, gate_point)
         else:
             # Single-building rules (center_proximity, boundary_setback)
             group = by_name.get(rule["group"])

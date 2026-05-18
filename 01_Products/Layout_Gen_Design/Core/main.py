@@ -598,7 +598,8 @@ def generate_layouts(site_width, site_length, wind_dir,
             continue
 
         # Score
-        scoring = evaluate_all_v2(groups, racks, site_width, site_length, wind_dir)
+        scoring = evaluate_all_v2(groups, racks, site_width, site_length, wind_dir,
+                                  gate_point=gate_point)
         passing = sum(1 for r in scoring["results"] if r["passed"])
 
         if passing >= min_rules_passing:

@@ -40,21 +40,33 @@ wind_dir    = st.sidebar.selectbox("Wind Direction",
                                    ["North", "South", "East", "West"], index=2)
 
 st.sidebar.divider()
-st.sidebar.header("Gate")
-gate_side   = st.sidebar.selectbox("Gate edge", ["N", "S", "E", "W"], index=0)
+st.sidebar.header("Site Gate")
+gate_side   = st.sidebar.selectbox("Gate edge", ["N", "S", "E", "W"], index=0,
+                                   help="Which site boundary edge the gate (plot entrance) is on.")
 gate_ratio  = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05)
-gh_position = st.sidebar.selectbox("Gate House side", ["right", "left"], index=0)
 
 st.sidebar.divider()
-st.sidebar.header("Anchors")
-gis_corner  = st.sidebar.selectbox("GIS corner", ["NE", "NW", "SE", "SW"], index=0)
+st.sidebar.header("Fixed Anchors")
+
+st.sidebar.subheader("Gate House Anchor")
+gh_edge   = st.sidebar.selectbox("Edge (GH)", ["N", "S", "E", "W"], index=0)
+gh_ratio  = st.sidebar.slider("Position (GH)", 0.0, 1.0, 0.5, step=0.05)
+gh_offset = st.sidebar.slider("Offset (GH)", 0, 50, 0, step=1)
+
+st.sidebar.subheader("GIS Anchor")
+gis_edge   = st.sidebar.selectbox("Edge (GIS)", ["N", "S", "E", "W"], index=1)
+gis_ratio  = st.sidebar.slider("Position (GIS)", 0.0, 1.0, 0.8, step=0.05)
+gis_offset = st.sidebar.slider("Offset (GIS)", 0, 50, 0, step=1)
+
+st.sidebar.subheader("Water Anchor")
+water_edge   = st.sidebar.selectbox("Edge (Water)", ["N", "S", "E", "W"], index=2)
+water_ratio  = st.sidebar.slider("Position (Water)", 0.0, 1.0, 0.2, step=0.05)
+water_offset = st.sidebar.slider("Offset (Water)", 0, 50, 0, step=1)
 
 st.sidebar.divider()
 st.sidebar.header("Generation")
 boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, step=5,
                                     help="Minimum distance from free-placed buildings to the plot boundary. Negative values allow overlapping the boundary.")
-anchor_offset = st.sidebar.slider("Anchor offset (GH / GIS)", 0, 30, 5, step=1,
-                                  help="Inward distance from the boundary for fixed-corner buildings (Gate House and GIS). 0 = flush.")
 min_passing = st.sidebar.slider("Min rules passing", 1, len(RULES), 1,
                                 help="Keep low for road testing — high values may fail to find a layout.")
 fix_seed = st.sidebar.checkbox("Fix building positions (seed)", value=True,
@@ -77,7 +89,10 @@ show_entrances = st.sidebar.checkbox("Entrance points",   value=True)
 st.title("Road Logic Test Page")
 st.caption(
     f"Site **{site_width}×{site_length} m** | Wind **{wind_dir}** | "
-    f"Gate **{gate_side}@{gate_ratio:.2f}** | GIS **{gis_corner}** | "
+    f"Gate **{gate_side}@{gate_ratio:.2f}** | "
+    f"GH **{gh_edge}@{gh_ratio:.2f}/{gh_offset}m** | "
+    f"GIS **{gis_edge}@{gis_ratio:.2f}/{gis_offset}m** | "
+    f"Water **{water_edge}@{water_ratio:.2f}/{water_offset}m** | "
     f"Min rules **{min_passing}/{len(RULES)}**"
 )
 
@@ -94,8 +109,11 @@ with btn_col2:
 # roads even when reusing cached buildings.
 bldg_sig = (
     site_width, site_length, wind_dir,
-    gate_side, gate_ratio, gh_position,
-    gis_corner, boundary_margin, anchor_offset, min_passing,
+    gate_side, gate_ratio,
+    gh_edge,    gh_ratio,    gh_offset,
+    gis_edge,   gis_ratio,   gis_offset,
+    water_edge, water_ratio, water_offset,
+    boundary_margin, min_passing,
     int(seed_val) if fix_seed else None,
 )
 
@@ -133,10 +151,16 @@ if do_generate or do_reroll:
                 min_rules_passing=min_passing,
                 gate_side=gate_side,
                 gate_ratio=gate_ratio,
-                gh_position=gh_position,
-                gis_corner=gis_corner,
+                gh_edge=gh_edge,
+                gh_ratio=gh_ratio,
+                gh_offset=gh_offset,
+                gis_edge=gis_edge,
+                gis_ratio=gis_ratio,
+                gis_offset=gis_offset,
+                water_edge=water_edge,
+                water_ratio=water_ratio,
+                water_offset=water_offset,
                 boundary_margin=boundary_margin,
-                anchor_offset=anchor_offset,
             )
         layout_new = results[0] if results else None
         st.session_state["layout"]   = layout_new

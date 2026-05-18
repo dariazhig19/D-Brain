@@ -68,14 +68,22 @@ def _has_any_overlap(positions):
     Returns True if ANY overlap exists.
     """
     items = []
+    names = []
     for name, val in positions.items():
         if name in _FP:
             x, y = _pos_xy(val)
             w, h = _dims(name, _pos_rot(val))
             items.append((x, y, w, h))
+            names.append(name)
     for i in range(len(items)):
         for j in range(i + 1, len(items)):
-            if _rects_overlap(*items[i], *items[j]):
+            n1, n2 = names[i], names[j]
+            # Exception: Water vs WT/WWT can have 3m gap instead of _OVERLAP_GAP
+            if (n1 == "Water" and n2 == "WT/WWT") or (n1 == "WT/WWT" and n2 == "Water"):
+                current_gap = 3
+            else:
+                current_gap = _OVERLAP_GAP
+            if _rects_overlap(*items[i], *items[j], gap=current_gap):
                 return True
     return False
 
@@ -298,20 +306,19 @@ def _place_water(sw, sl, ww_x, ww_y, ww_rotated, margin):
     """Water: near WT/WWT, adjacent but non-overlapping. Water is square (no rotation)."""
     w, h = _FP["Water"]   # square
     ww_w, ww_h = _dims("WT/WWT", ww_rotated)
-    water_gap = max(5, _OVERLAP_GAP)
     # Try placing adjacent to WT/WWT (right, left, top, bottom)
     candidates = [
-        (ww_x + ww_w + water_gap, ww_y),              # right of WT/WWT
-        (ww_x - w - water_gap, ww_y),                  # left of WT/WWT
-        (ww_x, ww_y + ww_h + water_gap),               # above WT/WWT
-        (ww_x, ww_y - h - water_gap),                  # below WT/WWT
-        (ww_x + ww_w + water_gap, ww_y + ww_h - h),    # right-top aligned
+        (ww_x + ww_w + 3, ww_y),              # right of WT/WWT
+        (ww_x - w - 3, ww_y),                  # left of WT/WWT
+        (ww_x, ww_y + ww_h + 3),               # above WT/WWT
+        (ww_x, ww_y - h - 3),                  # below WT/WWT
+        (ww_x + ww_w + 3, ww_y + ww_h - h),    # right-top aligned
     ]
     for cx, cy in candidates:
         cx = _clamp(cx, margin, sw - w - margin)
         cy = _clamp(cy, margin, sl - h - margin)
         # Verify non-overlap with WT/WWT
-        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=_OVERLAP_GAP):
+        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
             return cx, cy, False
     # Fallback with randomness
     for _ in range(200):
@@ -319,10 +326,10 @@ def _place_water(sw, sl, ww_x, ww_y, ww_rotated, margin):
         y = ww_y + random.uniform(-80, 80)
         x = _clamp(x, margin, sw - w - margin)
         y = _clamp(y, margin, sl - h - margin)
-        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=_OVERLAP_GAP):
+        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
             return x, y, False
     # Last resort
-    return (_clamp(ww_x + ww_w + water_gap + 5, margin, sw - w - margin),
+    return (_clamp(ww_x + ww_w + 8, margin, sw - w - margin),
             _clamp(ww_y, margin, sl - h - margin),
             False)
 
@@ -471,7 +478,12 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
             if pname in _FP:
                 px, py = _pos_xy(pval)
                 pw, ph = _dims(pname, _pos_rot(pval))
-                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=_OVERLAP_GAP):
+                # Exception: Water vs WT/WWT can have 3m gap instead of _OVERLAP_GAP
+                if (name == "Water" and pname == "WT/WWT") or (name == "WT/WWT" and pname == "Water"):
+                    current_gap = 3
+                else:
+                    current_gap = _OVERLAP_GAP
+                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=current_gap):
                     overlap = True
                     break
         if not overlap:

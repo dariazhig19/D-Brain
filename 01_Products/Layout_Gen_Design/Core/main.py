@@ -50,7 +50,7 @@ def _pos_rot(val):
 
 # ── Overlap detection ─────────────────────────────────────────────────────
 
-_OVERLAP_GAP = 1  # minimum gap (metres) between any two buildings (reduced for tight sites)
+_OVERLAP_GAP = 6  # Enforce 6m gap so adjacent 3m building buffers can touch but not overlap
 
 
 def _rects_overlap(x1, y1, w1, h1, x2, y2, w2, h2, gap=_OVERLAP_GAP):
@@ -298,19 +298,20 @@ def _place_water(sw, sl, ww_x, ww_y, ww_rotated, margin):
     """Water: near WT/WWT, adjacent but non-overlapping. Water is square (no rotation)."""
     w, h = _FP["Water"]   # square
     ww_w, ww_h = _dims("WT/WWT", ww_rotated)
+    water_gap = max(5, _OVERLAP_GAP)
     # Try placing adjacent to WT/WWT (right, left, top, bottom)
     candidates = [
-        (ww_x + ww_w + 5, ww_y),              # right of WT/WWT
-        (ww_x - w - 5, ww_y),                  # left of WT/WWT
-        (ww_x, ww_y + ww_h + 5),               # above WT/WWT
-        (ww_x, ww_y - h - 5),                  # below WT/WWT
-        (ww_x + ww_w + 5, ww_y + ww_h - h),    # right-top aligned
+        (ww_x + ww_w + water_gap, ww_y),              # right of WT/WWT
+        (ww_x - w - water_gap, ww_y),                  # left of WT/WWT
+        (ww_x, ww_y + ww_h + water_gap),               # above WT/WWT
+        (ww_x, ww_y - h - water_gap),                  # below WT/WWT
+        (ww_x + ww_w + water_gap, ww_y + ww_h - h),    # right-top aligned
     ]
     for cx, cy in candidates:
         cx = _clamp(cx, margin, sw - w - margin)
         cy = _clamp(cy, margin, sl - h - margin)
         # Verify non-overlap with WT/WWT
-        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
+        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=_OVERLAP_GAP):
             return cx, cy, False
     # Fallback with randomness
     for _ in range(200):
@@ -318,10 +319,10 @@ def _place_water(sw, sl, ww_x, ww_y, ww_rotated, margin):
         y = ww_y + random.uniform(-80, 80)
         x = _clamp(x, margin, sw - w - margin)
         y = _clamp(y, margin, sl - h - margin)
-        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
+        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=_OVERLAP_GAP):
             return x, y, False
     # Last resort
-    return (_clamp(ww_x + ww_w + 10, margin, sw - w - margin),
+    return (_clamp(ww_x + ww_w + water_gap + 5, margin, sw - w - margin),
             _clamp(ww_y, margin, sl - h - margin),
             False)
 
@@ -388,7 +389,7 @@ def _place_warehouse(sw, sl, placed_positions, margin):
             if name in _FP:
                 px, py = _pos_xy(pval)
                 pw, ph = _dims(name, _pos_rot(pval))
-                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=5):
+                if _rects_overlap(x, y, w, h, px, py, pw, ph, gap=_OVERLAP_GAP):
                     overlap = True
                     break
         if not overlap:

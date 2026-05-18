@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/test_placement.py",
     "01_Products/Layout_Gen_Design/Dashboard/Roads_Test.py",
     "01_Products/Layout_Gen_Design/test_road.py",
     "01_Products/Layout_Gen_Design/test_gh.py",
@@ -250,7 +251,6 @@
     "01_Products/Layout_Gen_Design/Core/Grid.py",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
     "02_Library/Generative_Theory/He_GlobalMapper_Arbitrary-Shaped_Urban_Layout_Generation_ICCV_2023_paper.pdf",
-    "02_Library/Generative_Theory/Unconfirmed 515388.crdownload",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",

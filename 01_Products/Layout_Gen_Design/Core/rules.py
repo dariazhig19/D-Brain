@@ -278,6 +278,7 @@ RULES = [
     {"id": "PB-02", "type": "boundary_setback", "group": "Power Block",    "target": "Primary Road",   "threshold": 5,   "penalty_rate": 5000, "penalty_mode": "flat"},
     {"id": "CT-01", "type": "leeward_edge",     "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
+    {"id": "CT-03", "type": "parallel_to_short_edge", "group": "Cooling Tower", "target": "Plot Short Edge", "threshold": 0, "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "AD-01", "type": "boundary_setback", "group": "Admin Building", "target": "Primary Road",   "threshold": 20,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "AD-02", "type": "max_distance",     "group": "Admin Building", "target": "Gate House",     "threshold": 50,  "penalty_rate": 100,  "penalty_mode": "linear"},
     {"id": "AD-03", "type": "windward_edge",    "group": "Admin Building", "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
@@ -570,6 +571,27 @@ def _eval_boundary_overflow(rule, group, site_width, site_length, **_):
     )
 
 
+def _eval_parallel_to_short_edge(rule, group, site_width, site_length, **_):
+    """Check if the building's longest dimension is parallel to the site's shortest dimension."""
+    w, h = group["width"], group["height"]
+    
+    is_square = (w == h)
+    building_long_axis = "X" if w > h else "Y"
+    site_short_axis = "X" if site_width <= site_length else "Y"
+    
+    aligned = is_square or (building_long_axis == site_short_axis)
+    penalty = 0 if aligned else rule["penalty_rate"]
+    
+    return _result(
+        rule["id"], f"{rule['group']}: Orientation", rule["group"],
+        aligned, penalty,
+        "Aligned with short edge \u2713" if aligned else "Misaligned (parallel to long edge)",
+        measured=f"Long axis: {building_long_axis}",
+        threshold=f"Must match site short axis ({site_short_axis})",
+        calc="0 pts (aligned)" if aligned else f"{rule['penalty_rate']:,} pts flat (misaligned)",
+    )
+
+
 # ── Evaluator dispatch table ──────────────────────────────────────────────
 
 _EVALUATORS = {
@@ -584,6 +606,7 @@ _EVALUATORS = {
     "road_proximity":      _eval_road_proximity,
     "boundary_overflow":   _eval_boundary_overflow,
     "gate_distance":       _eval_gate_distance,
+    "parallel_to_short_edge": _eval_parallel_to_short_edge,
 }
 
 

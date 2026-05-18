@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/test_anchors.py",
     "01_Products/Layout_Gen_Design/Layout_Requirements.md",
     "01_Products/Layout_Gen_Design/decode_requirements.py",
     "01_Products/Layout_Gen_Design/print_legend.py",
@@ -278,7 +279,6 @@
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Notes.md",
     "!Me.md",
-    "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",

@@ -143,79 +143,25 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 
 
 
-def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right",
-                       anchor_offset=0):
-    """Gate House: placed to the right or left of the site gate, inside the plot.
-
-    The gate is the physical entry point on the plot boundary. Gate House
-    sits inside the plot next to the gate.
-
-    Args:
-        sw, sl:         site width and length in metres.
-        gate_side:      "N" | "S" | "E" | "W" — which boundary edge the gate is on.
-        gate_ratio:     0.0–1.0 position along that edge (0.5 = center).
-        gh_position:    "right" | "left" — which side of the gate the GH sits on
-                        (when looking from outside into the plot).
-        anchor_offset:  inward distance from the gate-side boundary in metres.
-                        0 keeps GH flush with the boundary (legacy behaviour).
-    """
-    w, h = _FP["Gate House"]
-    gate_x, gate_y = compute_gate_point(gate_side, gate_ratio, sw, sl)
-    gap = 10  # gap of 10m between gate opening and Gate House
-
-    if gate_side == "N":
-        y = sl - h - anchor_offset
-        if gh_position == "right":
-            x = gate_x + gap
-        else:
-            x = gate_x - w - gap
-    elif gate_side == "S":
-        y = anchor_offset
-        if gh_position == "right":
-            x = gate_x + gap
-        else:
-            x = gate_x - w - gap
-    elif gate_side == "E":
-        x = sw - w - anchor_offset
-        if gh_position == "right":
-            y = gate_y - h - gap
-        else:
-            y = gate_y + gap
-    elif gate_side == "W":
-        x = anchor_offset
-        if gh_position == "right":
-            y = gate_y + gap
-        else:
-            y = gate_y - h - gap
+def _place_anchor(sw, sl, name, edge, ratio, offset):
+    """Place a fixed anchor building strictly based on user-provided edge, ratio, and inward offset."""
+    w, h = _FP[name]
+    if edge == "N":
+        x = (sw - w) * ratio
+        y = sl - h - offset
+    elif edge == "S":
+        x = (sw - w) * ratio
+        y = offset
+    elif edge == "E":
+        x = sw - w - offset
+        y = (sl - h) * ratio
+    elif edge == "W":
+        x = offset
+        y = (sl - h) * ratio
     else:
-        raise ValueError(f"gate_side must be N/S/E/W, got {gate_side!r}")
-
-    x = _clamp(x, 0, sw - w)
-    y = _clamp(y, 0, sl - h)
-    return x, y, False
-
-
-def _place_gis(sw, sl, corner="NE", anchor_offset=0):
-    """GIS: FIXED at chosen corner. Rotation fixed.
-
-    Args:
-        corner:         "NE" | "NW" | "SE" | "SW". Default "NE".
-        anchor_offset:  inward distance from both corner edges in metres.
-                        0 keeps GIS flush with the corner (legacy behaviour).
-    """
-    w, h = _FP["GIS"]
-    gis_margin = anchor_offset
-    if corner == "NE":
-        x, y = sw - w - gis_margin, sl - h - gis_margin
-    elif corner == "NW":
-        x, y = gis_margin,           sl - h - gis_margin
-    elif corner == "SE":
-        x, y = sw - w - gis_margin, gis_margin
-    elif corner == "SW":
-        x, y = gis_margin,           gis_margin
-    else:
-        raise ValueError(f"gis_corner must be NE/NW/SE/SW, got {corner!r}")
-    return x, y, False
+        raise ValueError(f"edge must be N/S/E/W, got {edge!r}")
+        
+    return _clamp(x, 0, sw - w), _clamp(y, 0, sl - h), False
 
 
 def _place_power_block(sw, sl, margin):
@@ -278,60 +224,39 @@ def _place_cooling_tower(sw, sl, wind_dir, margin):
             rotated)
 
 
-def _place_wt_wwt(sw, sl, wind_dir, margin):
-    """WT/WWT: setback ≥ 15 m, prefer downwind side. May rotate 90°."""
+def _place_wt_wwt(sw, sl, water_x, water_y, water_rotated, margin):
+    """WT/WWT: near Water, adjacent but non-overlapping. May rotate."""
     rotated = _maybe_rotate("WT/WWT")
     w, h = _dims("WT/WWT", rotated)
-    # Place on the opposite side of wind direction (downwind)
-    if wind_dir == "East":
-        x = random.uniform(margin, sw * 0.3)
-    elif wind_dir == "West":
-        x = random.uniform(sw * 0.7 - w, sw - w - margin)
-    else:
-        x = random.uniform(margin, sw - w - margin)
-
-    if wind_dir == "North":
-        y = random.uniform(margin, sl * 0.3)
-    elif wind_dir == "South":
-        y = random.uniform(sl * 0.7 - h, sl - h - margin)
-    else:
-        y = random.uniform(margin, sl - h - margin)
-
-    return (_clamp(x, margin, sw - w - margin),
-            _clamp(y, margin, sl - h - margin),
-            rotated)
-
-
-def _place_water(sw, sl, ww_x, ww_y, ww_rotated, margin):
-    """Water: near WT/WWT, adjacent but non-overlapping. Water is square (no rotation)."""
-    w, h = _FP["Water"]   # square
-    ww_w, ww_h = _dims("WT/WWT", ww_rotated)
-    # Try placing adjacent to WT/WWT (right, left, top, bottom)
+    ww_w, ww_h = _dims("Water", water_rotated)
+    
+    # Try placing adjacent to Water (right, left, top, bottom)
     candidates = [
-        (ww_x + ww_w + 3, ww_y),              # right of WT/WWT
-        (ww_x - w - 3, ww_y),                  # left of WT/WWT
-        (ww_x, ww_y + ww_h + 3),               # above WT/WWT
-        (ww_x, ww_y - h - 3),                  # below WT/WWT
-        (ww_x + ww_w + 3, ww_y + ww_h - h),    # right-top aligned
+        (water_x + ww_w + 3, water_y),
+        (water_x - w - 3, water_y),
+        (water_x, water_y + ww_h + 3),
+        (water_x, water_y - h - 3),
+        (water_x + ww_w + 3, water_y + ww_h - h),
     ]
     for cx, cy in candidates:
         cx = _clamp(cx, margin, sw - w - margin)
         cy = _clamp(cy, margin, sl - h - margin)
-        # Verify non-overlap with WT/WWT
-        if not _rects_overlap(cx, cy, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
-            return cx, cy, False
+        if not _rects_overlap(cx, cy, w, h, water_x, water_y, ww_w, ww_h, gap=3):
+            return cx, cy, rotated
+    
     # Fallback with randomness
     for _ in range(200):
-        x = ww_x + random.uniform(-80, 80)
-        y = ww_y + random.uniform(-80, 80)
+        x = water_x + random.uniform(-80, 80)
+        y = water_y + random.uniform(-80, 80)
         x = _clamp(x, margin, sw - w - margin)
         y = _clamp(y, margin, sl - h - margin)
-        if not _rects_overlap(x, y, w, h, ww_x, ww_y, ww_w, ww_h, gap=3):
-            return x, y, False
+        if not _rects_overlap(x, y, w, h, water_x, water_y, ww_w, ww_h, gap=3):
+            return x, y, rotated
+            
     # Last resort
-    return (_clamp(ww_x + ww_w + 8, margin, sw - w - margin),
-            _clamp(ww_y, margin, sl - h - margin),
-            False)
+    return (_clamp(water_x + ww_w + 8, margin, sw - w - margin),
+            _clamp(water_y, margin, sl - h - margin),
+            rotated)
 
 
 def _place_flare(sw, sl, wind_dir, margin):
@@ -493,21 +418,15 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000,
-                     gate_side="N", gate_ratio=0.5, gh_position="right",
-                     gis_corner="NE", boundary_margin=15, anchor_offset=0):
+                     gate_side="N", gate_ratio=0.5, 
+                     gh_edge="N", gh_ratio=0.5, gh_offset=0,
+                     gis_edge="N", gis_ratio=0.8, gis_offset=0,
+                     water_edge="N", water_ratio=0.2, water_offset=0,
+                     boundary_margin=15):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
     Each building is placed sequentially with collision checks against all prior buildings.
-
-    Args:
-        gate_side       : "N" | "S" | "E" | "W" — which boundary edge the site gate is on.
-        gate_ratio      : 0.0–1.0 position along that edge (0.5 = center).
-        gh_position     : "right" | "left" — Gate House side relative to gate.
-        gis_corner      : "NE" | "NW" | "SE" | "SW" — which corner anchors GIS.
-
-    Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
-    Each dict: {positions, rack_endpoints, groups, racks, scoring, road, gate_point}
     """
     sw, sl = site_width, site_length
     gate_point = compute_gate_point(gate_side, gate_ratio, sw, sl)
@@ -517,48 +436,42 @@ def generate_layouts(site_width, site_length, wind_dir,
     for _ in range(max_pool):
         placed = {}
 
-        # 1. Gate House (FIXED — to right/left of site gate, inside plot) — always succeeds
-        gh_x, gh_y, _ = _place_gate_house(sw, sl, gate_side=gate_side,
-                                           gate_ratio=gate_ratio,
-                                           gh_position=gh_position,
-                                           anchor_offset=anchor_offset)
-        placed["Gate House"] = (gh_x, gh_y, False)
+        # 1. Gate House (FIXED)
+        gh_x, gh_y, gh_rot = _place_anchor(sw, sl, "Gate House", gh_edge, gh_ratio, gh_offset)
+        placed["Gate House"] = (gh_x, gh_y, gh_rot)
 
-        # 2. GIS (FIXED — user-chosen corner) — always succeeds
-        gis_x, gis_y, _ = _place_gis(sw, sl, corner=gis_corner, anchor_offset=anchor_offset)
-        placed["GIS"] = (gis_x, gis_y, False)
+        # 2. GIS (FIXED)
+        gis_x, gis_y, gis_rot = _place_anchor(sw, sl, "GIS", gis_edge, gis_ratio, gis_offset)
+        placed["GIS"] = (gis_x, gis_y, gis_rot)
+        
+        # 3. Water (FIXED)
+        water_x, water_y, water_rot = _place_anchor(sw, sl, "Water", water_edge, water_ratio, water_offset)
+        placed["Water"] = (water_x, water_y, water_rot)
 
-        # 3. Power Block (center, minimal jitter) — collision-aware
+        # 4. Power Block (center, minimal jitter) — collision-aware
         result = _try_place_collision_aware(sw, sl, "Power Block", placed,
                     lambda: _place_power_block(sw, sl, boundary_margin), max_attempts=50)
         if result is None: continue
         placed["Power Block"] = result
 
-        # 4. Admin Building (near GH + PB) — collision-aware
+        # 5. Admin Building (near GH + PB) — collision-aware
         pb_x, pb_y = placed["Power Block"][:2]
         result = _try_place_collision_aware(sw, sl, "Admin Building", placed,
                     lambda: _place_admin(sw, sl, gh_x, gh_y, pb_x, pb_y, boundary_margin), max_attempts=50)
         if result is None: continue
         placed["Admin Building"] = result
 
-        # 5. Cooling Tower (leeward edge) — collision-aware
+        # 6. Cooling Tower (leeward edge) — collision-aware
         result = _try_place_collision_aware(sw, sl, "Cooling Tower", placed,
                     lambda: _place_cooling_tower(sw, sl, wind_dir, boundary_margin), max_attempts=100)
         if result is None: continue
         placed["Cooling Tower"] = result
 
-        # 6. WT/WWT (leeward, setback) — collision-aware
+        # 7. WT/WWT (adjacent to Water) — collision-aware
         result = _try_place_collision_aware(sw, sl, "WT/WWT", placed,
-                    lambda: _place_wt_wwt(sw, sl, wind_dir, boundary_margin), max_attempts=100)
+                    lambda: _place_wt_wwt(sw, sl, water_x, water_y, water_rot, boundary_margin), max_attempts=100)
         if result is None: continue
         placed["WT/WWT"] = result
-
-        # 7. Water (near WT/WWT) — collision-aware
-        ww_x, ww_y, ww_rotated = placed["WT/WWT"]
-        result = _try_place_collision_aware(sw, sl, "Water", placed,
-                    lambda: _place_water(sw, sl, ww_x, ww_y, ww_rotated, boundary_margin), max_attempts=100)
-        if result is None: continue
-        placed["Water"] = result
 
         # 8. Flare (leeward corner) — collision-aware
         result = _try_place_collision_aware(sw, sl, "Flare", placed,

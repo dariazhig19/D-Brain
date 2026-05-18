@@ -290,9 +290,6 @@ RULES = [
 
 
 
-    # LPG/Metering
-    {"id": "LP-01", "type": "boundary_setback", "group": "LPG/Metering",   "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
-    {"id": "LP-02", "type": "min_distance",     "group": "LPG/Metering",   "target": "Power Block",    "threshold": 30,  "penalty_rate": 300,  "penalty_mode": "linear"},
 
     # Flare
     {"id": "FL-01", "type": "leeward_edge",     "group": "Flare",          "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},

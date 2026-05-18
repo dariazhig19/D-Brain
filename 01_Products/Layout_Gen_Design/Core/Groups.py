@@ -73,7 +73,6 @@ FOOTPRINTS = {
     "Gate House":     (20,  20),   # 12x12 building + 10 cars parking (~250 sqm)
     "GIS":            (110, 51),
     "Warehouse":      (90,  55),   # 59x40 building + 100 cars parking (~2500 sqm)
-    "LPG/Metering":   (40,  30),   # Unchanged
     "Flare":          (40,  40),   # Ø40 Flare Stack
     "WT/WWT":         (100, 80),   # 81x56 WT/WWT building + space for Clarifiers, Tanks
     "RAW Water Tank": (37,  37),   # Ø37 Raw Tank
@@ -102,8 +101,7 @@ GROUP_COLORS = {
     "Admin Building": "#f5a623",
     "Gate House":     "#9b59b6",
     "GIS":            "#2c3e50",
-    "Warehouse":      "#d35400",
-    "LPG/Metering":   "#f1c40f",
+    "Warehouse":      "#e67e22",
     "Flare":          "#e74c3c",
     "WT/WWT":         "#34495e",
     "RAW Water Tank": "#00bcd4",
@@ -219,7 +217,6 @@ def get_all_groups(site_width, site_length, positions=None):
         "Gate House":     (site_width / 2 - 6,      site_length - 12),
         "GIS":            (site_width - 110 - 15,   site_length - 51 - 15),
         "Warehouse":      (15,                      15),
-        "LPG/Metering":   (15,                      site_length - 30 - 15),
         "Flare":          (site_width - 40 - 15,    15),
         "WT/WWT":         (15,                      site_length / 2 - 28),
         "RAW Water Tank": (15,                      site_length / 2 + 35),

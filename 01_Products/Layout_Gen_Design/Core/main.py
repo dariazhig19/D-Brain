@@ -340,28 +340,6 @@ def _place_flare(sw, sl, wind_dir, margin):
     return _clamp(x, margin, sw - w - margin), _clamp(y, margin, sl - h - margin), False
 
 
-def _place_lpg(sw, sl, margin):
-    """LPG/Metering: setback ≥ 15 m, corner placement. May rotate 90°."""
-    rotated = _maybe_rotate("LPG/Metering")
-    w, h = _dims("LPG/Metering", rotated)
-    # Prefer corners
-    corner = random.choice(["top-left", "top-right", "bottom-left", "bottom-right"])
-    if corner == "top-left":
-        x, y = margin, sl - h - margin
-    elif corner == "top-right":
-        x, y = sw - w - margin, sl - h - margin
-    elif corner == "bottom-left":
-        x, y = margin, margin
-    else:
-        x, y = sw - w - margin, margin
-    # Add some randomness
-    x += random.uniform(-5, 5)
-    y += random.uniform(-5, 5)
-    return (_clamp(x, margin, sw - w - margin),
-            _clamp(y, margin, sl - h - margin),
-            rotated)
-
-
 def _place_warehouse(sw, sl, placed_positions, margin):
     """Warehouse: find available space, avoid overlaps with placed buildings.
     May rotate 90°."""
@@ -414,10 +392,9 @@ def _place_racks(groups):
             return _closest_points(g1, g2)
         return None
 
-    # Pipe Rack: Power Block <-> Cooling Tower, LPG/Metering, WT/WWT
+    # Pipe Rack: Power Block <-> Cooling Tower, WT/WWT
     pipe_rack = [
         segment("Power Block", "Cooling Tower"),
-        segment("Power Block", "LPG/Metering"),
         segment("Power Block", "WT/WWT"),
     ]
 
@@ -538,13 +515,7 @@ def generate_layouts(site_width, site_length, wind_dir,
         if result is None: continue
         placed["Flare"] = result
 
-        # 9. LPG/Metering (corner, setback) — collision-aware
-        result = _try_place_collision_aware(sw, sl, "LPG/Metering", placed,
-                    lambda: _place_lpg(sw, sl, boundary_margin), max_attempts=100)
-        if result is None: continue
-        placed["LPG/Metering"] = result
-
-        # 10. Warehouse (available space) — collision-aware
+        # 9. Warehouse (available space) — collision-aware
         wh_x, wh_y, wh_rotated = _place_warehouse(sw, sl, placed, boundary_margin)
         placed["Warehouse"] = (wh_x, wh_y, wh_rotated)
 
@@ -628,8 +599,4 @@ def generate_layouts(site_width, site_length, wind_dir,
 
     diverse.sort(key=lambda c: c["scoring"]["total_penalty"])
     
-    # Filter out LPG/Metering from final output so it doesn't render in the dashboard
-    for layout in diverse:
-        layout["groups"] = [g for g in layout["groups"] if g["name"] != "LPG/Metering"]
-        
     return diverse[:n_results]

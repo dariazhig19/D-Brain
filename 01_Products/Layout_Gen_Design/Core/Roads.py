@@ -12,7 +12,7 @@ coexist:
 """
 
 from Core.Grid import Grid
-from Core.Pathfind import astar, build_passable, snap_to_passable
+from Core.Pathfind import astar, snap_to_passable
 
 
 # ── Constants (metres) ────────────────────────────────────────────────────
@@ -131,119 +131,77 @@ def deform_around_buildings(road, buildings, site_w, site_l, gap=ROAD_TO_BUILDIN
     return {**road, "outer_polyline": outer_polyline, "inner_polyline": inner_polyline}
 
 
-# ── Grid-based A* road network ────────────────────────────────────────────
+# ── Grid-based A* internal road network ───────────────────────────────────
 
-def _ring_waypoints(grid, margin_m, n_per_edge):
-    """Sample ``n_per_edge`` cell waypoints along each side of a rectangle
-    that sits just inside the setback ring. Returns a clockwise list.
-
-    Waypoints are pushed one cell inside the setback so they are guaranteed
-    to satisfy the width-aware passability check during A*.
-    """
-    cs = grid.cell_size
-    # World coords of the inner-setback rectangle, pulled in by one cell so
-    # the (2*width+1) corridor around each waypoint stays inside the grid.
-    x0 = margin_m + cs
-    y0 = margin_m + cs
-    x1 = grid.site_w - margin_m - cs
-    y1 = grid.site_l - margin_m - cs
-
-    def lerp(a, b, t):
-        return a + (b - a) * t
-
-    pts = []
-    for k in range(n_per_edge):   # bottom edge L→R
-        t = k / n_per_edge
-        pts.append((lerp(x0, x1, t), y0))
-    for k in range(n_per_edge):   # right edge B→T
-        t = k / n_per_edge
-        pts.append((x1, lerp(y0, y1, t)))
-    for k in range(n_per_edge):   # top edge R→L
-        t = k / n_per_edge
-        pts.append((lerp(x1, x0, t), y1))
-    for k in range(n_per_edge):   # left edge T→B
-        t = k / n_per_edge
-        pts.append((x0, lerp(y1, y0, t)))
-
-    return [grid.world_to_cell(x, y) for (x, y) in pts]
-
-
-def build_road_network(site_w, site_l, buildings, *,
+def build_road_network(site_w, site_l, buildings, gate_point, *,
                        cell_size=2.5,
-                       n_per_edge=6,
-                       turn_penalty=0.5,
-                       width_cells=1):
-    """Construct a closed-loop perimeter road by A* on an occupancy grid.
+                       turn_penalty=0.5):
+    """Build an internal road network connecting the site gate to all
+    building entrances via A* on an occupancy grid.
 
-    Builds a :class:`Grid`, blocks buildings (inflated by ``ROAD_TO_BUILDING``)
-    and the setback strip, then routes the road between waypoints arranged
-    around the inside of the setback ring. The concatenated path forms a
-    closed loop that deforms inward around any building that intrudes — and
-    handles all four edges uniformly, unlike :func:`deform_around_buildings`.
+    Buildings are marked on the grid with a 3m inflation buffer
+    (``ROAD_TO_BUILDING``), so no additional corridor erosion is needed.
+    A* runs with ``width_cells=0`` (single-cell pathfinding) since the
+    buffer is already baked into the grid.
 
     Args:
         site_w, site_l: site dimensions in metres.
-        buildings:      iterable of dicts with ``x``, ``y``, ``width``, ``height``.
+        buildings:      iterable of group dicts with ``x``, ``y``, ``width``,
+                        ``height``, and ``entrance_points``.
+        gate_point:     (x, y) world coordinate of the site gate on the boundary.
         cell_size:      grid resolution in metres (default 2.5).
-        n_per_edge:     waypoints per side of the loop (default 6 → 24 total).
         turn_penalty:   smoothing prior passed to :func:`astar`.
-        width_cells:    half-width of required clear corridor. ``1`` ⇒ 3-cell
-                        corridor ≈ 7.5 m, slightly above the 7 m road spec.
 
     Returns:
-        Dict with the same shape as :func:`build_perimeter_road` plus:
-            ``loop_cells``  list of (i, j) cell indices, closed
-            ``loop_world``  list of (x, y) world coords, closed
-            ``grid``        the occupancy Grid (reusable by rack routing)
-            ``mode``        ``'astar'``
-        Returns ``None`` if any segment fails to find a path.
+        Dict with:
+            ``segments``    list of dicts, each with ``from``, ``to``, ``path_world``
+            ``grid``        the occupancy Grid
+            ``mode``        ``'internal'``
+        Returns ``None`` if any entrance is unreachable from the gate.
     """
     grid = Grid(site_w, site_l, cell_size=cell_size)
     grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
-    grid.mark_setback(ROAD_SETBACK)
 
-    # Precompute the eroded passability map once for the whole loop — replaces
-    # the per-state 3x3 corridor check inside A* with an O(1) array lookup.
-    passable = build_passable(grid, width_cells)
+    # No setback blocking and no corridor erosion — just the 3m building buffer.
+    # A* uses width_cells=0 since the buffer is already in the grid.
+    free = ~grid.blocked
 
-    # Snap each waypoint to the nearest passable cell. Buildings flush with
-    # the boundary (e.g. Gate House) overlap the default waypoint positions;
-    # without this, A* would return None on every candidate.
-    raw_waypoints = _ring_waypoints(grid, ROAD_SETBACK, n_per_edge)
-    waypoints = []
-    for wp in raw_waypoints:
-        snapped = snap_to_passable(passable, wp, max_radius=30)
-        if snapped is None:
-            return None
-        waypoints.append(snapped)
-    # Drop consecutive duplicates that snapping may produce.
-    waypoints = [w for k, w in enumerate(waypoints)
-                 if k == 0 or w != waypoints[k - 1]]
-    if len(waypoints) < 4:
+    gate_cell = grid.world_to_cell(*gate_point)
+    # Snap gate to nearest free cell if it landed on a blocked cell
+    gate_cell = snap_to_passable(free, gate_cell, max_radius=30)
+    if gate_cell is None:
         return None
 
-    loop_cells = []
-    for k in range(len(waypoints)):
-        a = waypoints[k]
-        b = waypoints[(k + 1) % len(waypoints)]
-        segment = astar(grid, a, b,
-                        turn_penalty=turn_penalty,
-                        width_cells=width_cells,
-                        passable=passable)
-        if segment is None:
-            return None
-        # Drop the segment's last cell — next segment's first cell repeats it.
-        loop_cells.extend(segment[:-1] if k < len(waypoints) - 1 else segment)
+    segments = []
 
-    loop_world = [grid.cell_to_world(i, j) for (i, j) in loop_cells]
+    for building in buildings:
+        for entrance_pt in building.get("entrance_points", []):
+            ent_cell = grid.world_to_cell(*entrance_pt)
+            # Snap entrance to nearest free cell (entrance is on building edge,
+            # which is blocked by the 3m inflation)
+            ent_cell = snap_to_passable(free, ent_cell, max_radius=15)
+            if ent_cell is None:
+                return None
+
+            path = astar(grid, gate_cell, ent_cell,
+                         turn_penalty=turn_penalty,
+                         width_cells=0,
+                         passable=free)
+            if path is None:
+                return None
+
+            path_world = [grid.cell_to_world(i, j) for (i, j) in path]
+            segments.append({
+                "from":       "gate",
+                "to":         building["name"],
+                "to_point":   entrance_pt,
+                "path_cells": path,
+                "path_world": path_world,
+            })
 
     return {
-        "outer":         None,
-        "inner":         None,
-        "setback":       ROAD_SETBACK,
-        "width":         ROAD_WIDTH,
-        "loop_cells":    loop_cells,
-        "loop_world":    loop_world,
-        "grid":          grid,
-        "mode":          "astar",
+        "segments":  segments,
+        "grid":      grid,
+        "mode":      "internal",
+        "width":     ROAD_WIDTH,
     }

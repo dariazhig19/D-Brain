@@ -134,30 +134,14 @@ def _render_layout(layout, sw, sl, wd, rank):
     ax.fill([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='#f0f8ff', zorder=0)
     ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.0)
 
-    # Perimeter road corridor — A* loops carry a single centerline that we
-    # offset by ±width/2 to recreate the corridor. Legacy layouts still
-    # carry pre-built outer/inner polylines from deform_around_buildings.
+    # Internal road network — draw each A* path from gate to entrance
     road = layout.get("road", {})
-    outer_pl = inner_pl = None
-    if road.get("mode") == "astar" and road.get("loop_world"):
-        outer_pl, inner_pl = _offset_loop(road["loop_world"], road["width"] / 2)
-    else:
-        outer_pl = road.get("outer_polyline")
-        inner_pl = road.get("inner_polyline")
-        if not (outer_pl and inner_pl):
-            outer_corners = road.get("outer")
-            inner_corners = road.get("inner")
-            if outer_corners and inner_corners:
-                outer_pl = list(outer_corners) + [outer_corners[0]]
-                inner_pl = list(inner_corners) + [inner_corners[0]]
-    if outer_pl and inner_pl:
-        ox, oy = zip(*outer_pl)
-        ix, iy = zip(*inner_pl)
-        # Layer: outer fill above site bg, inner fill punches it back to bg color
-        ax.fill(ox, oy, color='#cccccc', zorder=0.5)
-        ax.fill(ix, iy, color='#f0f8ff', zorder=0.6)
-        ax.plot(ox, oy, color='#666666', lw=0.8, zorder=0.7)
-        ax.plot(ix, iy, color='#666666', lw=0.8, zorder=0.7)
+    if road.get("mode") == "internal" and road.get("segments"):
+        for seg in road["segments"]:
+            pw = seg.get("path_world", [])
+            if len(pw) >= 2:
+                rx, ry = zip(*pw)
+                ax.plot(rx, ry, color='#999999', lw=1.5, zorder=0.7, solid_capstyle='round')
 
     # Wind indicator
     wind_map = {

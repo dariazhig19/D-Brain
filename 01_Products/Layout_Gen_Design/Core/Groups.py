@@ -112,13 +112,15 @@ RACK_COLORS = {
 
 # ── Entrance point computation ─────────────────────────────────────────────
 
-def compute_entrance_points(group):
+def compute_entrance_points(group, pb_center=None):
     """Compute entrance point(s) for a building.
 
     Rules:
     - Power Block: 4 entrances, one at the center of each side.
-    - All other buildings: 1 entrance at the center of the longest side.
-      If width == height (square), entrance goes on the south side.
+    - All other buildings: 1 entrance on the side facing the Power Block.
+      Determines which side of the building is closest to PB center and
+      places the entrance at the center of that side.
+      If pb_center is None, falls back to center of longest side.
 
     Since rotated buildings already have swapped width/height in the
     group dict, the logic works automatically for rotated buildings.
@@ -138,13 +140,26 @@ def compute_entrance_points(group):
             (x + w,     y + h / 2),  # East  (right)
         ]
 
-    # All other buildings: 1 entrance at center of longest side
+    # For all other buildings: entrance on the side facing PB
+    sides = {
+        "S": (x + w / 2, y),          # bottom edge center
+        "N": (x + w / 2, y + h),      # top edge center
+        "W": (x,         y + h / 2),  # left edge center
+        "E": (x + w,     y + h / 2),  # right edge center
+    }
+
+    if pb_center is not None:
+        # Pick the side whose center point is closest to PB center
+        best_side = min(sides, key=lambda s: (
+            (sides[s][0] - pb_center[0]) ** 2 + (sides[s][1] - pb_center[1]) ** 2
+        ))
+        return [sides[best_side]]
+
+    # Fallback: center of longest side
     if w >= h:
-        # Longest side is horizontal → entrance on south (bottom) edge
-        return [(x + w / 2, y)]
+        return [sides["S"]]
     else:
-        # Longest side is vertical → entrance on west (left) edge
-        return [(x, y + h / 2)]
+        return [sides["W"]]
 
 
 def compute_gate_point(side, ratio, site_w, site_l):
@@ -217,8 +232,18 @@ def get_all_groups(site_width, site_length, positions=None):
             "color":   GROUP_COLORS[name],
             "rotated": rotated,
         }
-        group["entrance_points"] = compute_entrance_points(group)
         groups.append(group)
+
+    # Find Power Block center for entrance direction
+    pb = next((g for g in groups if g["name"] == "Power Block"), None)
+    pb_center = None
+    if pb:
+        pb_center = (pb["x"] + pb["width"] / 2, pb["y"] + pb["height"] / 2)
+
+    # Compute entrance points for all groups (facing PB)
+    for group in groups:
+        group["entrance_points"] = compute_entrance_points(group, pb_center=pb_center)
+
     return groups
 
 

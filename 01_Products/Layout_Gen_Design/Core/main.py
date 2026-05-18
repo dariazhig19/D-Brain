@@ -570,10 +570,11 @@ def generate_layouts(site_width, site_length, wind_dir,
 
         groups = get_all_groups(site_width, site_length, positions=positions)
 
-        # Build the perimeter road by A* on a 2.5m occupancy grid that
-        # includes every placed building. Returns None if the road cannot
-        # route through the setback ring — reject the candidate in that case.
-        road = build_road_network(sw, sl, groups)
+        # Build the internal road network connecting the gate to all building
+        # entrances via A* on a 2.5m grid. Buildings are inflated by 3m on the
+        # grid (no corridor erosion needed). Returns None if any entrance is
+        # unreachable — reject the candidate in that case.
+        road = build_road_network(sw, sl, groups, gate_point)
         if road is None:
             continue
 

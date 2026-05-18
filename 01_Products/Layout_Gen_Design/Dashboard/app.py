@@ -160,7 +160,8 @@ def _render_layout(layout, sw, sl, wd, rank):
             pw = seg.get("path_world", [])
             if len(pw) >= 2:
                 rx, ry = zip(*pw)
-                ax.plot(rx, ry, color='#999999', lw=1.5, zorder=0.7, solid_capstyle='round')
+                # lw=5.5 closely approximates a 7m physical width on a 500m plot at this figsize/DPI
+                ax.plot(rx, ry, color='#999999', lw=5.5, alpha=0.6, zorder=0.7, solid_capstyle='round')
 
     # Wind indicator
     wind_map = {

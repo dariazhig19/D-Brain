@@ -12,7 +12,7 @@ coexist:
 """
 
 from Core.Grid import Grid
-from Core.Pathfind import astar, snap_to_passable
+from Core.Pathfind import astar, snap_to_passable, build_passable
 
 
 # ── Constants (metres) ────────────────────────────────────────────────────
@@ -140,9 +140,8 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     building entrances via A* on an occupancy grid.
 
     Buildings are marked on the grid with a 6m inflation buffer
-    (``ROAD_TO_BUILDING``), so no additional corridor erosion is needed.
-    A* runs with ``width_cells=0`` (single-cell pathfinding) since the
-    buffer is already baked into the grid.
+    (``ROAD_TO_BUILDING``). A* runs with ``width_cells=1`` to enforce
+    a physical 3-cell (7.5m) road footprint.
 
     Args:
         site_w, site_l: site dimensions in metres.
@@ -162,13 +161,13 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     grid = Grid(site_w, site_l, cell_size=cell_size)
     grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
 
-    # No setback blocking and no corridor erosion — just the 6m building buffer.
-    # A* uses width_cells=0 since the buffer is already in the grid.
-    free = ~grid.blocked
+    # Erodes the free space to ensure a 7.5m wide road footprint (3 cells) fits.
+    width_cells = 1
+    passable = build_passable(grid, width_cells)
 
     gate_cell = grid.world_to_cell(*gate_point)
-    # Snap gate to nearest free cell if it landed on a blocked cell
-    gate_cell = snap_to_passable(free, gate_cell, max_radius=30)
+    # Snap gate to nearest passable cell if it landed in a blocked zone
+    gate_cell = snap_to_passable(passable, gate_cell, max_radius=30)
     if gate_cell is None:
         return None
 
@@ -177,16 +176,15 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     for building in buildings:
         for entrance_pt in building.get("entrance_points", []):
             ent_cell = grid.world_to_cell(*entrance_pt)
-            # Snap entrance to nearest free cell (entrance is on building edge,
-            # which is blocked by the 3m inflation)
-            ent_cell = snap_to_passable(free, ent_cell, max_radius=15)
+            # Snap entrance to nearest passable cell
+            ent_cell = snap_to_passable(passable, ent_cell, max_radius=15)
             if ent_cell is None:
                 return None
 
             path = astar(grid, gate_cell, ent_cell,
                          turn_penalty=turn_penalty,
-                         width_cells=0,
-                         passable=free)
+                         width_cells=width_cells,
+                         passable=passable)
             if path is None:
                 return None
 
@@ -200,8 +198,9 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
             })
 
     return {
-        "segments":  segments,
-        "grid":      grid,
-        "mode":      "internal",
-        "width":     ROAD_WIDTH,
+        "segments":    segments,
+        "grid":        grid,
+        "mode":        "internal",
+        "width":       ROAD_WIDTH,
+        "width_cells": width_cells,
     }

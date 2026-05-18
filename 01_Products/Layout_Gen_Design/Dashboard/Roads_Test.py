@@ -217,13 +217,20 @@ if grid is not None and show_grid:
 if grid is not None and show_paths and segs:
     cmap = cm.get_cmap('tab10', max(len(segs), 1))
     cs = grid.cell_size
+    wc = road.get("width_cells", 0)
+    drawn_cells = set()
     for k, seg in enumerate(segs):
         color = cmap(k % 10)
         for (i, j) in seg.get("path_cells", []):
-            ax.add_patch(plt.Rectangle(
-                (i * cs, j * cs), cs, cs,
-                facecolor=color, alpha=0.35, edgecolor='none', zorder=0.6,
-            ))
+            for di in range(-wc, wc + 1):
+                for dj in range(-wc, wc + 1):
+                    cell = (i + di, j + dj)
+                    if cell not in drawn_cells:
+                        drawn_cells.add(cell)
+                        ax.add_patch(plt.Rectangle(
+                            (cell[0] * cs, cell[1] * cs), cs, cs,
+                            facecolor=color, alpha=0.35, edgecolor='none', zorder=0.6,
+                        ))
 
 # Smoothed road lines (cell-center polyline)
 if show_smooth and segs:
@@ -233,7 +240,8 @@ if show_smooth and segs:
         if len(pw) >= 2:
             color = cmap(k % 10)
             rx, ry = zip(*pw)
-            ax.plot(rx, ry, color=color, lw=2.2, zorder=2.5,
+            # lw=16 closely approximates a 7m physical width on a standard 500m plot at this DPI
+            ax.plot(rx, ry, color=color, lw=16, alpha=0.7, zorder=2.5,
                     solid_capstyle='round',
                     label=f"→ {seg.get('to', '?')}")
 

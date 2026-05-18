@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Layout_Requirements.md",
     "01_Products/Layout_Gen_Design/decode_requirements.py",
     "01_Products/Layout_Gen_Design/print_legend.py",
     "01_Products/Layout_Gen_Design/read_requirements.py",
@@ -248,7 +249,6 @@
     "01_Products/Layout_Gen_Design/test_gh.py",
     "01_Products/Layout_Gen_Design/test_entrances.py",
     "00_Input/2026-05-14 - Session Report.md",
-    "streamlit",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",

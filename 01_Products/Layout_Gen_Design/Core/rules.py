@@ -300,20 +300,19 @@ RULES = [
     {"id": "WW-01", "type": "boundary_setback", "group": "WT/WWT",         "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "WW-02", "type": "leeward_edge",     "group": "WT/WWT",         "target": "Wind Direction", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "flat"},
 
-    # Water
-    {"id": "WA-01", "type": "boundary_setback", "group": "Water",          "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
-    {"id": "WA-02", "type": "min_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
-    {"id": "WA-03", "type": "max_distance",     "group": "Water",          "target": "WT/WWT",         "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
+    # RAW Water Tank
+    {"id": "WA-01", "type": "boundary_setback", "group": "RAW Water Tank", "target": "Primary Road",   "threshold": 10,  "penalty_rate": 1000, "penalty_mode": "flat"},
+    {"id": "WA-02", "type": "min_distance",     "group": "RAW Water Tank", "target": "WT/WWT",         "threshold": 10,  "penalty_rate": 200,  "penalty_mode": "linear"},
+    {"id": "WA-03", "type": "max_distance",     "group": "RAW Water Tank", "target": "WT/WWT",         "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
 
     # Rack length rules — shorter connection = lower penalty
     # Pipe Rack connections
     {"id": "PR-01", "type": "rack_length", "group": "Power Block",   "target": "Cooling Tower",  "rack": "Pipe Rack",    "penalty_rate": 50, "penalty_mode": "linear"},
-    {"id": "PR-02", "type": "rack_length", "group": "Power Block",   "target": "LPG/Metering",   "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
     {"id": "PR-03", "type": "rack_length", "group": "Power Block",   "target": "WT/WWT",         "rack": "Pipe Rack",    "penalty_rate": 30, "penalty_mode": "linear"},
     # Main Rack connections
     {"id": "MR-02", "type": "rack_length", "group": "Power Block",   "target": "Admin Building", "rack": "Main Rack",    "penalty_rate": 20, "penalty_mode": "linear"},
     # Utility Rack connections
-    {"id": "UR-01", "type": "rack_length", "group": "WT/WWT",        "target": "Water",          "rack": "Utility Rack", "penalty_rate": 40, "penalty_mode": "linear"},
+    {"id": "UR-01", "type": "rack_length", "group": "WT/WWT",        "target": "RAW Water Tank", "rack": "Utility Rack", "penalty_rate": 40, "penalty_mode": "linear"},
     {"id": "UR-02", "type": "rack_length", "group": "WT/WWT",        "target": "Cooling Tower",  "rack": "Utility Rack", "penalty_rate": 30, "penalty_mode": "linear"},
     # Cable Tunnel connection (GIS ↔ Power Block)
     {"id": "CT-03", "type": "rack_length", "group": "GIS",           "target": "Power Block",    "rack": "Cable Tunnel", "penalty_rate": 20, "penalty_mode": "linear"},

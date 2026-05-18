@@ -27,6 +27,19 @@ Update the layout engine to render specific components (Flare, RAW Water Tank) a
 - **WT/WWT Logic**: Update `_place_wt_wwt` to anchor itself to the `RAW Water Tank` instead of the old Water block.
 - **LPG Removal**: Delete all references and placement logic for `LPG/Metering`.
 
+### 4. Footprint & Buffer Tuning
+- **Footprint Shrinkage (`Core/Groups.py`)**: Stripped out assumed parking and extra clearance padding from `FOOTPRINTS` to leave only the raw structural dimensions:
+  - `Admin Building`: `30x25` (was `50x40`)
+  - `Gate House`: `12x12` (was `20x20`)
+  - `Warehouse`: `59x40` (was `90x55`)
+  - `WT/WWT`: `81x56` (was `100x80`)
+- **A* Pathfinder Calibration (`Core/Roads.py`)**: 
+  - Adjusted the grid resolution (`cell_size=2.5m`) and activated morphological erosion (`width_cells=1`) to enforce a physical **7.5m road corridor footprint**.
+  - Configured `ROAD_TO_BUILDING = 6` (enforcing a safe 7.5m buffer on the grid due to ceiling math).
+- **Cooling Tower Generative Bounds (`Core/Main.py` & `Core/Rules.py`)**:
+  - Expanded `_place_cooling_tower` boundary search zone from a strict 15m strip to the entire outer **40% of the downwind side**.
+  - Increased `CT-01` (Leeward Edge) rule threshold from 30m to **120m** so the AI can freely place the Cooling Tower vertically inside the inland gap between WT/WWT and the Power Block without penalty.
+
 ## Open Questions
 > [!IMPORTANT]
 > The **Flare** is defined as `Ø40,000` (Stack only, KO Drum separate). If the footprint on the map is rendered as a perfect Ø40m circle, where do you want the KO Drum to go? Should the generative engine ignore the KO drum entirely, or do you want me to create a separate `Flare K.O Drum` block that the engine places next to the Flare?
@@ -35,3 +48,5 @@ Update the layout engine to render specific components (Flare, RAW Water Tank) a
 1. Test generation to ensure `LPG/Metering` is gone.
 2. Confirm `RAW Water Tank` and `Flare` render visually as circles in the Streamlit plot.
 3. Check that WT/WWT and Demi Water Tanks correctly cluster around the user-placed RAW Water Tank.
+4. Verify that internal roads successfully find 8m corridors without crashing the A* network.
+5. Validate that the Cooling Tower correctly positions itself vertically inside the inland gap.

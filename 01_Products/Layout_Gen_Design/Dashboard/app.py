@@ -43,14 +43,23 @@ gate_side = st.sidebar.selectbox("Gate edge",
                                   help="Which site boundary edge the gate (plot entrance) is on.")
 gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05,
                                 help="0.0 = left/bottom end, 0.5 = center, 1.0 = right/top end.")
-gh_position = st.sidebar.selectbox("Gate House side",
-                                    ["right", "left"], index=0,
-                                    help="Place Gate House to the right or left of the gate (looking from outside into the plot).")
 st.sidebar.divider()
 st.sidebar.header("Fixed Anchors")
-gis_corner      = st.sidebar.selectbox("GIS corner",
-                                       ["NE", "NW", "SE", "SW"], index=0,
-                                       help="Which site corner anchors the GIS.")
+
+st.sidebar.subheader("Gate House Anchor")
+gh_edge = st.sidebar.selectbox("Edge (GH)", ["N", "S", "E", "W"], index=0)
+gh_ratio = st.sidebar.slider("Position (GH)", 0.0, 1.0, 0.5, step=0.05)
+gh_offset = st.sidebar.slider("Offset (GH)", 0, 50, 0, step=1)
+
+st.sidebar.subheader("GIS Anchor")
+gis_edge = st.sidebar.selectbox("Edge (GIS)", ["N", "S", "E", "W"], index=1)
+gis_ratio = st.sidebar.slider("Position (GIS)", 0.0, 1.0, 0.8, step=0.05)
+gis_offset = st.sidebar.slider("Offset (GIS)", 0, 50, 0, step=1)
+
+st.sidebar.subheader("Water Anchor")
+water_edge = st.sidebar.selectbox("Edge (Water)", ["N", "S", "E", "W"], index=2)
+water_ratio = st.sidebar.slider("Position (Water)", 0.0, 1.0, 0.2, step=0.05)
+water_offset = st.sidebar.slider("Offset (Water)", 0, 50, 0, step=1)
 st.sidebar.divider()
 st.sidebar.header("Generation Settings")
 boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, step=5,
@@ -79,8 +88,15 @@ if do_generate:
             min_rules_passing=min_passing,
             gate_side=gate_side,
             gate_ratio=gate_ratio,
-            gh_position=gh_position,
-            gis_corner=gis_corner,
+            gh_edge=gh_edge,
+            gh_ratio=gh_ratio,
+            gh_offset=gh_offset,
+            gis_edge=gis_edge,
+            gis_ratio=gis_ratio,
+            gis_offset=gis_offset,
+            water_edge=water_edge,
+            water_ratio=water_ratio,
+            water_offset=water_offset,
             boundary_margin=boundary_margin,
         )
     st.session_state["results"] = results

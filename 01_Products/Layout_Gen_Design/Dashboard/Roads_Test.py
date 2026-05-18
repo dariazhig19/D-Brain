@@ -192,7 +192,7 @@ fig, ax = plt.subplots(figsize=(12, 8), dpi=110)
 ax.fill([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='#f7fbff', zorder=0)
 ax.plot([0, sw, sw, 0, 0], [0, 0, sl, sl, 0], color='black', lw=1.2, zorder=1)
 
-# Blocked cells overlay (the 3m inflated buffer A* sees as walls)
+# Blocked cells overlay (the 6m inflated buffer A* sees as walls)
 if grid is not None and show_blocked:
     blocked_img = grid.blocked.T.astype(float)
     ax.imshow(

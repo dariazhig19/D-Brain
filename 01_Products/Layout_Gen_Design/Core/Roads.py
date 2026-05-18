@@ -19,7 +19,7 @@ from Core.Pathfind import astar, snap_to_passable
 
 ROAD_WIDTH       = 7      # All roads are 7m wide
 ROAD_SETBACK     = 5      # Perimeter road outer edge is 5m from site boundary
-ROAD_TO_BUILDING = 3      # Min gap from road inner edge to building
+ROAD_TO_BUILDING = 6      # Min gap from road inner edge to building
 ROAD_TO_RACK     = 2      # Min gap from road to rack
 RACK_TO_BLOCK    = 2.5    # Min gap from rack to building
 
@@ -139,7 +139,7 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     """Build an internal road network connecting the site gate to all
     building entrances via A* on an occupancy grid.
 
-    Buildings are marked on the grid with a 3m inflation buffer
+    Buildings are marked on the grid with a 6m inflation buffer
     (``ROAD_TO_BUILDING``), so no additional corridor erosion is needed.
     A* runs with ``width_cells=0`` (single-cell pathfinding) since the
     buffer is already baked into the grid.
@@ -162,7 +162,7 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     grid = Grid(site_w, site_l, cell_size=cell_size)
     grid.mark_buildings(buildings, inflate_m=ROAD_TO_BUILDING)
 
-    # No setback blocking and no corridor erosion — just the 3m building buffer.
+    # No setback blocking and no corridor erosion — just the 6m building buffer.
     # A* uses width_cells=0 since the buffer is already in the grid.
     free = ~grid.blocked
 

@@ -1,6 +1,6 @@
 import random
 import math
-from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS
+from Core.Groups import get_all_groups, get_all_racks, FOOTPRINTS, RACK_WIDTHS, compute_gate_point
 from Core.Roads import build_road_network, ROAD_INNER_EDGE, MIN_BUILDING_FROM_BOUNDARY
 from Core.Rules import evaluate_all_v2
 
@@ -136,23 +136,34 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 _MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
 
 
-def _place_gate_house(sw, sl, side="N"):
-    """Gate House: FIXED at chosen edge, centered along that edge, flush
-    with the site boundary (per GH-01). Rotation also fixed.
+def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5):
+    """Gate House: placed adjacent to the site gate, just inside the boundary.
 
-    side: "N" | "S" | "E" | "W" — which edge to anchor on. Default "N".
+    The gate is the physical entry point on the plot boundary. Gate House
+    sits flush with the boundary, centered on the gate position.
+
+    Args:
+        sw, sl:     site width and length in metres.
+        gate_side:  "N" | "S" | "E" | "W" — which boundary edge the gate is on.
+        gate_ratio: 0.0–1.0 position along that edge (0.5 = center).
     """
     w, h = _FP["Gate House"]
-    if side == "N":
-        x, y = (sw - w) / 2, sl - h
-    elif side == "S":
-        x, y = (sw - w) / 2, 0
-    elif side == "E":
-        x, y = sw - w, (sl - h) / 2
-    elif side == "W":
-        x, y = 0, (sl - h) / 2
+    gate_x, gate_y = compute_gate_point(gate_side, gate_ratio, sw, sl)
+
+    if gate_side == "N":
+        x = _clamp(gate_x - w / 2, 0, sw - w)
+        y = sl - h
+    elif gate_side == "S":
+        x = _clamp(gate_x - w / 2, 0, sw - w)
+        y = 0
+    elif gate_side == "E":
+        x = sw - w
+        y = _clamp(gate_y - h / 2, 0, sl - h)
+    elif gate_side == "W":
+        x = 0
+        y = _clamp(gate_y - h / 2, 0, sl - h)
     else:
-        raise ValueError(f"gate_house_side must be N/S/E/W, got {side!r}")
+        raise ValueError(f"gate_side must be N/S/E/W, got {gate_side!r}")
     return x, y, False
 
 
@@ -445,28 +456,30 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000,
-                     gate_house_side="N", gis_corner="NE"):
+                     gate_side="N", gate_ratio=0.5, gis_corner="NE"):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
     Each building is placed sequentially with collision checks against all prior buildings.
 
     Args:
-        gate_house_side : "N" | "S" | "E" | "W" — which edge anchors Gate House.
+        gate_side       : "N" | "S" | "E" | "W" — which boundary edge the site gate is on.
+        gate_ratio      : 0.0–1.0 position along that edge (0.5 = center).
         gis_corner      : "NE" | "NW" | "SE" | "SW" — which corner anchors GIS.
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
-    Each dict: {positions, rack_endpoints, groups, racks, scoring, road}
+    Each dict: {positions, rack_endpoints, groups, racks, scoring, road, gate_point}
     """
     sw, sl = site_width, site_length
+    gate_point = compute_gate_point(gate_side, gate_ratio, sw, sl)
 
     candidates = []
 
     for _ in range(max_pool):
         placed = {}
 
-        # 1. Gate House (FIXED — user-chosen edge) — always succeeds
-        gh_x, gh_y, _ = _place_gate_house(sw, sl, side=gate_house_side)
+        # 1. Gate House (FIXED — adjacent to site gate) — always succeeds
+        gh_x, gh_y, _ = _place_gate_house(sw, sl, gate_side=gate_side, gate_ratio=gate_ratio)
         placed["Gate House"] = (gh_x, gh_y, False)
 
         # 2. GIS (FIXED — user-chosen corner) — always succeeds
@@ -566,6 +579,7 @@ def generate_layouts(site_width, site_length, wind_dir,
                 "racks":          racks,
                 "scoring":        scoring,
                 "road":           road,
+                "gate_point":     gate_point,
             })
 
         if len(candidates) >= n_results * 15:

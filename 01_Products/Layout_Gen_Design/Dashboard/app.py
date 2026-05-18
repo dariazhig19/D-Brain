@@ -12,7 +12,7 @@ importlib.reload(Core.Roads)
 importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
 importlib.reload(Core.Exporter)
-from Core.Groups import get_all_groups, get_all_racks, draw_group, draw_rack, FOOTPRINTS
+from Core.Groups import get_all_groups, get_all_racks, draw_group, draw_rack, FOOTPRINTS, compute_gate_point
 from Core.Rules import RULES
 from Core.Main import generate_layouts
 from Core.Exporter import export_to_dxf
@@ -37,10 +37,14 @@ site_length = st.sidebar.slider("Plot Length (B)", 100, 1000, 270, step=10)
 wind_dir    = st.sidebar.selectbox("Wind Direction",
                                    ["North", "South", "East", "West"], index=2)
 st.sidebar.divider()
+st.sidebar.header("Site Gate")
+gate_side = st.sidebar.selectbox("Gate edge",
+                                  ["N", "S", "E", "W"], index=0,
+                                  help="Which site boundary edge the gate (plot entrance) is on.")
+gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05,
+                                help="0.0 = left/bottom end, 0.5 = center, 1.0 = right/top end.")
+st.sidebar.divider()
 st.sidebar.header("Fixed Anchors")
-gate_house_side = st.sidebar.selectbox("Gate House edge",
-                                       ["N", "S", "E", "W"], index=0,
-                                       help="Which site edge anchors the Gate House (flush with boundary).")
 gis_corner      = st.sidebar.selectbox("GIS corner",
                                        ["NE", "NW", "SE", "SW"], index=0,
                                        help="Which site corner anchors the GIS.")
@@ -68,7 +72,8 @@ if do_generate:
             site_width, site_length, wind_dir,
             n_results=n_results,
             min_rules_passing=min_passing,
-            gate_house_side=gate_house_side,
+            gate_side=gate_side,
+            gate_ratio=gate_ratio,
             gis_corner=gis_corner,
         )
     st.session_state["results"] = results
@@ -168,6 +173,20 @@ def _render_layout(layout, sw, sl, wd, rank):
     # Draw all buildings
     for g in layout["groups"]:
         draw_group(ax, g)
+
+    # Draw entrance markers (red dots)
+    for g in layout["groups"]:
+        for ex, ey in g.get("entrance_points", []):
+            ax.plot(ex, ey, 'o', color='red', markersize=3, zorder=5)
+
+    # Draw site gate marker (green triangle on boundary)
+    gate_pt = layout.get("gate_point")
+    if gate_pt:
+        gx, gy = gate_pt
+        ax.plot(gx, gy, '^', color='#27ae60', markersize=7, zorder=6,
+                markeredgecolor='white', markeredgewidth=0.5)
+        ax.text(gx, gy + 6, 'GATE', color='#27ae60', fontsize=5,
+                fontweight='bold', ha='center', va='bottom', zorder=6)
 
     # Violation overlays
     viols = layout["scoring"]["violations_by_group"]

@@ -110,6 +110,67 @@ RACK_COLORS = {
 }
 
 
+# ── Entrance point computation ─────────────────────────────────────────────
+
+def compute_entrance_points(group):
+    """Compute entrance point(s) for a building.
+
+    Rules:
+    - Power Block: 4 entrances, one at the center of each side.
+    - All other buildings: 1 entrance at the center of the longest side.
+      If width == height (square), entrance goes on the south side.
+
+    Since rotated buildings already have swapped width/height in the
+    group dict, the logic works automatically for rotated buildings.
+
+    Returns:
+        list of (x, y) world coordinates for each entrance point.
+    """
+    x, y, w, h = group["x"], group["y"], group["width"], group["height"]
+    name = group["name"]
+
+    if name == "Power Block":
+        # 4 entrances: center of each side
+        return [
+            (x + w / 2, y),          # South (bottom)
+            (x + w / 2, y + h),      # North (top)
+            (x,         y + h / 2),  # West  (left)
+            (x + w,     y + h / 2),  # East  (right)
+        ]
+
+    # All other buildings: 1 entrance at center of longest side
+    if w >= h:
+        # Longest side is horizontal → entrance on south (bottom) edge
+        return [(x + w / 2, y)]
+    else:
+        # Longest side is vertical → entrance on west (left) edge
+        return [(x, y + h / 2)]
+
+
+def compute_gate_point(side, ratio, site_w, site_l):
+    """Compute the site gate world coordinate on the plot boundary.
+
+    Args:
+        side:   "N" | "S" | "E" | "W" — which boundary edge.
+        ratio:  0.0–1.0 along that edge (0.5 = center).
+        site_w: plot width in metres.
+        site_l: plot length in metres.
+
+    Returns:
+        (x, y) world coordinate on the boundary.
+    """
+    if side == "S":
+        return (site_w * ratio, 0)
+    elif side == "N":
+        return (site_w * ratio, site_l)
+    elif side == "W":
+        return (0, site_l * ratio)
+    elif side == "E":
+        return (site_w, site_l * ratio)
+    else:
+        raise ValueError(f"gate side must be N/S/E/W, got {side!r}")
+
+
 def get_all_groups(site_width, site_length, positions=None):
     """
     Return all 11 rectangle groups for Phase 05.
@@ -147,7 +208,7 @@ def get_all_groups(site_width, site_length, positions=None):
         x, y = pos[0], pos[1]
         rotated = pos[2] if len(pos) >= 3 else False
         w, h = (fh, fw) if rotated else (fw, fh)
-        groups.append({
+        group = {
             "name":    name,
             "x":       x,
             "y":       y,
@@ -155,7 +216,9 @@ def get_all_groups(site_width, site_length, positions=None):
             "height":  h,
             "color":   GROUP_COLORS[name],
             "rotated": rotated,
-        })
+        }
+        group["entrance_points"] = compute_entrance_points(group)
+        groups.append(group)
     return groups
 
 

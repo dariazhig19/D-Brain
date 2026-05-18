@@ -68,3 +68,4 @@ Main Streamlit application. Currently implements **Phase_04**:
 | [[Daily_Report_20260506]] | `App.py` | Rewrote for Phase 03 generative layout, grid display, rule inspector, and DXF export. |
 | [[Daily_Report_20260507]] | `App.py` | Added rack visualization and dynamic rule inspector. |
 | [[Daily_Report_20260513]] | `App.py` | Phase 05 UI: Added Fixed Anchor sidebar section and polyline road rendering logic. |
+| [[Daily_Report_20260518]] | `App.py`, `Roads_Test.py` | Implemented circular rendering for RAW Water Tank and Flare using ax.add_patch(plt.Circle). Updated test dashboard to visually reflect true road widths and draw explicit A* cell footprints. |

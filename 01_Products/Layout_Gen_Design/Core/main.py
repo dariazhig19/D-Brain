@@ -135,48 +135,46 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 
 
 
-def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"):
+def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right",
+                       anchor_offset=0):
     """Gate House: placed to the right or left of the site gate, inside the plot.
 
     The gate is the physical entry point on the plot boundary. Gate House
-    sits inside the plot next to the gate, respecting the same minimum
-    boundary distance as all other buildings (_MARGIN = 15m).
+    sits inside the plot next to the gate.
 
     Args:
-        sw, sl:       site width and length in metres.
-        gate_side:    "N" | "S" | "E" | "W" — which boundary edge the gate is on.
-        gate_ratio:   0.0–1.0 position along that edge (0.5 = center).
-        gh_position:  "right" | "left" — which side of the gate the GH sits on
-                      (when looking from outside into the plot).
+        sw, sl:         site width and length in metres.
+        gate_side:      "N" | "S" | "E" | "W" — which boundary edge the gate is on.
+        gate_ratio:     0.0–1.0 position along that edge (0.5 = center).
+        gh_position:    "right" | "left" — which side of the gate the GH sits on
+                        (when looking from outside into the plot).
+        anchor_offset:  inward distance from the gate-side boundary in metres.
+                        0 keeps GH flush with the boundary (legacy behaviour).
     """
     w, h = _FP["Gate House"]
     gate_x, gate_y = compute_gate_point(gate_side, gate_ratio, sw, sl)
     gap = 2  # small gap between gate opening and Gate House
 
     if gate_side == "N":
-        # Gate on top edge. GH sits flush with top boundary.
-        y = sl - h
+        y = sl - h - anchor_offset
         if gh_position == "right":
             x = gate_x + gap
         else:
             x = gate_x - w - gap
     elif gate_side == "S":
-        # Gate on bottom edge. GH sits flush with bottom boundary.
-        y = 0
+        y = anchor_offset
         if gh_position == "right":
             x = gate_x + gap
         else:
             x = gate_x - w - gap
     elif gate_side == "E":
-        # Gate on right edge. GH sits flush with right boundary.
-        x = sw - w
+        x = sw - w - anchor_offset
         if gh_position == "right":
             y = gate_y - h - gap
         else:
             y = gate_y + gap
     elif gate_side == "W":
-        # Gate on left edge. GH sits flush with left boundary.
-        x = 0
+        x = anchor_offset
         if gh_position == "right":
             y = gate_y + gap
         else:
@@ -184,19 +182,21 @@ def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"
     else:
         raise ValueError(f"gate_side must be N/S/E/W, got {gate_side!r}")
 
-    # Clamp to allow GH to stay within plot (gh_margin = 0)
     x = _clamp(x, 0, sw - w)
     y = _clamp(y, 0, sl - h)
     return x, y, False
 
 
-def _place_gis(sw, sl, corner="NE"):
-    """GIS: FIXED at chosen corner with road-margin clearance. Rotation fixed.
+def _place_gis(sw, sl, corner="NE", anchor_offset=0):
+    """GIS: FIXED at chosen corner. Rotation fixed.
 
-    corner: "NE" | "NW" | "SE" | "SW". Default "NE".
+    Args:
+        corner:         "NE" | "NW" | "SE" | "SW". Default "NE".
+        anchor_offset:  inward distance from both corner edges in metres.
+                        0 keeps GIS flush with the corner (legacy behaviour).
     """
     w, h = _FP["GIS"]
-    gis_margin = 0  # Allow flush with boundary
+    gis_margin = anchor_offset
     if corner == "NE":
         x, y = sw - w - gis_margin, sl - h - gis_margin
     elif corner == "NW":
@@ -481,7 +481,7 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000,
                      gate_side="N", gate_ratio=0.5, gh_position="right",
-                     gis_corner="NE", boundary_margin=15):
+                     gis_corner="NE", boundary_margin=15, anchor_offset=0):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
@@ -507,11 +507,12 @@ def generate_layouts(site_width, site_length, wind_dir,
         # 1. Gate House (FIXED — to right/left of site gate, inside plot) — always succeeds
         gh_x, gh_y, _ = _place_gate_house(sw, sl, gate_side=gate_side,
                                            gate_ratio=gate_ratio,
-                                           gh_position=gh_position)
+                                           gh_position=gh_position,
+                                           anchor_offset=anchor_offset)
         placed["Gate House"] = (gh_x, gh_y, False)
 
         # 2. GIS (FIXED — user-chosen corner) — always succeeds
-        gis_x, gis_y, _ = _place_gis(sw, sl, corner=gis_corner)
+        gis_x, gis_y, _ = _place_gis(sw, sl, corner=gis_corner, anchor_offset=anchor_offset)
         placed["GIS"] = (gis_x, gis_y, False)
 
         # 3. Power Block (center, minimal jitter) — collision-aware

@@ -52,7 +52,9 @@ gis_corner  = st.sidebar.selectbox("GIS corner", ["NE", "NW", "SE", "SW"], index
 st.sidebar.divider()
 st.sidebar.header("Generation")
 boundary_margin = st.sidebar.slider("Boundary Margin (offset)", -50, 50, -20, step=5,
-                                    help="Minimum distance from buildings to the plot boundary. Negative values allow overlapping the boundary.")
+                                    help="Minimum distance from free-placed buildings to the plot boundary. Negative values allow overlapping the boundary.")
+anchor_offset = st.sidebar.slider("Anchor offset (GH / GIS)", 0, 30, 5, step=1,
+                                  help="Inward distance from the boundary for fixed-corner buildings (Gate House and GIS). 0 = flush.")
 min_passing = st.sidebar.slider("Min rules passing", 1, len(RULES), 1,
                                 help="Keep low for road testing — high values may fail to find a layout.")
 fix_seed = st.sidebar.checkbox("Fix building positions (seed)", value=True,
@@ -93,7 +95,7 @@ with btn_col2:
 bldg_sig = (
     site_width, site_length, wind_dir,
     gate_side, gate_ratio, gh_position,
-    gis_corner, boundary_margin, min_passing,
+    gis_corner, boundary_margin, anchor_offset, min_passing,
     int(seed_val) if fix_seed else None,
 )
 
@@ -134,6 +136,7 @@ if do_generate or do_reroll:
                 gh_position=gh_position,
                 gis_corner=gis_corner,
                 boundary_margin=boundary_margin,
+                anchor_offset=anchor_offset,
             )
         layout_new = results[0] if results else None
         st.session_state["layout"]   = layout_new

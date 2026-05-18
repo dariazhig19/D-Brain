@@ -136,34 +136,58 @@ def _line_intersects_rect(p1, p2, rx, ry, rw, rh):
 _MARGIN = MIN_BUILDING_FROM_BOUNDARY  # 15m from boundary (past the road)
 
 
-def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5):
-    """Gate House: placed adjacent to the site gate, just inside the boundary.
+def _place_gate_house(sw, sl, gate_side="N", gate_ratio=0.5, gh_position="right"):
+    """Gate House: placed to the right or left of the site gate, inside the plot.
 
     The gate is the physical entry point on the plot boundary. Gate House
-    sits flush with the boundary, centered on the gate position.
+    sits inside the plot next to the gate, respecting the same minimum
+    boundary distance as all other buildings (_MARGIN = 15m).
 
     Args:
-        sw, sl:     site width and length in metres.
-        gate_side:  "N" | "S" | "E" | "W" — which boundary edge the gate is on.
-        gate_ratio: 0.0–1.0 position along that edge (0.5 = center).
+        sw, sl:       site width and length in metres.
+        gate_side:    "N" | "S" | "E" | "W" — which boundary edge the gate is on.
+        gate_ratio:   0.0–1.0 position along that edge (0.5 = center).
+        gh_position:  "right" | "left" — which side of the gate the GH sits on
+                      (when looking from outside into the plot).
     """
     w, h = _FP["Gate House"]
     gate_x, gate_y = compute_gate_point(gate_side, gate_ratio, sw, sl)
+    gap = 2  # small gap between gate opening and Gate House
 
     if gate_side == "N":
-        x = _clamp(gate_x - w / 2, 0, sw - w)
-        y = sl - h
+        # Gate on top edge. GH sits inside, _MARGIN from top boundary.
+        y = sl - _MARGIN - h
+        if gh_position == "right":
+            x = gate_x + gap
+        else:
+            x = gate_x - w - gap
     elif gate_side == "S":
-        x = _clamp(gate_x - w / 2, 0, sw - w)
-        y = 0
+        # Gate on bottom edge. GH sits inside, _MARGIN from bottom boundary.
+        y = _MARGIN
+        if gh_position == "right":
+            x = gate_x + gap
+        else:
+            x = gate_x - w - gap
     elif gate_side == "E":
-        x = sw - w
-        y = _clamp(gate_y - h / 2, 0, sl - h)
+        # Gate on right edge. GH sits inside, _MARGIN from right boundary.
+        x = sw - _MARGIN - w
+        if gh_position == "right":
+            y = gate_y - h - gap
+        else:
+            y = gate_y + gap
     elif gate_side == "W":
-        x = 0
-        y = _clamp(gate_y - h / 2, 0, sl - h)
+        # Gate on left edge. GH sits inside, _MARGIN from left boundary.
+        x = _MARGIN
+        if gh_position == "right":
+            y = gate_y + gap
+        else:
+            y = gate_y - h - gap
     else:
         raise ValueError(f"gate_side must be N/S/E/W, got {gate_side!r}")
+
+    # Clamp to ensure GH stays within plot with _MARGIN from all boundaries
+    x = _clamp(x, _MARGIN, sw - w - _MARGIN)
+    y = _clamp(y, _MARGIN, sl - h - _MARGIN)
     return x, y, False
 
 
@@ -456,7 +480,8 @@ def _try_place_collision_aware(sw, sl, name, placed, place_fn, max_attempts=200)
 
 def generate_layouts(site_width, site_length, wind_dir,
                      n_results=10, min_rules_passing=10, max_pool=5000,
-                     gate_side="N", gate_ratio=0.5, gis_corner="NE"):
+                     gate_side="N", gate_ratio=0.5, gh_position="right",
+                     gis_corner="NE"):
     """
     Constrained random placement engine for all groups (Phase 05).
     Infrastructure-first: road network is fixed, then buildings are placed hierarchically.
@@ -465,6 +490,7 @@ def generate_layouts(site_width, site_length, wind_dir,
     Args:
         gate_side       : "N" | "S" | "E" | "W" — which boundary edge the site gate is on.
         gate_ratio      : 0.0–1.0 position along that edge (0.5 = center).
+        gh_position     : "right" | "left" — Gate House side relative to gate.
         gis_corner      : "NE" | "NW" | "SE" | "SW" — which corner anchors GIS.
 
     Returns up to n_results layout dicts, sorted by total_penalty (lowest first).
@@ -478,8 +504,10 @@ def generate_layouts(site_width, site_length, wind_dir,
     for _ in range(max_pool):
         placed = {}
 
-        # 1. Gate House (FIXED — adjacent to site gate) — always succeeds
-        gh_x, gh_y, _ = _place_gate_house(sw, sl, gate_side=gate_side, gate_ratio=gate_ratio)
+        # 1. Gate House (FIXED — to right/left of site gate, inside plot) — always succeeds
+        gh_x, gh_y, _ = _place_gate_house(sw, sl, gate_side=gate_side,
+                                           gate_ratio=gate_ratio,
+                                           gh_position=gh_position)
         placed["Gate House"] = (gh_x, gh_y, False)
 
         # 2. GIS (FIXED — user-chosen corner) — always succeeds

@@ -34,10 +34,10 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
 | **PB-01** | Power Block    | `center_proximity`  | Plot Center         | 20 m      | 100 pts / m      | Only on excess beyond 20 m  |
 | **PB-02** | Power Block    | `boundary_setback`  | Primary Road        | 5 m       | 5000 pts (flat)  | If any edge < 5 m           |
-| **CT-01** | Cooling Tower  | `leeward_edge`      | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **downwind** edge |
+| **CT-01** | Cooling Tower  | `leeward_edge`      | Wind Direction      | 120 m     | 1000 pts (flat)  | Must be on **downwind** edge |
 | **CT-02** | Cooling Tower  | `min_distance`      | Admin Building      | 50 m      | 500 pts / m      | If distance < 50 m          |
 | **AD-01** | Admin Building | `boundary_setback`  | Primary Road        | 20 m      | 1000 pts (flat)  | If any edge < 20 m          |
-| **AD-02** | Admin Building | `max_distance`      | Gate House          | 50 m      | 100 pts / m      | If distance > 50 m          |
+| **AD-02** | Admin Building | `max_gate_distance` | Site Gate           | 80 m      | 100 pts / m      | If distance > 80 m          |
 | **AD-03** | Admin Building | `windward_edge`     | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **upwind** edge   |
 
 ---
@@ -47,14 +47,15 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 | Building/Block | Dimensions (W x L) | Notes |
 | :--- | :--- | :--- |
 | **Power Block** | 150,000 x 150,000 | Site Center Anchor |
-| **Cooling Tower** | 40,000 x 183,000 | Includes aux equipment from Excel |
-| **Admin Building** | 30,000 x 25,000 | Include parking area |
-| **Gate House** | 12,000 x 12,000 | Include parking; North Center |
+| **Cooling Tower** | 40,000 x 183,000 | Strict building footprint |
+| **Admin Building** | 30,000 x 25,000 | Strict building footprint (no parking padding) |
+| **Gate House** | 12,000 x 12,000 | Strict building footprint (no parking padding) |
 | **GIS** | 110,000 x 51,000 | North-East position |
 | **Flare** | Ø 40,000 | Flare Stack only (KO Drum separate) |
-| **WT/WWT** | 81,000 x 56,000 | Includes aux equipment from Excel |
-| **Warehouse** | 59,000 x 40,000 | Include parking area |
-| **Water Block** | 37,000 (RAW) / 10,000 (Demi) | Various tanks inside |
+| **WT/WWT** | 81,000 x 56,000 | Strict building footprint |
+| **Warehouse** | 59,000 x 40,000 | Strict building footprint (no parking padding) |
+| **RAW Water Tank** | Ø 37,000 | RAW Water Tank circle |
+| **Demi Water Tank**| 25,000 x 12,000 | (x2) Ø10 Demi Tanks side-by-side |
 
 ---
 
@@ -76,23 +77,23 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 | :-: | :----------------- | :----------------------------------------------------------- | :-------------------- | :----------------------------------------------------------------- |
 | 1   | **Gate House**     | **FIXED** — N-center, flush with top boundary                | Fixed (square)        | Anchors site entrance (rule GH-01: must sit on site edge)          |
 | 2   | **GIS**            | **FIXED** — NE corner, 15 m from boundary                    | Fixed                 | Pinned to grid-tie corner so cable tunnel to PB is short           |
-| 3   | **Power Block**    | Site center, ±5 % jitter                                     | None (square 150×150) | Heart of plant — minimizes total rack distance to every utility    |
-| 4   | **Admin Building** | North zone between GH and PB (d_GH ≤ 80 m, d_PB ≤ 120 m)     | Random 90°            | Near gate for human entry, near PB for operations                  |
-| 5   | **Cooling Tower**  | Leeward edge (opposite wind dir), depth 15–30 m              | Random 90°            | Plumes must blow away from site                                    |
-| 6   | **WT/WWT**         | Leeward third of site, ≥ 15 m setback                        | Random 90°            | Odors stay downwind                                                |
-| 7   | **Water**          | Adjacent to WT/WWT (right/left/top/bottom), no overlap       | None (square)         | Hydraulically tied to WT/WWT                                       |
-| 8   | **Flare**          | Leeward corner, 15–30 m depth                                | None (square)         | Heat radiation away from buildings                                 |
-| 9   | **LPG/Metering**   | Random corner, ≥ 15 m setback                                | Random 90°            | Hazardous-area separation                                          |
-| 10  | **Warehouse**      | Any remaining gap, ≥ 5 m clear of all placed buildings       | Random 90°            | Lowest priority — fills leftover space                             |
+| 3   | **RAW Water Tank** | **FIXED** — User-defined edge and ratio                      | None (square)         | Hydraulically tied to WT/WWT, fixed anchor                         |
+| 4   | **Power Block**    | Site center, ±5 % jitter                                     | None (square 150×150) | Heart of plant — minimizes total rack distance to every utility    |
+| 5   | **Cooling Tower**  | Leeward edge, closest to Power Block                         | Random 90°            | Plumes must blow away from site, compact placement                 |
+| 6   | **WT/WWT**         | Near RAW water tank, closest to Power Block                  | Random 90°            | Odors stay downwind, compact placement                             |
+| 7   | **Warehouse**      | Any remaining gap, closest to Power Block                    | Random 90°            | Fills leftover space compactly                                     |
+| 8   | **Flare**          | Leeward corner, closest to Power Block                       | None (square)         | Heat radiation away from buildings, compact placement              |
+| 9   | **Admin Building** | Closest to Site Gate and Power Block                         | Random 90°            | Near gate for human entry, near PB for operations                  |
+| 10  | **Demi Water Tank**| Near RAW Water Tank                                          | Random 90°            | Hydraulically tied to RAW Water Tank                               |
 
 **Three tiers:**
-- **Pinned anchors (1–2)** — code-driven fixtures, always succeed, rotation fixed.
-- **Heart + connections (3–4)** — Power Block centers the layout; Admin keys off both fixed and central anchors.
-- **Wind-sensitive (5–8) and hazardous (9)** — placed via wind direction + corner heuristics. Warehouse (10) absorbs slack.
+- **Pinned anchors (1–3)** — code-driven fixtures, always succeed, rotation fixed.
+- **Heart (4)** — Power Block centers the layout.
+- **Priority by footprint size (5–10)** — Placed in descending order of size, each optimized to be as close to the Power Block as possible, maximizing compactness while respecting all boundaries and specific zone constraints.
 
-**Rotation:** non-square, non-fixed buildings randomly take 0° or 90°. Square footprints (PB, Water, Flare, GH) and pinned buildings (GH, GIS) are never rotated.
+**Rotation:** non-square, non-fixed buildings randomly take 0° or 90°. Square footprints (PB, RAW Water Tank, Flare, GH) and pinned buildings (GH, GIS) are never rotated.
 
-**Racks** (placed after all buildings): Power Block must connect to Cooling Tower, LPG/Metering, and WT/WWT via Pipe Rack; to Admin via Main Rack; WT/WWT connects to Water and Cooling Tower via Utility Rack; GIS connects to Power Block via Cable Tunnel.
+**Racks** (placed after all buildings): Power Block must connect to Cooling Tower and WT/WWT via Pipe Rack; to Admin via Main Rack; WT/WWT connects to RAW Water Tank and Cooling Tower via Utility Rack; GIS connects to Power Block via Cable Tunnel.
 
 ---
 
@@ -103,18 +104,22 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 | ID        | Group          | Rule Type           | Target              | Threshold | Penalty          | Condition                   |
 | :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
 | **GH-01** | Gate House     | `boundary_setback`  | Primary Road        | 0 m       | 5000 pts (flat)  | Must be on site boundary    |
-| **GIS-01** | GIS            | `boundary_setback`  | Primary Road        | 15 m      | 1000 pts (flat)  | Setback from boundary       |
+| **GIS-01**| GIS            | `boundary_setback`  | Primary Road        | 15 m      | 1000 pts (flat)  | Setback from boundary       |
 | **WH-01** | Warehouse      | `boundary_setback`  | Primary Road        | 15 m      | 1000 pts (flat)  | Setback from boundary       |
-| **LP-01** | LPG/Metering   | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
-| **LP-02** | LPG/Metering   | `min_distance`      | Power Block         | 30 m      | 300 pts / m      | Safe distance from PB       |
+| **WH-02** | Warehouse      | `max_distance`      | Power Block         | 250 m     | 100 pts / m      | Compact layout              |
 | **FL-01** | Flare          | `leeward_edge`      | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **downwind** edge |
 | **FL-02** | Flare          | `min_distance`      | Admin Building      | 100 m     | 500 pts / m      | Safe distance from Admin    |
 | **FL-03** | Flare          | `min_distance`      | Power Block         | 50 m      | 300 pts / m      | Safe distance from PB       |
+| **FL-04** | Flare          | `max_distance`      | Power Block         | 150 m     | 100 pts / m      | Compact layout              |
 | **WW-01** | WT/WWT         | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
 | **WW-02** | WT/WWT         | `leeward_edge`      | Wind Direction      | 50 m      | 500 pts (flat)   | Must be on **downwind** edge |
-| **WA-01** | Water          | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
-| **WA-02** | Water          | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | Near water treatment        |
-| **WA-03** | Water          | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | Cannot be too far from WWT  |
+| **WW-03** | WT/WWT         | `max_distance`      | Power Block         | 200 m     | 100 pts / m      | Compact layout              |
+| **WA-01** | RAW Water Tank | `boundary_setback`  | Primary Road        | 10 m      | 1000 pts (flat)  | Setback from boundary       |
+| **WA-02** | RAW Water Tank | `min_distance`      | WT/WWT              | 10 m      | 200 pts / m      | Near water treatment        |
+| **WA-03** | RAW Water Tank | `max_distance`      | WT/WWT              | 80 m      | 100 pts / m      | Cannot be too far from WWT  |
+| **CT-04** | Cooling Tower  | `max_distance`      | Power Block         | 180 m     | 100 pts / m      | Compact layout              |
+| **AD-04** | Admin Building | `max_distance`      | Power Block         | 150 m     | 100 pts / m      | Compact layout              |
+| **DW-02** | Demi Water Tank| `max_distance`      | RAW Water Tank      | 40 m      | 100 pts / m      | Near RAW Water              |
 
 ### Infrastructure (Road) Rules
 
@@ -130,9 +135,9 @@ Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
 
 | Rack | Width | Purpose | Connects |
 | :--- | :---- | :------ | :------- |
-| **Pipe Rack** | 6 m | Process piping (cooling water, fuel gas, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ LPG/Metering, Power Block ↔ WT/WWT |
+| **Pipe Rack** | 6 m | Process piping (cooling water, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ WT/WWT |
 | **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Admin Building |
-| **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ Water, WT/WWT ↔ Cooling Tower |
+| **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ RAW Water Tank, WT/WWT ↔ Cooling Tower |
 | **Cable Tunnel** | 3 m | Underground cable route | GIS ↔ Power Block |
 
 ### Rack Length Rules
@@ -142,10 +147,9 @@ Rule: each connection should be as short as possible. Penalty = `rack_length × 
 | ID        | Rack           | Rule Type      | Building A       | Building B       | Penalty          | Condition                      |
 | :-------- | :------------- | :------------- | :--------------- | :--------------- | :--------------- | :----------------------------- |
 | **PR-01** | Pipe Rack      | `rack_length`  | Power Block      | Cooling Tower    | 50 pts / m       | Shorter = better (cooling water) |
-| **PR-02** | Pipe Rack      | `rack_length`  | Power Block      | LPG/Metering     | 30 pts / m       | Shorter = better (fuel gas)    |
 | **PR-03** | Pipe Rack      | `rack_length`  | Power Block      | WT/WWT           | 30 pts / m       | Shorter = better (demin water) |
 | **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | Shorter = better (control cables) |
-| **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | Water            | 40 pts / m       | Shorter = better (raw water)   |
+| **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | RAW Water Tank   | 40 pts / m       | Shorter = better (raw water)   |
 | **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |
 | **CT-03** | Cable Tunnel   | `rack_length`  | GIS              | Power Block      | 20 pts / m       | Shorter = better (high voltage) |
 

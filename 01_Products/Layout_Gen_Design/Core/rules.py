@@ -280,7 +280,7 @@ RULES = [
     {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
     {"id": "CT-03", "type": "parallel_to_short_edge", "group": "Cooling Tower", "target": "Plot Short Edge", "threshold": 0, "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "AD-01", "type": "boundary_setback", "group": "Admin Building", "target": "Primary Road",   "threshold": 20,  "penalty_rate": 1000, "penalty_mode": "flat"},
-    {"id": "AD-02", "type": "max_distance",     "group": "Admin Building", "target": "Gate House",     "threshold": 50,  "penalty_rate": 100,  "penalty_mode": "linear"},
+    {"id": "AD-02", "type": "max_gate_distance","group": "Admin Building", "target": "Site Gate",      "threshold": 80,  "penalty_rate": 100,  "penalty_mode": "linear"},
     {"id": "AD-03", "type": "windward_edge",    "group": "Admin Building", "target": "Wind Direction", "threshold": 30,  "penalty_rate": 1000, "penalty_mode": "flat"},
 
     # ── Phase 04 new rules ────────────────────────────────────────────────
@@ -326,6 +326,14 @@ RULES = [
     {"id": "RD-01", "type": "road_proximity", "group": "Power Block",    "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
     {"id": "RD-02", "type": "road_proximity", "group": "Cooling Tower",  "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
     {"id": "RD-03", "type": "road_proximity", "group": "Admin Building", "threshold": 3,  "penalty_rate": 500, "penalty_mode": "linear"},
+
+    # Compactness rules (Max distance to Power Block)
+    {"id": "CT-04", "type": "max_distance", "group": "Cooling Tower", "target": "Power Block", "threshold": 180, "penalty_rate": 100, "penalty_mode": "linear"},
+    {"id": "WW-03", "type": "max_distance", "group": "WT/WWT",        "target": "Power Block", "threshold": 200, "penalty_rate": 100, "penalty_mode": "linear"},
+    {"id": "WH-02", "type": "max_distance", "group": "Warehouse",     "target": "Power Block", "threshold": 250, "penalty_rate": 100, "penalty_mode": "linear"},
+    {"id": "FL-04", "type": "max_distance", "group": "Flare",         "target": "Power Block", "threshold": 150, "penalty_rate": 100, "penalty_mode": "linear"},
+    {"id": "AD-04", "type": "max_distance", "group": "Admin Building","target": "Power Block", "threshold": 150, "penalty_rate": 100, "penalty_mode": "linear"},
+    {"id": "DW-02", "type": "max_distance", "group": "Demi Water Tank","target": "RAW Water Tank", "threshold": 40, "penalty_rate": 100, "penalty_mode": "linear"},
 ]
 
 
@@ -540,6 +548,32 @@ def _eval_gate_distance(rule, group, gate_point, **_):
     )
 
 
+def _eval_max_gate_distance(rule, group, gate_point, **_):
+    """Maximum distance from the building rectangle to the site gate point.
+    Linear penalty on excess above the threshold.
+    """
+    if gate_point is None:
+        return _result(
+            rule["id"], f"{rule['group']} ↔ {rule['target']}: Max Dist", rule["group"],
+            True, 0,
+            "Skipped (no gate_point supplied)",
+            measured="n/a", threshold=f"≤ {rule['threshold']} m", calc="0 pts (skipped)",
+        )
+    gx, gy = gate_point
+    distance = _point_to_rect_distance(gx, gy, group)
+    excess = max(0.0, distance - rule["threshold"])
+    penalty = excess * rule["penalty_rate"]
+    passed = excess == 0
+    return _result(
+        rule["id"], f"{rule['group']} ↔ {rule['target']}: Max Dist", rule["group"],
+        passed, penalty,
+        f"{distance:.1f} m from gate ✓" if passed else f"Too far from gate: {distance:.1f} m (need ≤ {rule['threshold']} m)",
+        measured=f"{distance:.1f} m (edge-to-point)",
+        threshold=f"≤ {rule['threshold']} m from gate",
+        calc=f"Excess: {distance:.1f} − {rule['threshold']} = {excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (OK)",
+    )
+
+
 def _eval_boundary_overflow(rule, group, site_width, site_length, **_):
     """Check if building extends past site boundary.
     Logarithmic penalty to discourage but not hard-reject overflow.
@@ -602,6 +636,7 @@ _EVALUATORS = {
     "road_proximity":      _eval_road_proximity,
     "boundary_overflow":   _eval_boundary_overflow,
     "gate_distance":       _eval_gate_distance,
+    "max_gate_distance":   _eval_max_gate_distance,
     "parallel_to_short_edge": _eval_parallel_to_short_edge,
 }
 
@@ -673,7 +708,7 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir, gate_point
             if group is None:
                 continue
             r = evaluator(rule, group, site_width, site_length)
-        elif rule_type == "gate_distance":
+        elif rule_type in ("gate_distance", "max_gate_distance"):
             group = by_name.get(rule["group"])
             if group is None:
                 continue

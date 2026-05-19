@@ -150,7 +150,6 @@ if do_generate or do_reroll:
                 n_results=1,
                 min_rules_passing=min_passing,
                 max_pool=300,
-                candidate_pool_size=1,
                 gate_side=gate_side,
                 gate_ratio=gate_ratio,
                 gh_edge=gh_edge,
@@ -264,8 +263,9 @@ if show_entrances:
 # Snap cells — where gate / entrance got moved to by snap_to_passable
 if grid is not None and show_snaps and segs:
     cs = grid.cell_size
-    # Gate snap = first cell of the first segment
-    first_cell = segs[0].get("path_cells", [None])[0] if segs else None
+    # Gate snap = first cell of the first segment that has path_cells
+    gate_seg = next((s for s in segs if s.get("path_cells")), None)
+    first_cell = gate_seg["path_cells"][0] if gate_seg else None
     if first_cell is not None:
         gi, gj = first_cell
         ax.add_patch(plt.Rectangle(

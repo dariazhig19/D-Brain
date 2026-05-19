@@ -173,6 +173,31 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
 
     segments = []
 
+    # --- Draw PB Ring Road natively into segments ---
+    pb = next((b for b in buildings if b["name"] == "Power Block"), None)
+    if pb:
+        pbx, pby, pbw, pbh = pb["x"], pb["y"], pb["width"], pb["height"]
+        # The gap is 3m from PB. Road width is ~8m. Centerline offset = 3 + 4 = 7m.
+        offset = 7
+        ring_world = [
+            (pbx - offset, pby - offset),
+            (pbx + pbw + offset, pby - offset),
+            (pbx + pbw + offset, pby + pbh + offset),
+            (pbx - offset, pby + pbh + offset),
+            (pbx - offset, pby - offset),  # close the loop
+        ]
+        
+        # We can just provide the corner coordinates. 
+        # The dashboard renders paths by drawing lines between path_world coordinates.
+        segments.append({
+            "from":       "Power Block",
+            "to":         "Ring Road",
+            "to_point":   ring_world[0],
+            "path_cells": [], # No cells needed for manual segment rendering
+            "path_world": ring_world,
+        })
+    # ------------------------------------------------
+
     for building in buildings:
         for entrance_pt in building.get("entrance_points", []):
             ent_cell = grid.world_to_cell(*entrance_pt)

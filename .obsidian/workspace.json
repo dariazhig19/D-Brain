@@ -146,7 +146,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Pasted image 20260519172846.png",
+                "file": "Pasted image 20260519172928.png",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -156,7 +156,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Pasted image 20260519172846"
+              "title": "Backlinks for Pasted image 20260519172928"
             }
           },
           {
@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "Pasted image 20260519172928.png",
     "Pasted image 20260519172846.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
@@ -282,7 +283,6 @@
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png"
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png"
   ]
 }

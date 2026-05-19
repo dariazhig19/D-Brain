@@ -28,17 +28,14 @@
             "id": "d1bff7cf6a0db9fc",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 11277.93248685484,
-                  "y": 230.38897727302566,
-                  "zoom": 0.8071932309130081
-                }
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "!Product_Vision_KR"
             }
           },
           {
@@ -146,7 +143,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Pasted image 20260519172928.png",
+                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -156,7 +153,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Pasted image 20260519172928"
+              "title": "Backlinks for !Product_Vision_KR"
             }
           },
           {
@@ -237,11 +234,11 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "Pasted image 20260519172928.png",
     "Pasted image 20260519172846.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase_05_Plan.md",
     "04_Reports/Daily/Daily_Report_20260518.md",
     "01_Products/Layout_Gen_Design/debug_placement.py",
@@ -282,7 +279,6 @@
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md",
     "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png"
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png"
   ]
 }

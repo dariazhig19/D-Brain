@@ -19,6 +19,7 @@ We will transition the Ring Road from being explicit physical "blocks" (thick gr
 ### `Core/Roads.py`
 - [x] In `build_road_network`, calculate a mathematical ring exactly **7m** off the edge of the Power Block (3m setback + half of the 8m road).
 - [x] Append this Ring Road loop explicitly into the `segments` list that the pathfinder returns.
+- [x] Skip A* routing to Power Block entrances (they sit inside the 6m inflate buffer; the Ring Road segment covers PB connectivity).
 - **Result:** The A* algorithm will draw the road completely around the PB, and as the Gate and other buildings route their paths, they will naturally merge and connect to this existing corridor.
 
 ## Verification Plan

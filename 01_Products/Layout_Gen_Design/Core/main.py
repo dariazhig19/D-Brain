@@ -26,15 +26,13 @@ def _rand_pos(site_w, site_l, w, h, margin=15):
 
 def _dims(name, rotated):
     """Return (w, h) for a footprint, swapped if rotated 90°."""
-    base = name.split("_")[0] if name.startswith("PB Road") else name
-    w, h = _FP[base]
+    w, h = _FP[name]
     return (h, w) if rotated else (w, h)
 
 
 def _maybe_rotate(name):
     """Random 0°/90° flag. Square footprints always return False (no-op)."""
-    base = name.split("_")[0] if name.startswith("PB Road") else name
-    w, h = _FP[base]
+    w, h = _FP[name]
     if w == h:
         return False
     return random.random() < 0.5

@@ -199,6 +199,11 @@ def build_road_network(site_w, site_l, buildings, gate_point, *,
     # ------------------------------------------------
 
     for building in buildings:
+        # The Power Block is served by the Ring Road segment above;
+        # its entrance points sit inside the 6m inflation buffer and
+        # cannot be reached by A* — skip them.
+        if building["name"] == "Power Block":
+            continue
         for entrance_pt in building.get("entrance_points", []):
             ent_cell = grid.world_to_cell(*entrance_pt)
             # Snap entrance to nearest passable cell

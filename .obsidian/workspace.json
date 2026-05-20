@@ -28,14 +28,17 @@
             "id": "d1bff7cf6a0db9fc",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 10863.631980024087,
+                  "y": 54.75670267461095,
+                  "zoom": 1
+                }
               },
-              "icon": "lucide-file",
-              "title": "!Product_Vision_KR"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -143,7 +146,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -153,7 +156,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for !Product_Vision_KR"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -234,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
     "Pasted image 20260519180256.png",
     "Pasted image 20260519180250.png",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
@@ -279,7 +283,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Implementation_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Implementation_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png"
+    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md"
   ]
 }

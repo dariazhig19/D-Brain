@@ -79,7 +79,8 @@ if phase == "Phase 06 (Sketch roads)":
 
     st.sidebar.header("Phase 06 Settings")
     show_grid     = st.sidebar.checkbox("2m Grid lines", value=False)
-    show_buffer   = st.sidebar.checkbox("Block 8m buffers", value=True)
+    show_buffer   = st.sidebar.checkbox("Block 8m + 16m buffers", value=True)
+    show_rack_buf = st.sidebar.checkbox("Rack buffers (Case 1 & 2)", value=True)
     show_raw      = st.sidebar.checkbox("Raw stubs (pre-prune)", value=False)
     show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
     show_kept     = st.sidebar.checkbox("Kept graph (fire + secondary)", value=True)
@@ -215,6 +216,25 @@ if phase == "Phase 06 (Sketch roads)":
                 ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
                         alpha=0.8, zorder=1.8,
                         label=lbl if k == 0 else "")
+
+    # Rack-buffer rectangles (Step A) for the 5 "need rack" blocks:
+    #  - Case 1 (8m offset, teal dashed): rack between block and road
+    #  - Case 2 (26m offset, purple dotted): road between block and rack
+    if show_rack_buf:
+        rack_buf = sketch.get("rack_buffers", {})
+        legended = {"case1": False, "case2": False}
+        for bname, cases in rack_buf.items():
+            for case_key, color, ls, lbl in (
+                ("case1", '#16a085', '--', 'Rack buffer Case 1 (8m)'),
+                ("case2", '#8e44ad', ':',  'Rack buffer Case 2 (26m)'),
+            ):
+                rx, ry, rw, rh = cases[case_key]
+                xs = [rx, rx + rw, rx + rw, rx, rx]
+                ys = [ry, ry, ry + rh, ry + rh, ry]
+                ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
+                        alpha=0.7, zorder=1.75,
+                        label=lbl if not legended[case_key] else "")
+                legended[case_key] = True
 
     # Blocks (circles for Tanks + Flare per Groups.SHAPES, rectangles otherwise)
     for b in blocks:

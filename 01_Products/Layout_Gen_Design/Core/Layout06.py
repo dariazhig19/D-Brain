@@ -17,6 +17,7 @@ CELL_SIZE         = 2    # metres per grid cell
 ROAD_BUFFER       = 8    # min distance from block edge to ANY road centerline (default, no rack adjacent)
 BLOCK_BUFFER      = 16   # min gap between two block edges (default, no rack between)
 BOUNDARY_MARGIN   = 17   # min distance from floated block to site boundary (perimeter CL at 9m + 8m road buffer)
+BOUNDARY_TOLERANCE = 20  # magnet placer allows floated blocks to spill up to 20m outside the plot
 PB_RING_OFFSET    = 9    # ring CL from PB face — 8m road buffer + 1 cell past the buffer line on the 2m grid
 PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← configurable
 PERIMETER_ROAD_W  = 8    # perimeter road width
@@ -81,22 +82,43 @@ def _overlaps(ax, ay, aw, ah, bx, by, bw, bh, gap=BLOCK_BUFFER):
     return not (ax + aw + gap <= bx or bx + bw + gap <= ax or
                 ay + ah + gap <= by or by + bh + gap <= ay)
 
-def _overlaps_any(name, placed, x, y, w, h, gap=BLOCK_BUFFER):
-    """All real blocks keep `gap` (16m) edge-to-edge by default.
+
+def pair_min_gap(name_a, name_b):
+    """Minimum allowed edge-to-edge distance between two real blocks.
+
+    Keyed on rack membership (`RACK_BLOCKS`):
+      rack ↔ rack       → ROAD_W_RACK_OFFSET (14m, shared rack-side road CL)
+      no-rack ↔ no-rack → ROAD_BUFFER       (8m, shared no-rack road CL)
+      mixed             → B2B_W_RACK_OFFSET (28m, rack-side b2b)
+
+    Virtual `_…_zone` entries are handled by the caller (gap=0)."""
+    a_rack = name_a in RACK_BLOCKS
+    b_rack = name_b in RACK_BLOCKS
+    if a_rack and b_rack:
+        return ROAD_W_RACK_OFFSET   # 14
+    if not a_rack and not b_rack:
+        return ROAD_BUFFER          # 8
+    return B2B_W_RACK_OFFSET        # 28
+
+
+def _overlaps_any(name, placed, x, y, w, h):
+    """Per-pair edge-to-edge gap, keyed on rack membership via `pair_min_gap`.
 
     Virtual zones (names with `_` prefix — `_pb_ring_zone`, `_gate_spur_zone`,
     `_ring_spur_zone`) use gap=0 because their rectangle already includes the
     8m road buffer; a block touching the zone edge is already 8m from the
-    road centerline.
-
-    Note: the larger "with-rack" block-to-block gap (`B2B_W_RACK_OFFSET = 28`)
-    is NOT enforced here — it's only relevant on sides that actually get a
-    rack, which is decided later by Step 1.2-RACK B/C."""
+    road centerline."""
     for bname, (bx, by, bw, bh) in placed.items():
-        current_gap = 0 if bname.startswith("_") else gap
+        current_gap = 0 if bname.startswith("_") else pair_min_gap(name, bname)
         if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
             return True
     return False
+
+
+def _within_relaxed_bounds(x, y, w, h, sw, sl, tol=BOUNDARY_TOLERANCE):
+    """Allow placement up to `tol` metres outside the plot on any side."""
+    return (x >= -tol and y >= -tol
+            and x + w <= sw + tol and y + h <= sl + tol)
 
 # ── Placement helpers ──────────────────────────────────────────────────────
 def place_anchor(sw, sl, name, edge, ratio, offset):
@@ -145,6 +167,81 @@ def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=No
         valid.sort(key=lambda v: (v[0]+v[2]/2 - cx)**2 + (v[1]+v[3]/2 - cy)**2)
         # Top 10% closest — matches Main.py top_n = len // 10 logic
         return random.choice(valid[:max(1, len(valid) // 10)])
+    return random.choice(valid)
+
+
+# ── Magnet placer (Phase 06, Step 1.1+) ────────────────────────────────────
+def _slide(t_start, t_extent, b_extent, inset, i, n):
+    """i-th of n evenly spaced lateral positions for a block of extent
+    `b_extent` sliding along a target's side of extent `t_extent`. `inset`
+    forces a minimum corner overlap so candidates are not perfectly flush
+    with the target's corner (avoids 0-overlap degenerate adjacency)."""
+    lo = t_start - b_extent + inset
+    hi = t_start + t_extent - inset
+    if n <= 1:
+        return (lo + hi) / 2
+    return lo + (hi - lo) * i / (n - 1)
+
+
+def _magnet_candidates(name, w, h, placed, sw, sl,
+                       samples_per_side=7, lateral_inset=4):
+    """Generate (x, y) candidates by snapping a block (w×h, named `name`) at
+    the pair-appropriate magnet distance against each side of every real
+    placed block. Honors relaxed bounds (`_within_relaxed_bounds`) and the
+    per-pair collision check (`_overlaps_any`)."""
+    cands = []
+    for tname, (tx, ty, tw, th) in placed.items():
+        if tname.startswith("_"):
+            continue
+        D = pair_min_gap(name, tname)
+        sides = []
+        # North of T
+        sides += [(_slide(tx, tw, w, lateral_inset, i, samples_per_side),
+                   ty + th + D) for i in range(samples_per_side)]
+        # South of T
+        sides += [(_slide(tx, tw, w, lateral_inset, i, samples_per_side),
+                   ty - h - D) for i in range(samples_per_side)]
+        # East of T
+        sides += [(tx + tw + D,
+                   _slide(ty, th, h, lateral_inset, i, samples_per_side))
+                  for i in range(samples_per_side)]
+        # West of T
+        sides += [(tx - w - D,
+                   _slide(ty, th, h, lateral_inset, i, samples_per_side))
+                  for i in range(samples_per_side)]
+        for x, y in sides:
+            x, y = snap_xy(x, y)
+            if not _within_relaxed_bounds(x, y, w, h, sw, sl):
+                continue
+            if _overlaps_any(name, placed, x, y, w, h):
+                continue
+            cands.append((x, y))
+    return cands
+
+
+def _try_magnet_place(sw, sl, name, placed, prefer_near=None):
+    """Place a floated block by magnetizing to a previously placed block.
+
+    Tries both orientations. Returns (x, y, w, h) or None when no candidate
+    survives bounds + collision checks. `prefer_near` keeps the existing
+    top-10%-closest selection so blocks still cluster near PB."""
+    base_w, base_h = BLOCK_FOOTPRINTS[name]
+    orientations = [(base_w, base_h)]
+    if base_w != base_h:
+        orientations.append((base_h, base_w))
+
+    valid = []
+    for w, h in orientations:
+        for x, y in _magnet_candidates(name, w, h, placed, sw, sl):
+            valid.append((x, y, w, h))
+
+    if not valid:
+        return None
+    if prefer_near is not None:
+        cx, cy = prefer_near
+        valid.sort(key=lambda v: (v[0] + v[2] / 2 - cx) ** 2
+                                + (v[1] + v[3] / 2 - cy) ** 2)
+        valid = valid[:max(1, len(valid) // 10)]
     return random.choice(valid)
 
 
@@ -741,44 +838,25 @@ def generate_sketch(
             if rect:
                 placed[zone_name] = rect
 
-        # 4. Floated blocks
-        raw_x, raw_y, raw_w, raw_h = placed["RAW Water Tank"]
-        gh_x, gh_y   = placed["Gate House"][:2]
+        # 4. Floated blocks — magnet placement.
+        # Each block snaps against a previously placed block's side at the
+        # pair-appropriate distance (8 / 14 / 28 m, see pair_min_gap). Order
+        # is biggest-first; prefer_near keeps the "cluster around PB" pull.
+        gh_x, gh_y = placed["Gate House"][:2]
+        admin_anchor = ((gh_x + pb_cx) / 2, (gh_y + pb_cy) / 2)
 
-        floated = [
-            # Order: descending footprint size, each prefer closest to PB (Scoring_Logic.md)
-
-            # 5. Cooling Tower (7,320m²) — leeward edge, closest to PB
-            ("Cooling Tower",   _leeward(sw, sl, wind_dir, "Cooling Tower"),
-                                 {"prefer_near": (pb_cx, pb_cy)}),
-
-            # 6. WT/WWT (4,536m²) — near RAW Water Tank (tight adjacent 50%), closest to PB
-            ("WT/WWT",          _near_raw_tight(sw, sl, "WT/WWT",
-                                                raw_x, raw_y, raw_w, raw_h, spread=100),
-                                 {"prefer_near": (pb_cx, pb_cy)}),
-
-            # 7. Warehouse (2,360m²) — any remaining gap, closest to PB
-            ("Warehouse",       _anywhere(sw, sl, "Warehouse"),
-                                 {"prefer_near": (pb_cx, pb_cy)}),
-
-            # 8. Flare (1,600m²) — leeward CORNER (tight to boundary), closest to PB
-            ("Flare",           _leeward_corner(sw, sl, wind_dir, "Flare"),
-                                 {"prefer_near": (pb_cx, pb_cy)}),
-
-            # 9. Admin Building (750m²) — closest to Site Gate AND PB (balanced)
-            ("Admin Building",  _near(sw, sl, "Admin Building",
-                                      (gh_x + pb_cx)/2, (gh_y + pb_cy)/2, spread=100),
-                                 {"prefer_near": ((gh_x + pb_cx)/2, (gh_y + pb_cy)/2)}),
-
-            # 10. Demi Water Tank (300m²) — near RAW Water Tank
-            #     No PB pull — hydraulically tied to RAW Water only
-            ("Demi Water Tank", _near(sw, sl, "Demi Water Tank", raw_x, raw_y, spread=60),
-                                 {}),
+        floated_order = [
+            ("Cooling Tower",   (pb_cx, pb_cy)),
+            ("WT/WWT",          (pb_cx, pb_cy)),
+            ("Warehouse",       (pb_cx, pb_cy)),
+            ("Flare",           (pb_cx, pb_cy)),
+            ("Admin Building",  admin_anchor),
+            ("Demi Water Tank", None),
         ]
 
         ok = True
-        for name, fn, kwargs in floated:
-            pos = _try_place(sw, sl, name, placed, fn, **kwargs)
+        for name, prefer in floated_order:
+            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer)
             if pos is None:
                 ok = False
                 break

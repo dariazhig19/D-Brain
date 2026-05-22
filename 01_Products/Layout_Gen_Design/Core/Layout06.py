@@ -972,7 +972,9 @@ def generate_sketch(
         # Steps B-1..B-5 and C (spine + connector) — not implemented yet.
         rack_buffers = compute_rack_buffers(blocks)
         spine_centerlines, candidate_points, active_cases, water_triangle = build_rack_spines(rack_buffers, blocks, sw, sl)
-        rack_segments = spine_centerlines   # Will be expanded with B-4/C logic later
+        pb_ct_segments = list(spine_centerlines)
+        water_cluster_segments = []
+        rack_segments = list(spine_centerlines)
 
         # B-5: Water cluster spine
         if len(water_triangle) == 3:
@@ -1013,6 +1015,122 @@ def generate_sketch(
                         if not (p0[0] == p1[0] == p2[0] or p0[1] == p1[1] == p2[1]):
                             simplified.append(p1)
                     simplified.append(path[-1])
+                    for i in range(len(simplified)-1):
+                        seg = [simplified[i], simplified[i+1]]
+                        rack_segments.append(seg)
+                        water_cluster_segments.append(seg)
+
+        # Step C: Connect PB<->CT spine to Water Cluster Spine
+        if pb_ct_segments and water_cluster_segments:
+            grid_c = Grid(sw, sl, cell_size=CELL_SIZE)
+            
+            def set_segment_blocked(p1, p2, val):
+                c1 = grid_c.world_to_cell(*p1)
+                c2 = grid_c.world_to_cell(*p2)
+                if c1[0] == c2[0]:
+                    for y in range(min(c1[1], c2[1]), max(c1[1], c2[1]) + 1):
+                        grid_c.blocked[c1[0], y] = val
+                elif c1[1] == c2[1]:
+                    for x in range(min(c1[0], c2[0]), max(c1[0], c2[0]) + 1):
+                        grid_c.blocked[x, c1[1]] = val
+
+            def set_extended_line_blocked(p1, p2, val):
+                c1 = grid_c.world_to_cell(*p1)
+                c2 = grid_c.world_to_cell(*p2)
+                if c1[0] == c2[0]:
+                    for y in range(grid_c.nrows):
+                        grid_c.blocked[c1[0], y] = val
+                elif c1[1] == c2[1]:
+                    for x in range(grid_c.ncols):
+                        grid_c.blocked[x, c1[1]] = val
+
+            def run_c_routing(restricted):
+                if restricted:
+                    grid_c.blocked[:, :] = True
+                    for seg in pb_ct_segments + water_cluster_segments:
+                        set_extended_line_blocked(seg[0], seg[1], False)
+                    for b_name in RACK_BLOCKS:
+                        if b_name in rack_buffers and b_name in active_cases:
+                            rx, ry, rw, rh = rack_buffers[b_name][active_cases[b_name]]
+                            set_segment_blocked((rx, ry), (rx+rw, ry), False)
+                            set_segment_blocked((rx+rw, ry), (rx+rw, ry+rh), False)
+                            set_segment_blocked((rx, ry+rh), (rx+rw, ry+rh), False)
+                            set_segment_blocked((rx, ry), (rx, ry+rh), False)
+                else:
+                    grid_c.blocked[:, :] = False
+
+                for b in blocks:
+                    grid_c.mark_building(b, inflate_m=0)
+
+                start_cells = []
+                for seg in pb_ct_segments:
+                    c1 = grid_c.world_to_cell(*seg[0])
+                    c2 = grid_c.world_to_cell(*seg[1])
+                    if c1[0] == c2[0]:
+                        for y in range(min(c1[1], c2[1]), max(c1[1], c2[1]) + 1):
+                            if not grid_c.blocked[c1[0], y]:
+                                start_cells.append((c1[0], y))
+                    else:
+                        for x in range(min(c1[0], c2[0]), max(c1[0], c2[0]) + 1):
+                            if not grid_c.blocked[x, c1[1]]:
+                                start_cells.append((x, c1[1]))
+                
+                goal_cells = set()
+                for seg in water_cluster_segments:
+                    c1 = grid_c.world_to_cell(*seg[0])
+                    c2 = grid_c.world_to_cell(*seg[1])
+                    if c1[0] == c2[0]:
+                        for y in range(min(c1[1], c2[1]), max(c1[1], c2[1]) + 1):
+                            if not grid_c.blocked[c1[0], y]:
+                                goal_cells.add((c1[0], y))
+                    else:
+                        for x in range(min(c1[0], c2[0]), max(c1[0], c2[0]) + 1):
+                            if not grid_c.blocked[x, c1[1]]:
+                                goal_cells.add((x, c1[1]))
+
+                import collections
+                queue = collections.deque()
+                visited = {}
+                for sc in start_cells:
+                    queue.append(sc)
+                    visited[sc] = None
+                
+                found_goal = None
+                while queue:
+                    curr = queue.popleft()
+                    if curr in goal_cells:
+                        found_goal = curr
+                        break
+                    cx, cy = curr
+                    for dx, dy in [(0,1), (1,0), (0,-1), (-1,0)]:
+                        nx, ny = cx + dx, cy + dy
+                        if 0 <= nx < grid_c.ncols and 0 <= ny < grid_c.nrows:
+                            if not grid_c.blocked[nx, ny]:
+                                if (nx, ny) not in visited:
+                                    visited[(nx, ny)] = curr
+                                    queue.append((nx, ny))
+                return found_goal, visited
+
+            found_goal, visited = run_c_routing(restricted=True)
+            if not found_goal:
+                found_goal, visited = run_c_routing(restricted=False)
+
+            if found_goal:
+                path_cells = []
+                curr = found_goal
+                while curr is not None:
+                    path_cells.append(curr)
+                    curr = visited[curr]
+                path_cells.reverse()
+
+                if len(path_cells) > 1:
+                    path_pts = [grid_c.cell_to_world(*c) for c in path_cells]
+                    simplified = [path_pts[0]]
+                    for i in range(1, len(path_pts)-1):
+                        p0, p1, p2 = simplified[-1], path_pts[i], path_pts[i+1]
+                        if not (p0[0] == p1[0] == p2[0] or p0[1] == p1[1] == p2[1]):
+                            simplified.append(p1)
+                    simplified.append(path_pts[-1])
                     for i in range(len(simplified)-1):
                         rack_segments.append([simplified[i], simplified[i+1]])
 

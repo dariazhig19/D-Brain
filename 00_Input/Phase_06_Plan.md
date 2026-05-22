@@ -140,7 +140,12 @@ Result: **3 points** — one each on RAW, Demi, and WWT rack buffer lines, formi
 
 #### Step C — Connect spines into one network
 
-Connect the **PB↔CT spine** and the **water cluster spine** with the shortest orthogonal path (no diagonals). The connection path must:
+The **PB↔CT spine** (from Step B-1) actually consists of two separate, parallel line segments (one for the PB block, one for the CT block). We connect these lines and the **water cluster spine** into a single unified network using a two-stage orthogonal routing sequence:
+
+1. **First Connection:** Route the shortest orthogonal path from the **water cluster spine** to the closest of the two PB/CT lines.
+2. **Second Connection:** Take the newly expanded connected network (water cluster + path + the hit line) and route the shortest orthogonal path from this combined network to the **remaining disconnected line** (CT or PB).
+
+For both routing passes, the connection path must:
 - Extend an existing spine line, OR
 - Route along another "need rack" block's active rack-buffer line (Case 1 or Case 2),
 - Never cross any block footprint.

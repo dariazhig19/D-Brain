@@ -974,6 +974,48 @@ def generate_sketch(
         spine_centerlines, candidate_points, active_cases, water_triangle = build_rack_spines(rack_buffers, blocks, sw, sl)
         rack_segments = spine_centerlines   # Will be expanded with B-4/C logic later
 
+        # B-5: Water cluster spine
+        if len(water_triangle) == 3:
+            grid_b5 = Grid(sw, sl, cell_size=CELL_SIZE)
+            for b in blocks:
+                grid_b5.mark_building(b, inflate_m=0)
+                
+            def astar_route(p1, p2):
+                c1 = grid_b5.world_to_cell(*p1)
+                c2 = grid_b5.world_to_cell(*p2)
+                was1 = grid_b5.blocked[c1]
+                was2 = grid_b5.blocked[c2]
+                grid_b5.blocked[c1] = False
+                grid_b5.blocked[c2] = False
+                path = astar(grid_b5, c1, c2, width_cells=0, allow_diagonal=False)
+                grid_b5.blocked[c1] = was1
+                grid_b5.blocked[c2] = was2
+                return [grid_b5.cell_to_world(*c) for c in path] if path else []
+                
+            raw_pt, demi_pt, wwt_pt = water_triangle[0], water_triangle[1], water_triangle[2]
+            
+            path_rd = astar_route(raw_pt, demi_pt)
+            path_rw = astar_route(raw_pt, wwt_pt)
+            path_dw = astar_route(demi_pt, wwt_pt)
+            
+            len_rd = len(path_rd) if path_rd else float('inf')
+            len_rw = len(path_rw) if path_rw else float('inf')
+            len_dw = len(path_dw) if path_dw else float('inf')
+            
+            paths = [(len_rd, path_rd), (len_rw, path_rw), (len_dw, path_dw)]
+            paths.sort(key=lambda x: x[0])
+            
+            for length, path in paths[:2]:
+                if length != float('inf') and path:
+                    simplified = [path[0]]
+                    for i in range(1, len(path)-1):
+                        p0, p1, p2 = simplified[-1], path[i], path[i+1]
+                        if not (p0[0] == p1[0] == p2[0] or p0[1] == p1[1] == p2[1]):
+                            simplified.append(p1)
+                    simplified.append(path[-1])
+                    for i in range(len(simplified)-1):
+                        rack_segments.append([simplified[i], simplified[i+1]])
+
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
         # Use ROAD_BUFFER - 1m (cell quantization slack) on the 2m grid: a path

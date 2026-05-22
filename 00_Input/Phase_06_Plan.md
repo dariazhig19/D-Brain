@@ -35,13 +35,13 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 
 ---
 
-## Step 1: Block + Road Sketch
+## Step 1: Block + Road + Rack Sketch
 
 ### 1.1 Grid Setup
 - Cell size: **2m × 2m**
 - Site: 500m × 270m → grid is **250 × 135 cells**
 - All block positions snap to grid (no floating point coordinates)
-- Each block has a configurable **buffer** (default: 8m = half of primary road width)
+- Each block has a configurable **buffers**
 
 ### 1.2 Placement + Rack + Fire Road Sequence
 
@@ -58,6 +58,35 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 ```
 
 ---
+
+
+
+### 1.3 Block Placement Order
+
+| # | Block | Type | Rule | Buffer |
+|---|---|---|---|---|
+| 1 | **Gate House** | Fixed anchor | User-defined edge + ratio | 8m |
+| 2 | **GIS** | Fixed anchor | User-defined edge + ratio | 8m |
+| 3 | **RAW Water** | Fixed anchor | User-defined edge + ratio | 8m |
+| 4 | **Power Block** | Soft anchor | Site center ± jitter | 8m |
+| ↓ | *→ PB Ring Road drawn here* | — | — | — |
+| 5 | **Cooling Tower** | Floated | Leeward zone, explicitly snaps to PB | 8m |
+| 6 | **WT/WWT** | Floated | Near RAW Water, explicitly snaps to PB | 8m |
+| 7 | **Warehouse** | Floated | Available space, explicitly snaps to PB | 8m |
+| 8 | **Flare** | Floated | Leeward corner | 8m |
+| 9 | **Admin** | Floated | Near Gate + PB, explicitly snaps to PB | 8m |
+| 10 | **Demi Water** | Floated | Near RAW Water, explicitly snaps to RAW Water | 8m |
+| ↓ | *→ Perimeter Fire Road drawn here* | — | — | — |
+
+
++ See buffer rules from Step A — Buffer layers per block
+
+I want to design the floated-block placement so blocks snap onto each other's road-buffer lines like magnets, with these rules:
+- **Plot Boundary Leeway:** A `BOUNDARY_TOLERANCE` of 10m is allowed during layout generation to provide leeway for tight border fits.
+- **Ignore Fixed Anchors:** Floated blocks do NOT use Fixed Anchors (Gate House, GIS, RAW Water) as default magnets. This guarantees they form a cohesive central cluster instead of stranding near the borders. (Exception: Demi Water is hardcoded to target RAW Water).
+- rack blocks ↔ rack blocks: snab by using the 14m road buffer (so their block edges sit 28m apart on that side)
+- no-rack blocks ↔ no-rack blocks : share the 8m road buffer (16m apart)
+- mixed rack/no-rack blocks: connect via b2b buffer (no shared road; sit block edges sit 28m apart)
 
 ### 1.2-RACK Pipe Rack Algorithm
 
@@ -84,15 +113,17 @@ Single rack type, **width = 6 m**, connects the 5 "need rack" blocks: **PB, Cool
 
 Block-side decision (which regime applies) is made by Step B/C of rack routing. During Step 1.3 floated-block placement the **baseline** offsets are used for all blocks; the larger "with-rack" offsets are precomputed in Step A and enforced later if/when a rack lands on that side.
 
-Cell size: 2 m throughout. The active rack-buffer rectangle per rack block is **chosen at random** between Case 1 and Case 2 (Step B-1).
+Cell size: 2 m throughout. The active rack-buffer rectangle per rack block is chosen as follows:
+- **PB and Cooling Tower:** Chosen at random between Case 1 and Case 2.
+- **Demi Water, WT/WWT, RAW Water:** Locked to Case 1 Rack only.
 
 #### Step B — Build spine segments
 
-**B-1 (PB↔CT spine):** PB and Cooling Tower each have 2 rack-buffer rectangles (Case 1 and Case 2). For each block, randomly pick one case — this selects the active rack buffer rectangle. Take the closest facing sides of the two selected rectangles → those 2 facing rack-buffer lines become the **PB↔CT spine centerlines** (2 parallel lines running between PB and CT).
+**B-1 (PB↔CT spine):** PB and Cooling Tower each have 2 rack-buffer rectangles (Case 1 and Case 2). For each block, randomly pick one case — this selects the active rack buffer rectangle. Take the closest side whose direction (or reverse direction) is looking to RAW Water Tank → those 2 rack-buffer lines become the **PB↔CT spine centerlines** (2 parallel lines).
 
-**B-2 (RAW points):** RAW Water Tank's active rack-buffer rectangle has 4 corner points. Measure distance from each corner to the **center point** of PB's selected rack-buffer line (from B-1). Keep the **2 closest corners** as the candidate RAW points.
+**B-2 (RAW points):** RAW Water Tank's active rack-buffer rectangle has 4 corner points. Any point landing outside the plot boundaries is completely pruned. Measure distance from each remaining corner to the **center point** of PB's selected rack-buffer line (from B-1). Keep the **2 closest corners** as the candidate RAW points.
 
-**B-3 (Demi points):** Same as B-2 for Demi Water Tank → 2 candidate Demi points.
+**B-3 (Demi points):** Same as B-2 for Demi Water Tank → Prune out-of-bounds corners, keep 2 candidate Demi points.
 
 **B-4 (Pick WWT join point):** Take all 4 candidate points (2 RAW from B-2 + 2 Demi from B-3). For each, try a perpendicular projection onto the nearest side of WWT's active rack-buffer rectangle. Prune any projection that lands outside the WWT side segment.
 
@@ -135,28 +166,6 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
 - Routes **around** all placed blocks (obstacle-aware polygon routing)
 - Connected to the Gate (entry point on boundary)
 - Where PB Ring Road and Perimeter Fire Road **overlap or are adjacent** → merged into one segment (no duplicate edges in graph)
-
-### 1.3 Block Placement Order
-
-| # | Block | Type | Rule | Buffer |
-|---|---|---|---|---|
-| 1 | **Gate House** | Fixed anchor | User-defined edge + ratio | 8m |
-| 2 | **GIS** | Fixed anchor | User-defined edge + ratio | 8m |
-| 3 | **RAW Water** | Fixed anchor | User-defined edge + ratio | 8m |
-| 4 | **Power Block** | Soft anchor | Site center ± jitter | 8m |
-| ↓ | *→ PB Ring Road drawn here* | — | — | — |
-| 5 | **Cooling Tower** | Floated | Leeward zone, closest to PB | 8m |
-| 6 | **WT/WWT** | Floated | Near RAW Water, closest to PB | 8m |
-| 7 | **Warehouse** | Floated | Available space | 8m |
-| 8 | **Flare** | Floated | Leeward corner | 8m |
-| 9 | **Admin** | Floated | Near Gate + PB | 8m |
-| 10 | **Demi Water** | Floated | Near RAW Water | 8m |
-| 11 | **EDG** | Floated | Near PB | 8m |
-| 12 | **Fire Water** | Floated | Near boundary | 8m |
-| ↓ | *→ Perimeter Fire Road drawn here* | — | — | — |
-
-**Buffer rule:** No block may be placed within **8m** of another block's edge. Buffer is adjustable per block pair.
-
 ### 1.4 Connect Blocks to Fire Road Network
 
 For each block (except Gate House which sits on the perimeter road):

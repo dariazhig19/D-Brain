@@ -201,23 +201,26 @@ if phase == "Phase 06 (Sketch roads)":
             ax.plot(tx, ty, color=trace_colors[via], lw=0.7, alpha=0.6, zorder=2.6,
                     label=lbl)
 
-    # Default buffer halos per block (apply to ALL blocks, rack or not):
-    #  - 8m road buffer (dashed)
-    #  - 16m block-to-block (dotted)
-    # Rack blocks ADDITIONALLY get the 6-offset rack buffer set (see below).
+    # Default buffer halos per block (visualize the magnetic snap boundaries):
+    #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)
+    #  - No-rack blocks: 8m road buffer (so two no-rack touching sit 16m apart)
     if show_buffer:
-        for k, b in enumerate(blocks):
-            for buf, color, ls, lbl in (
-                (ROAD_BUFFER, '#34495e', '--', f'{ROAD_BUFFER}m road buffer'),
-                (16,          '#c0392b', ':',  '16m block-to-block'),
-            ):
-                xs = [b["x"] - buf, b["x"] + b["width"] + buf,
-                      b["x"] + b["width"] + buf, b["x"] - buf, b["x"] - buf]
-                ys = [b["y"] - buf, b["y"] - buf,
-                      b["y"] + b["height"] + buf, b["y"] + b["height"] + buf, b["y"] - buf]
-                ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
-                        alpha=0.8, zorder=1.8,
-                        label=lbl if k == 0 else "")
+        legended_buffers = set()
+        for b in blocks:
+            is_rack = b["name"] in Core.Layout06.RACK_BLOCKS
+            snap_buf = 14 if is_rack else 8
+            color = '#2980b9' if is_rack else '#34495e'
+            lbl = f'{snap_buf}m road snap buffer'
+            
+            xs = [b["x"] - snap_buf, b["x"] + b["width"] + snap_buf,
+                  b["x"] + b["width"] + snap_buf, b["x"] - snap_buf, b["x"] - snap_buf]
+            ys = [b["y"] - snap_buf, b["y"] - snap_buf,
+                  b["y"] + b["height"] + snap_buf, b["y"] + b["height"] + snap_buf, b["y"] - snap_buf]
+            
+            ax.plot(xs, ys, color=color, linestyle='--', linewidth=1.0,
+                    alpha=0.8, zorder=1.8,
+                    label=lbl if lbl not in legended_buffers else "")
+            legended_buffers.add(lbl)
 
     # Rack-block per-side buffer rectangles (Step A) for the 5 "need rack" blocks.
     # 6 offsets total, split into two toggle groups:
@@ -246,6 +249,31 @@ if phase == "Phase 06 (Sketch roads)":
                         alpha=0.9, zorder=2.5,
                         label=lbl if not legended[key] else "")
                 legended[key] = True
+
+    # Rack spines (B-1)
+    rack_segments = sketch.get("rack_segments", [])
+    for i, seg in enumerate(rack_segments):
+        if seg and len(seg) == 2:
+            xs, ys = zip(*seg)
+            ax.plot(xs, ys, color='#d35400', linewidth=3.0, linestyle='-', zorder=3.5, 
+                    label='PB-CT Spine (B-1)' if i==0 else "")
+            
+    # Candidate points (B-2, B-3)
+    rack_candidates = sketch.get("rack_candidates", [])
+    for i, pt in enumerate(rack_candidates):
+        ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
+                label='RAW/Demi Candidates' if i==0 else "")
+
+    # Water Triangle (B-4)
+    water_triangle = sketch.get("water_triangle", [])
+    for i, pt in enumerate(water_triangle):
+        ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
+                label='WWT/RAW/Demi Final Points (B-4)' if i==0 else "")
+    if len(water_triangle) == 3:
+        # Draw lines connecting them
+        wx, wy = zip(*(water_triangle + [water_triangle[0]]))
+        ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1.5, zorder=3.6)
+
 
     # Blocks (circles for Tanks + Flare per Groups.SHAPES, rectangles otherwise)
     for b in blocks:

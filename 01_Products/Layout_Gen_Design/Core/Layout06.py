@@ -95,10 +95,10 @@ def pair_min_gap(name_a, name_b):
     a_rack = name_a in RACK_BLOCKS
     b_rack = name_b in RACK_BLOCKS
     if a_rack and b_rack:
-        return ROAD_W_RACK_OFFSET   # 14
+        return ROAD_W_RACK_OFFSET * 2   # 28m (14m + 14m)
     if not a_rack and not b_rack:
-        return ROAD_BUFFER          # 8
-    return B2B_W_RACK_OFFSET        # 28
+        return ROAD_BUFFER * 2          # 16m (8m + 8m)
+    return B2B_W_RACK_OFFSET            # 28m (mixed)
 
 
 def _overlaps_any(name, placed, x, y, w, h):
@@ -184,7 +184,7 @@ def _slide(t_start, t_extent, b_extent, inset, i, n):
 
 
 def _magnet_candidates(name, w, h, placed, sw, sl,
-                       samples_per_side=7, lateral_inset=4):
+                       samples_per_side=7, lateral_inset=4, target=None):
     """Generate (x, y) candidates by snapping a block (w×h, named `name`) at
     the pair-appropriate magnet distance against each side of every real
     placed block. Honors relaxed bounds (`_within_relaxed_bounds`) and the
@@ -192,6 +192,11 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
     cands = []
     for tname, (tx, ty, tw, th) in placed.items():
         if tname.startswith("_"):
+            continue
+        if target is not None and tname != target:
+            continue
+        # Do not use fixed anchors as default magnets unless explicitly targeted
+        if target is None and tname in ("Gate House", "GIS", "RAW Water Tank"):
             continue
         D = pair_min_gap(name, tname)
         sides = []
@@ -219,12 +224,13 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
     return cands
 
 
-def _try_magnet_place(sw, sl, name, placed, prefer_near=None):
+def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None):
     """Place a floated block by magnetizing to a previously placed block.
 
     Tries both orientations. Returns (x, y, w, h) or None when no candidate
     survives bounds + collision checks. `prefer_near` keeps the existing
-    top-10%-closest selection so blocks still cluster near PB."""
+    top-10%-closest selection so blocks still cluster near PB. `filter_fn`
+    can be used to restrict placement to specific zones (e.g. Leeward)."""
     base_w, base_h = BLOCK_FOOTPRINTS[name]
     orientations = [(base_w, base_h)]
     if base_w != base_h:
@@ -232,8 +238,16 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None):
 
     valid = []
     for w, h in orientations:
-        for x, y in _magnet_candidates(name, w, h, placed, sw, sl):
-            valid.append((x, y, w, h))
+        for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=magnet_target):
+            if filter_fn is None or filter_fn(x, y, w, h):
+                valid.append((x, y, w, h))
+
+    # Fallback to any valid magnet target if the specified target fails
+    if magnet_target is not None and not valid:
+        for w, h in orientations:
+            for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=None):
+                if filter_fn is None or filter_fn(x, y, w, h):
+                    valid.append((x, y, w, h))
 
     if not valid:
         return None
@@ -299,6 +313,181 @@ def compute_rack_buffers(blocks):
         for b in blocks
         if b["name"] in RACK_BLOCKS
     }
+
+
+def build_rack_spines(rack_buffers, blocks, sw, sl):
+    """Phase 06 Steps B-1 to B-4 — build PB-CT spine and candidates.
+
+    Returns:
+        spine_centerlines: List of lines (each a list of 2 points).
+        candidate_points: List of (x, y) points from RAW and Demi.
+        active_cases: Dict of which case was randomly selected for each block.
+    """
+    active_cases = {}
+    for name in ("Power Block", "Cooling Tower", "RAW Water Tank", "Demi Water Tank", "WT/WWT"):
+        if name in rack_buffers:
+            if name in ("RAW Water Tank", "Demi Water Tank", "WT/WWT"):
+                active_cases[name] = "case1_rack"
+            else:
+                active_cases[name] = random.choice(["case1_rack", "case2_rack"])
+
+    if "Power Block" not in rack_buffers or "Cooling Tower" not in rack_buffers:
+        return [], [], active_cases
+
+    pb_rect = rack_buffers["Power Block"][active_cases["Power Block"]]
+    ct_rect = rack_buffers["Cooling Tower"][active_cases["Cooling Tower"]]
+
+    raw_cx, raw_cy = 0, 0
+    pb_cx, pb_cy = 0, 0
+    for b in blocks:
+        if b["name"] == "RAW Water Tank":
+            raw_cx, raw_cy = b["x"] + b["width"]/2, b["y"] + b["height"]/2
+        elif b["name"] == "Power Block":
+            pb_cx, pb_cy = b["x"] + b["width"]/2, b["y"] + b["height"]/2
+
+    def get_spine_side(rect, block_cx, block_cy):
+        x, y, w, h = rect
+        dx = raw_cx - block_cx
+        dy = raw_cy - block_cy
+        
+        if abs(dx) > abs(dy):
+            side1 = [(x, y), (x+w, y)]           # Bottom
+            side2 = [(x, y+h), (x+w, y+h)]       # Top
+        else:
+            side1 = [(x, y), (x, y+h)]           # Left
+            side2 = [(x+w, y), (x+w, y+h)]       # Right
+            
+        mid1 = ((side1[0][0]+side1[1][0])/2, (side1[0][1]+side1[1][1])/2)
+        mid2 = ((side2[0][0]+side2[1][0])/2, (side2[0][1]+side2[1][1])/2)
+        dist1 = (mid1[0]-raw_cx)**2 + (mid1[1]-raw_cy)**2
+        dist2 = (mid2[0]-raw_cx)**2 + (mid2[1]-raw_cy)**2
+        
+        return side1 if dist1 < dist2 else side2
+
+    best_pb_side = get_spine_side(pb_rect, pb_cx, pb_cy)
+    
+    # We need CT center
+    ct_cx, ct_cy = 0, 0
+    for b in blocks:
+        if b["name"] == "Cooling Tower":
+            ct_cx, ct_cy = b["x"] + b["width"]/2, b["y"] + b["height"]/2
+            
+    best_ct_side = get_spine_side(ct_rect, ct_cx, ct_cy)
+
+    spine_centerlines = [best_pb_side, best_ct_side]
+
+    def side_mid(side):
+        return ((side[0][0]+side[1][0])/2, (side[0][1]+side[1][1])/2)
+        
+    pb_spine_mid = side_mid(best_pb_side)
+    candidate_points = []
+    
+    def get_corners(rect):
+        x, y, w, h = rect
+        return [(x, y), (x+w, y), (x+w, y+h), (x, y+h)]
+
+    def is_inside(c):
+        return 0 <= c[0] <= sw and 0 <= c[1] <= sl
+
+    raw_candidates = []
+    rect = rack_buffers.get("RAW Water Tank", {}).get(active_cases.get("RAW Water Tank"))
+    if rect:
+        corners = get_corners(rect)
+        corners = [c for c in corners if is_inside(c)]
+        corners.sort(key=lambda c: (c[0]-pb_spine_mid[0])**2 + (c[1]-pb_spine_mid[1])**2)
+        raw_candidates = corners[:2]
+        candidate_points.extend(raw_candidates)
+
+    demi_candidates = []
+    rect = rack_buffers.get("Demi Water Tank", {}).get(active_cases.get("Demi Water Tank"))
+    if rect:
+        corners = get_corners(rect)
+        corners = [c for c in corners if is_inside(c)]
+        corners.sort(key=lambda c: (c[0]-pb_spine_mid[0])**2 + (c[1]-pb_spine_mid[1])**2)
+        demi_candidates = corners[:2]
+        candidate_points.extend(demi_candidates)
+
+    wwt_pt = None
+    kept_raw = None
+    kept_demi = None
+    wwt_rect = rack_buffers.get("WT/WWT", {}).get(active_cases.get("WT/WWT"))
+    
+    if wwt_rect and candidate_points:
+        wwt_x, wwt_y, wwt_w, wwt_h = wwt_rect
+        wwt_sides = [
+            [(wwt_x, wwt_y), (wwt_x+wwt_w, wwt_y)],
+            [(wwt_x+wwt_w, wwt_y), (wwt_x+wwt_w, wwt_y+wwt_h)],
+            [(wwt_x, wwt_y+wwt_h), (wwt_x+wwt_w, wwt_y+wwt_h)],
+            [(wwt_x, wwt_y), (wwt_x, wwt_y+wwt_h)]
+        ]
+        
+        def pt_to_segment(p, s1, s2):
+            x, y = p
+            x1, y1 = s1
+            x2, y2 = s2
+            px = x2 - x1
+            py = y2 - y1
+            norm = px*px + py*py
+            u = ((x - x1) * px + (y - y1) * py) / float(norm) if norm else 0
+            if 0 <= u <= 1:
+                proj = (x1 + u * px, y1 + u * py)
+                return True, proj, math.hypot(x - proj[0], y - proj[1])
+            d1 = math.hypot(x - x1, y - y1)
+            d2 = math.hypot(x - x2, y - y2)
+            if d1 < d2:
+                return False, s1, d1
+            return False, s2, d2
+
+        best_proj_dist = float('inf')
+        best_proj_pair = None
+        
+        for pt in candidate_points:
+            closest_dist = float('inf')
+            closest_proj = None
+            closest_is_perp = False
+            for s1, s2 in wwt_sides:
+                is_perp, proj, d = pt_to_segment(pt, s1, s2)
+                if d < closest_dist:
+                    closest_dist = d
+                    closest_proj = proj
+                    closest_is_perp = is_perp
+            if closest_is_perp and closest_dist < best_proj_dist:
+                best_proj_dist = closest_dist
+                best_proj_pair = (pt, closest_proj)
+                
+        if best_proj_pair:
+            kept_source = best_proj_pair[0]
+            wwt_pt = best_proj_pair[1]
+        else:
+            candidate_points.sort(key=lambda c: (c[0]-pb_spine_mid[0])**2 + (c[1]-pb_spine_mid[1])**2)
+            kept_source = candidate_points[0]
+            closest_dist = float('inf')
+            closest_proj = None
+            for s1, s2 in wwt_sides:
+                _, proj, d = pt_to_segment(kept_source, s1, s2)
+                if d < closest_dist:
+                    closest_dist = d
+                    closest_proj = proj
+            wwt_pt = closest_proj
+            
+        def dist(p1, p2):
+            return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+
+        if kept_source in raw_candidates:
+            kept_raw = kept_source
+            if demi_candidates:
+                kept_demi = min(demi_candidates, key=lambda c: dist(c, kept_raw))
+        else:
+            kept_demi = kept_source
+            if raw_candidates:
+                kept_raw = min(raw_candidates, key=lambda c: dist(c, kept_demi))
+
+    water_triangle = []
+    if kept_raw: water_triangle.append(kept_raw)
+    if kept_demi: water_triangle.append(kept_demi)
+    if wwt_pt: water_triangle.append(wwt_pt)
+
+    return spine_centerlines, candidate_points, active_cases, water_triangle
 
 
 def build_gate_spur(gate_pt, perimeter_road):
@@ -728,25 +917,39 @@ def generate_sketch(
             if rect:
                 placed[zone_name] = rect
 
-        # 4. Floated blocks — magnet placement.
-        # Each block snaps against a previously placed block's side at the
-        # pair-appropriate distance (8 / 14 / 28 m, see pair_min_gap). Order
-        # is biggest-first; prefer_near keeps the "cluster around PB" pull.
+        # 4. Floated blocks — magnet placement with zone rules.
         gh_x, gh_y = placed["Gate House"][:2]
         admin_anchor = ((gh_x + pb_cx) / 2, (gh_y + pb_cy) / 2)
+        raw_x, raw_y, raw_w, raw_h = placed["RAW Water Tank"]
+        raw_cx, raw_cy = raw_x + raw_w/2, raw_y + raw_h/2
+
+        def leeward_filter(x, y, w, h):
+            if wind_dir == "East": return x <= sw * 0.45
+            if wind_dir == "West": return x >= sw * 0.55
+            if wind_dir == "North": return y <= sl * 0.45
+            return y >= sl * 0.55
+
+        def near_raw_filter(x, y, w, h):
+            cx, cy = x + w/2, y + h/2
+            return (cx - raw_cx)**2 + (cy - raw_cy)**2 <= 150**2
+
+        if wind_dir == "East": flare_corner = (0, sl/2)
+        elif wind_dir == "West": flare_corner = (sw, sl/2)
+        elif wind_dir == "North": flare_corner = (sw/2, 0)
+        else: flare_corner = (sw/2, sl)
 
         floated_order = [
-            ("Cooling Tower",   (pb_cx, pb_cy)),
-            ("WT/WWT",          (pb_cx, pb_cy)),
-            ("Warehouse",       (pb_cx, pb_cy)),
-            ("Flare",           (pb_cx, pb_cy)),
-            ("Admin Building",  admin_anchor),
-            ("Demi Water Tank", None),
+            ("Cooling Tower",   (pb_cx, pb_cy),   leeward_filter,  "Power Block"),
+            ("WT/WWT",          (pb_cx, pb_cy),   near_raw_filter, "Power Block"),
+            ("Warehouse",       None,             None,            "Power Block"),
+            ("Flare",           flare_corner,     leeward_filter,  None),
+            ("Admin Building",  admin_anchor,     None,            "Power Block"),
+            ("Demi Water Tank", (raw_cx, raw_cy), near_raw_filter, "RAW Water Tank"),
         ]
 
         ok = True
-        for name, prefer in floated_order:
-            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer)
+        for name, prefer, f_fn, m_target in floated_order:
+            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn, magnet_target=m_target)
             if pos is None:
                 ok = False
                 break
@@ -768,7 +971,8 @@ def generate_sketch(
         # Step A: per-block buffer rectangles for Case 1 & Case 2 layouts.
         # Steps B-1..B-5 and C (spine + connector) — not implemented yet.
         rack_buffers = compute_rack_buffers(blocks)
-        rack_segments = []   # populated by Steps B/C in a follow-up
+        spine_centerlines, candidate_points, active_cases, water_triangle = build_rack_spines(rack_buffers, blocks, sw, sl)
+        rack_segments = spine_centerlines   # Will be expanded with B-4/C logic later
 
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
@@ -890,6 +1094,9 @@ def generate_sketch(
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,
             "rack_segments":   rack_segments,
+            "rack_candidates": candidate_points,
+            "active_rack_cases": active_cases,
+            "water_triangle":  water_triangle,
             "stubs":           stubs,
             "road_graph":      pruned_graph,
             "fire_segments":   fire_segments,

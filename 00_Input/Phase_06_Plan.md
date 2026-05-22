@@ -43,18 +43,71 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 - All block positions snap to grid (no floating point coordinates)
 - Each block has a configurable **buffer** (default: 8m = half of primary road width)
 
-### 1.2 Placement + Fire Road Sequence
+### 1.2 Placement + Rack + Fire Road Sequence
 
-Fire roads are derived from block positions — they come **after** the blocks they depend on. Full sequence:
+**Racks are more important than roads** — they're placed before perimeter/spurs/stubs so roads route around the rack corridors. Full sequence:
 
 ```
-1. Place fixed anchors   (Gate House, GIS, RAW Water)
-2. Place Power Block     (center anchor ± jitter)
-3. → Draw PB Ring Road   (geometry derived from PB position)
-4. Place floated blocks  (Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi, EDG, Fire Water)
-5. → Draw Perimeter Fire Road  (polygon, avoids all placed blocks)
-6. → Connect both fire roads to Gate
+1. Place fixed anchors           (Gate House, GIS, RAW Water)
+2. Place Power Block + PB Ring Road  (ring must NOT intersect any fixed anchor)
+3. Place floated blocks          (Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi)
+4. → Place RACKS                 (single 6m Pipe Rack, see § 1.2-RACK below)
+5. → Draw Perimeter Fire Road    (polygon, avoids all placed blocks + racks)
+6. → Draw gate + ring spurs      (connect both fire roads to Gate)
+7. → Draw block stubs            (each block → both fire roads)
 ```
+
+---
+
+### 1.2-RACK Pipe Rack Algorithm
+
+Single rack type, **width = 6 m**, connects the 5 "need rack" blocks: **PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank**. (Cable Tunnel GIS↔PB is separate logic, not part of this step.)
+
+#### Step A — Buffer layers per block
+
+Every "need rack" block gets **4** concentric rectangular buffer offsets around its footprint:
+1. **Building buffer** (exists today)
+2. **Road buffer / road centerline** (exists today, 8m from block edge)
+3. **Case 1 rack buffer** — layout `Block → Rack → Road`:
+   `block edge — 2 cells (4m) — rack edge — 2 cells — rack centerline — 1 cell — rack edge — 1 cell — road edge — 2 cells — road centerline`
+4. **Case 2 rack buffer** — layout `Block → Road → Rack`:
+   `block edge — 8 cells (16m) — road centerline — 2 cells — road edge — 1 cell — rack edge — 2 cells — rack centerline — 1 cell — rack edge`
+
+Non-rack blocks (Gate House, Warehouse, Flare, Admin, GIS) keep only buffers 1 and 2.
+
+Cell size: 2 m throughout. The active buffer per rack block is **chosen at random** between Case 1 and Case 2 (Step B-1).
+
+#### Step B — Build spine segments
+
+**B-1 (PB↔CT spine):** PB and Cooling Tower each have 2 rack-buffer rectangles (Case 1 and Case 2). For each block, randomly pick one case — this selects the active rack buffer rectangle. Take the closest facing sides of the two selected rectangles → those 2 facing rack-buffer lines become the **PB↔CT spine centerlines** (2 parallel lines running between PB and CT).
+
+**B-2 (RAW points):** RAW Water Tank's active rack-buffer rectangle has 4 corner points. Measure distance from each corner to the **center point** of PB's selected rack-buffer line (from B-1). Keep the **2 closest corners** as the candidate RAW points.
+
+**B-3 (Demi points):** Same as B-2 for Demi Water Tank → 2 candidate Demi points.
+
+**B-4 (Pick WWT join point):** Take all 4 candidate points (2 RAW from B-2 + 2 Demi from B-3). For each, try a perpendicular projection onto the nearest side of WWT's active rack-buffer rectangle. Prune any projection that lands outside the WWT side segment.
+
+- *If ≥1 projection succeeds:* form candidate lines from each surviving source point to its projected point on WWT. Take the **shortest** line.
+  - The WWT endpoint of that line = the kept WWT point.
+  - The other endpoint is on RAW or Demi:
+    - If on **RAW** → keep it as RAW point; find closest of the 2 Demi candidates to that RAW point → that's the Demi point.
+    - If on **Demi** → keep it as Demi point; find closest of the 2 RAW candidates to that Demi point → that's the RAW point.
+- *If no projection succeeds:* among the 4 candidates, take the one closest to PB's selected rack-buffer-line center. Find the closest point on WWT's rack buffer to that point (nearest point, not perpendicular). Apply the same RAW/Demi selection rule above.
+
+Result: **3 points** — one each on RAW, Demi, and WWT rack buffer lines, forming the tightest triangle.
+
+**B-5 (Water cluster spine):** Connect the 3 points using **orthogonal paths only** (no diagonals). Paths can travel along any block's active rack-buffer line or through empty grid cells. Cannot intersect any block footprint.
+
+#### Step C — Connect spines into one network
+
+Connect the **PB↔CT spine** and the **water cluster spine** with the shortest orthogonal path (no diagonals). The connection path must:
+- Extend an existing spine line, OR
+- Route along another "need rack" block's active rack-buffer line,
+- Never cross any block footprint.
+
+#### Output
+
+A single connected rack polyline network (centerlines, 6 m wide). The network becomes an obstacle for later perimeter/spur/stub placement.
 
 **A. PB Ring Road**
 - Centerline offset: **8m** from each PB block face
@@ -106,16 +159,16 @@ All stubs become candidate road segments added to the road graph.
 
 ### 1.5 Path Verification (2-Path Check)
 
-For each block, find **2 paths to Gate** using the two stub connections:
+For each block **except Power Block**, find **2 candidate paths to Gate** using the two stub connections:
 
 - **Path 1:** Block → *PB Ring Road stub* → traverse fire road graph → Gate *(shortest)*
 - **Path 2:** Block → *Perimeter Fire Road stub* → traverse fire road graph → Gate *(shortest)*
 
-Paths may share some segments (e.g. both merge onto the same perimeter arc near Gate), but they **start from different stubs** so they are always structurally different.
+Compare the lengths of Path 1 and Path 2 (numerically — no need to draw both at this step). **Keep only the shorter path**; discard the longer one. Draw only the shorter path.
 
-After finding both paths for **all blocks**:
-- Segments **used by ≥1 path** of any block → **keep**
-- Segments **used by no path** → **prune**
+After choosing 1 path for **each block** (Power Block excluded), apply this rule to every road segment:
+- Segments **used by ≥1 kept path** of any block → **keep**
+- Segments **used by no kept path** → **prune**
 
 ### 1.6 Road Classification
 

@@ -35,11 +35,12 @@
 		{"id":"a9e9c8d03eb544d9","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png","x":9265,"y":-53,"width":399,"height":199},
 		{"id":"22e0de2d54ec8cef","type":"text","text":"roa","x":9436,"y":160,"width":250,"height":60},
 		{"id":"2c9cac12fe7e0d6b","type":"text","text":"# Phase_05","x":10640,"y":1628,"width":750,"height":50,"color":"4"},
-		{"id":"a60d746c3fbc1236","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png","x":10640,"y":-65,"width":400,"height":211},
 		{"id":"d7674efd8c7b8d49","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md","x":9004,"y":1916,"width":1200,"height":650},
-		{"id":"3b19a4d665993430","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png","x":11600,"y":-180,"width":400,"height":400},
+		{"id":"a60d746c3fbc1236","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png","x":10640,"y":-65,"width":400,"height":211},
 		{"id":"9d4b42815ae1a626","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png","x":11140,"y":-71,"width":400,"height":223},
-		{"id":"fdcdb3b135305211","type":"file","file":"Pasted image 20260519172928.png","x":11160,"y":200,"width":399,"height":229}
+		{"id":"3b19a4d665993430","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png","x":11600,"y":-180,"width":400,"height":400},
+		{"id":"0a90cd5969e2d4fc","x":11100,"y":-460,"width":400,"height":228,"type":"file","file":"Pasted image 20260522112630.png"},
+		{"id":"fdcdb3b135305211","type":"file","file":"Pasted image 20260519172928.png","x":11120,"y":220,"width":399,"height":229}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

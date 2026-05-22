@@ -32,9 +32,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 10863.631980024087,
-                  "y": 54.75670267461095,
-                  "zoom": 1
+                  "x": 11543.93293487115,
+                  "y": 164.9255427049613,
+                  "zoom": 0.6666666666666667
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -237,6 +237,7 @@
   },
   "active": "d1bff7cf6a0db9fc",
   "lastOpenFiles": [
+    "Pasted image 20260522112630.png",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
     "Pasted image 20260519180256.png",
     "Pasted image 20260519180250.png",
@@ -282,7 +283,6 @@
     "04_Reports/Daily/Daily_Report_20260507.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Implementation_Plan.md",
     "01_Products/Layout_Gen_Design/Notes/Phase_04/Implementation_Plan.md",
-    "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md",
-    "01_Products/Layout_Gen_Design/Dashboard/!Dashboard_Context.md"
+    "01_Products/Layout_Gen_Design/Notes/Phase_04/Task.md"
   ]
 }

@@ -22,11 +22,11 @@ importlib.reload(Core.Rules)
 importlib.reload(Core.Main)
 importlib.reload(Core.Layout06)
 
-from Core.Groups import draw_group, draw_rack
+from Core.Groups import draw_group, draw_rack, SHAPES
 from Core.Rules import RULES
 from Core.Main import generate_layouts
 from Core.Roads import build_road_network
-from Core.Layout06 import generate_sketch, BLOCK_BUFFER, PB_RING_OFFSET, PERIMETER_CL_DIST, CELL_SIZE
+from Core.Layout06 import generate_sketch, CELL_SIZE
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -75,13 +75,17 @@ st.sidebar.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 if phase == "Phase 06 (Sketch roads)":
     st.title("Phase 06 — Block + Road Sketch")
-    st.caption("Steps 1.1–1.3: grid-snapped blocks · PB ring road · perimeter fire road")
+    st.caption("Steps 1.1–1.5: blocks · ring + perimeter fire roads · stubs · 2-path verification + pruning")
 
     st.sidebar.header("Phase 06 Settings")
-    show_grid   = st.sidebar.checkbox("2m Grid lines", value=False)
-    show_buffer = st.sidebar.checkbox("Block 8m buffers", value=True)
-    fix_seed    = st.sidebar.checkbox("Fix seed", value=True)
-    seed_val    = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
+    show_grid     = st.sidebar.checkbox("2m Grid lines", value=False)
+    show_buffer   = st.sidebar.checkbox("Block 8m buffers", value=True)
+    show_raw      = st.sidebar.checkbox("Raw stubs (pre-prune)", value=False)
+    show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
+    show_kept     = st.sidebar.checkbox("Kept graph (fire + secondary)", value=True)
+    show_traces   = st.sidebar.checkbox("2-path traces (per block)", value=False)
+    fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
+    seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
 
     if st.button("Generate Sketch", type="primary", use_container_width=True):
         if fix_seed:
@@ -126,42 +130,104 @@ if phase == "Phase 06 (Sketch roads)":
         for j in range(int(sl // cs) + 1):
             ax.axhline(j * cs, color='#dddddd', lw=0.2, zorder=0.1)
 
-    # Perimeter Fire Road (orange dashed) — drawn first (behind blocks)
+    # Underlay: full ring + perimeter polyline (always shown, faintly)
     px, py = zip(*perimeter)
-    ax.plot(px, py, color='#e67e22', lw=3.5, alpha=0.85, zorder=1.5,
-            linestyle='--', solid_capstyle='round', label='Perimeter Fire Road')
-    # shaded road band (±4m from centerline)
-    for i in range(len(perimeter) - 1):
-        x1,y1 = perimeter[i]; x2,y2 = perimeter[i+1]
-        ax.plot([x1,x2],[y1,y2], color='#e67e22', lw=28, alpha=0.15, solid_capstyle='butt', zorder=0.8)
-
-    # PB Ring Road (pink) — drawn over perimeter
+    ax.plot(px, py, color='#888888', lw=0.5, alpha=0.5, zorder=1.4,
+            linestyle='--', solid_capstyle='round', label='Perimeter CL (raw)')
     rx, ry = zip(*ring_road)
-    ax.plot(rx, ry, color='#e91e8c', lw=3.5, alpha=0.9, zorder=2,
-            linestyle='--', solid_capstyle='round', label='PB Ring Road')
-    for i in range(len(ring_road) - 1):
-        x1,y1 = ring_road[i]; x2,y2 = ring_road[i+1]
-        ax.plot([x1,x2],[y1,y2], color='#e91e8c', lw=22, alpha=0.18, solid_capstyle='butt', zorder=0.9)
+    ax.plot(rx, ry, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
+            linestyle='--', solid_capstyle='round', label='Ring CL (raw)')
+    # Gate spur (perimeter → gate point) — short primary segment
+    gs = sketch.get("gate_spur") or []
+    if len(gs) >= 2:
+        gsx, gsy = zip(*gs)
+        ax.plot(gsx, gsy, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
+                linestyle='--', solid_capstyle='round', label='Gate spur (raw)')
+    # Ring spur (ring → perimeter) — primary connector around blocks
+    rs = sketch.get("ring_spur") or []
+    if len(rs) >= 2:
+        rsx, rsy = zip(*rs)
+        ax.plot(rsx, rsy, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
+                linestyle='--', solid_capstyle='round', label='Ring spur (raw)')
 
-    # Block 8m buffer zones
+    # Raw stubs (pre-prune) — show all stub paths regardless of pruning decision
+    stubs = sketch.get("stubs", {})
+    if show_raw:
+        first_stub = True
+        for bname, block_st in stubs.items():
+            for key, color, label_suffix in [("ring_stub", "#1abc9c", "to Ring"), ("perimeter_stub", "#2980b9", "to Perimeter")]:
+                path = block_st.get(key, [])
+                if len(path) >= 2:
+                    sx, sy = zip(*path)
+                    ax.plot(sx, sy, color=color, lw=1.0, ls=':', alpha=0.6, zorder=1.7,
+                            label=f'Raw stub ({label_suffix})' if first_stub else "")
+            first_stub = False
+
+    # Pruned segments (Step 1.5) — what got removed because no path used it
+    if show_pruned:
+        pruned_segs = sketch.get("pruned_segments", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(pruned_segs):
+            ax.plot([x1, x2], [y1, y2], color='#c0392b', lw=0.8, alpha=0.55, zorder=1.6,
+                    label='Pruned segment' if k == 0 else "")
+
+    # Kept graph (Step 1.5/1.6) — fire (primary, pink) + secondary (blue)
+    if show_kept:
+        fire_segs = sketch.get("fire_segments", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(fire_segs):
+            ax.plot([x1, x2], [y1, y2], color='#e91e8c', lw=2.0, alpha=0.95, zorder=2.5,
+                    solid_capstyle='round',
+                    label='Primary Fire Road (kept)' if k == 0 else "")
+        sec_segs = sketch.get("secondary_segs", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(sec_segs):
+            ax.plot([x1, x2], [y1, y2], color='#2980b9', lw=1.6, alpha=0.9, zorder=2.4,
+                    solid_capstyle='round',
+                    label='Secondary Stub (kept)' if k == 0 else "")
+
+    # 2-path traces (Step 1.5 verification) — overlay each block's two routes to gate
+    if show_traces:
+        traces = sketch.get("path_traces", [])
+        trace_colors = {"ring": "#16a085", "perimeter": "#f39c12"}
+        legended = {"ring": False, "perimeter": False}
+        for tr in traces:
+            via = tr["via"]
+            pts = tr["world"]
+            if len(pts) < 2:
+                continue
+            tx, ty = zip(*pts)
+            lbl = f"Path via {via}" if not legended[via] else ""
+            legended[via] = True
+            ax.plot(tx, ty, color=trace_colors[via], lw=0.7, alpha=0.6, zorder=2.6,
+                    label=lbl)
+
+    # Two buffer halos per block:
+    #  - 8m halo (inner, dashed): road buffer — no fire-road centerline inside
+    #  - 16m halo (outer, dotted): block-to-block clearance — no other block edge inside
     if show_buffer:
-        for b in blocks:
-            buf = BLOCK_BUFFER
-            bx = mpatches.FancyBboxPatch(
-                (b["x"] - buf, b["y"] - buf),
-                b["width"] + buf*2, b["height"] + buf*2,
-                boxstyle="square,pad=0",
-                facecolor='none', edgecolor=b["color"],
-                linestyle=':', linewidth=0.8, alpha=0.5, zorder=1.8,
-            )
-            ax.add_patch(bx)
+        for k, b in enumerate(blocks):
+            for buf, color, ls, lbl in (
+                (8,  '#34495e', '--', '8m road buffer'),
+                (16, '#c0392b', ':',  '16m block-to-block buffer'),
+            ):
+                xs = [b["x"] - buf, b["x"] + b["width"] + buf,
+                      b["x"] + b["width"] + buf, b["x"] - buf, b["x"] - buf]
+                ys = [b["y"] - buf, b["y"] - buf,
+                      b["y"] + b["height"] + buf, b["y"] + b["height"] + buf, b["y"] - buf]
+                ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
+                        alpha=0.8, zorder=1.8,
+                        label=lbl if k == 0 else "")
 
-    # Blocks
+    # Blocks (circles for Tanks + Flare per Groups.SHAPES, rectangles otherwise)
     for b in blocks:
         x, y, w, h = b["x"], b["y"], b["width"], b["height"]
-        ax.fill([x,x+w,x+w,x,x], [y,y,y+h,y+h,y], color=b["color"], alpha=0.55, zorder=2)
-        ax.plot([x,x+w,x+w,x,x], [y,y,y+h,y+h,y], color=b["color"], lw=1.0, zorder=2.1)
-        ax.text(x+w/2, y+h/2, b["name"], color='white', fontsize=5.5,
+        if SHAPES.get(b["name"]) == "circle":
+            r = min(w, h) / 2
+            cx, cy = x + w / 2, y + h / 2
+            ax.add_patch(mpatches.Circle((cx, cy), r, facecolor=b["color"], alpha=0.55, zorder=2))
+            ax.add_patch(mpatches.Circle((cx, cy), r, fill=False, edgecolor=b["color"], lw=1.0, zorder=2.1))
+        else:
+            ax.fill([x,x+w,x+w,x,x], [y,y,y+h,y+h,y], color=b["color"], alpha=0.55, zorder=2)
+            ax.plot([x,x+w,x+w,x,x], [y,y,y+h,y+h,y], color=b["color"], lw=1.0, zorder=2.1)
+        ax.text(x + w/2, y + h/2, b["name"], color='white', fontsize=5.5,
                 fontweight='bold', ha='center', va='center', zorder=3,
                 bbox=dict(facecolor='#333', alpha=0.75, edgecolor='none', pad=1))
 
@@ -190,10 +256,29 @@ if phase == "Phase 06 (Sketch roads)":
              "W (m)": b["width"], "H (m)": b["height"]} for b in blocks]
     st.dataframe(rows, use_container_width=True, hide_index=True)
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Blocks placed", len(blocks))
     c2.metric("Grid cell size", f"{CELL_SIZE}m")
-    c3.metric("Block buffer", f"{BLOCK_BUFFER}m")
+    c3.metric("Fire segs (kept)",  len(sketch.get("fire_segments", [])))
+    c4.metric("Secondary segs",    len(sketch.get("secondary_segs", [])))
+    c5.metric("Pruned segs",       len(sketch.get("pruned_segments", [])))
+
+    # Per-block kept path table (Step 1.5 — shorter of ring/perimeter, Power Block excluded)
+    traces = sketch.get("path_traces", [])
+    if traces:
+        st.markdown("#### Kept paths (Step 1.5 — shorter of ring/perimeter)")
+        trace_rows = []
+        for t in traces:
+            pts = t["world"]
+            length = sum(((pts[i][0]-pts[i-1][0])**2 + (pts[i][1]-pts[i-1][1])**2)**0.5
+                         for i in range(1, len(pts)))
+            trace_rows.append({
+                "Block":  t["block"],
+                "via":    t["via"],
+                "length (m)": round(length, 1),
+                "cells":  len(pts),
+            })
+        st.dataframe(trace_rows, use_container_width=True, hide_index=True)
     st.stop()
 
 

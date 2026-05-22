@@ -62,7 +62,9 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 ## 🛣️ Phase 05: Infrastructure & Connectivity
 
 ### Infrastructure Constraints
-- **Road Width:** 7,000 mm (all roads)
+- **Primary Road Width:** 8,000 mm 
+- **Secondary Road Width:** 6,000 mm
+- **Access Road Width:** 6000 mm
 - **Perimeter Fire Road:** Edge must be 5,000 mm from Site Boundary.
 - **Road-to-Building:** Min. 3,000 mm distance.
 - **Road-to-Rack:** Min. 2,000 mm distance.
@@ -93,7 +95,7 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 
 **Rotation:** non-square, non-fixed buildings randomly take 0° or 90°. Square footprints (PB, RAW Water Tank, Flare, GH) and pinned buildings (GH, GIS) are never rotated.
 
-**Racks** (placed after all buildings): Power Block must connect to Cooling Tower and WT/WWT via Pipe Rack; to Admin via Main Rack; WT/WWT connects to RAW Water Tank and Cooling Tower via Utility Rack; GIS connects to Power Block via Cable Tunnel.
+**Racks** (placed after all buildings, before roads in Phase 06): single 6m-wide Pipe Rack connects PB↔Cooling Tower, PB↔WT/WWT, WT/WWT↔RAW Water Tank, WT/WWT↔Cooling Tower, RAW Water Tank↔Demi Water Tank. GIS↔PB is a separate cable tunnel (not a rack).
 
 ---
 
@@ -131,14 +133,17 @@ Buildings are placed sequentially in the order below. Each step uses `_try_place
 
 ### Polyline Racks — Connection Map
 
-Racks are pipe/cable corridors connecting buildings. **Shorter = better.**
+Racks are pipe corridors connecting process blocks. **Shorter = better.**
 
-| Rack | Width | Purpose | Connects |
-| :--- | :---- | :------ | :------- |
-| **Pipe Rack** | 6 m | Process piping (cooling water, steam/condensate) | Power Block ↔ Cooling Tower, Power Block ↔ WT/WWT |
-| **Main Rack** | 8 m | Electrical cables + control signals | Power Block ↔ Admin Building |
-| **Utility Rack** | 6 m | Utility services (raw water, fire water, makeup water) | WT/WWT ↔ RAW Water Tank, WT/WWT ↔ Cooling Tower |
-| **Cable Tunnel** | 3 m | Underground cable route | GIS ↔ Power Block |
+Phase 06: a single rack type with **width 6 m** carries all process connections (cooling water, steam/condensate, demin water, raw water, makeup water). Five blocks need racks: **Power Block, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank.**
+
+| Rack | Width | Connects |
+| :--- | :---- | :------- |
+| **Pipe Rack** | 6 m | PB ↔ Cooling Tower, PB ↔ WT/WWT, WT/WWT ↔ RAW Water Tank, WT/WWT ↔ Cooling Tower, RAW Water Tank ↔ Demi Water Tank |
+
+**Cable Tunnel (GIS ↔ PB)** is *not* a rack — it's an underground cable route handled by separate logic (not part of Step 1.2 rack placement).
+
+**Admin Building** does not get a rack — control cables go via the cable tunnel route, not a pipe rack.
 
 ### Rack Length Rules
 
@@ -148,10 +153,9 @@ Rule: each connection should be as short as possible. Penalty = `rack_length × 
 | :-------- | :------------- | :------------- | :--------------- | :--------------- | :--------------- | :----------------------------- |
 | **PR-01** | Pipe Rack      | `rack_length`  | Power Block      | Cooling Tower    | 50 pts / m       | Shorter = better (cooling water) |
 | **PR-03** | Pipe Rack      | `rack_length`  | Power Block      | WT/WWT           | 30 pts / m       | Shorter = better (demin water) |
-| **MR-02** | Main Rack      | `rack_length`  | Power Block      | Admin Building   | 20 pts / m       | Shorter = better (control cables) |
-| **UR-01** | Utility Rack   | `rack_length`  | WT/WWT           | RAW Water Tank   | 40 pts / m       | Shorter = better (raw water)   |
-| **UR-02** | Utility Rack   | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |
-| **CT-03** | Cable Tunnel   | `rack_length`  | GIS              | Power Block      | 20 pts / m       | Shorter = better (high voltage) |
+| **UR-01** | Pipe Rack      | `rack_length`  | WT/WWT           | RAW Water Tank   | 40 pts / m       | Shorter = better (raw water)   |
+| **UR-02** | Pipe Rack      | `rack_length`  | WT/WWT           | Cooling Tower    | 30 pts / m       | Shorter = better (makeup water) |
+| **CT-03** | Cable Tunnel   | `rack_length`  | GIS              | Power Block      | 20 pts / m       | Separate logic (not Step 1.2)  |
 
 ---
 

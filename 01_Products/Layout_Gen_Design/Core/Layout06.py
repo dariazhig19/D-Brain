@@ -21,6 +21,19 @@ PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← conf
 PERIMETER_ROAD_W  = 8    # perimeter road width
 PERIMETER_CL_DIST = PERIMETER_SETBACK + PERIMETER_ROAD_W / 2   # 9m from boundary
 
+# ── Rack constants (Phase 06 — § 1.2-RACK) ─────────────────────────────
+# Single rack type, 6m wide, connects 5 process blocks. See !Scoring_Logic.md.
+RACK_BLOCKS = frozenset({
+    "Power Block", "Cooling Tower", "WT/WWT",
+    "RAW Water Tank", "Demi Water Tank",
+})
+RACK_WIDTH        = 6    # metres
+# Offsets from block edge to rack centerline ("rack buffer line"):
+#   Case 1 — block → rack → road    : rack CL at 8m  (road CL pushed to 16m)
+#   Case 2 — block → road → rack    : road CL at 16m, rack CL at 26m
+RACK_CASE1_OFFSET = 8
+RACK_CASE2_OFFSET = 26
+
 # ── Block catalog ──────────────────────────────────────────────────────────
 # Source of truth: Notes/!Scoring_Logic.md — 10 confirmed blocks
 # (width, height in metres) — non-square blocks may be rotated 90°
@@ -136,6 +149,33 @@ def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
     """Closed polyline of perimeter fire road centerline."""
     d = cl_dist
     return [(d,d),(sw-d,d),(sw-d,sl-d),(d,sl-d),(d,d)]
+
+
+# ── Rack — Step A: buffer rectangles per "need rack" block ───────────────
+def rack_buffer_rect(block, offset):
+    """Axis-aligned rectangle around a block's footprint, inflated by `offset`.
+
+    The rectangle's OUTLINE is the candidate centerline path for a rack
+    running on the matching side of the block. Returned as
+    `(x, y, w, h)` so it matches the format of other zone rectangles."""
+    bx, by, bw, bh = block["x"], block["y"], block["width"], block["height"]
+    return (bx - offset, by - offset, bw + 2 * offset, bh + 2 * offset)
+
+
+def compute_rack_buffers(blocks):
+    """Step A — per-block rack-buffer rectangles for both layout cases.
+
+    Returns {block_name: {'case1': rect, 'case2': rect}} for every block
+    in `RACK_BLOCKS`. Blocks not in `RACK_BLOCKS` get no entry.
+    """
+    return {
+        b["name"]: {
+            "case1": rack_buffer_rect(b, RACK_CASE1_OFFSET),
+            "case2": rack_buffer_rect(b, RACK_CASE2_OFFSET),
+        }
+        for b in blocks
+        if b["name"] in RACK_BLOCKS
+    }
 
 
 def build_gate_spur(gate_pt, perimeter_road):
@@ -729,6 +769,13 @@ def generate_sketch(
             if not n.startswith("_")
         ]
 
+        # 4. RACK placement (Step 1.2-RACK) — comes AFTER floated blocks but
+        # BEFORE perimeter/spurs/stubs (racks are more important than roads).
+        # Step A: per-block buffer rectangles for Case 1 & Case 2 layouts.
+        # Steps B-1..B-5 and C (spine + connector) — not implemented yet.
+        rack_buffers = compute_rack_buffers(blocks)
+        rack_segments = []   # populated by Steps B/C in a follow-up
+
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
         # Use 7m (not 8m) on the 2m grid: a path is allowed to run ON the 8m
@@ -848,6 +895,8 @@ def generate_sketch(
             "perimeter_road":  perimeter_road,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
+            "rack_buffers":    rack_buffers,
+            "rack_segments":   rack_segments,
             "stubs":           stubs,
             "road_graph":      pruned_graph,
             "fire_segments":   fire_segments,

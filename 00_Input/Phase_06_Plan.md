@@ -142,7 +142,7 @@ Result: **3 points** — one each on RAW, Demi, and WWT rack buffer lines, formi
 
 Connect the **PB↔CT spine** and the **water cluster spine** with the shortest orthogonal path (no diagonals). The connection path must:
 - Extend an existing spine line, OR
-- Route along another "need rack" block's active rack-buffer line,
+- Route along another "need rack" block's active rack-buffer line (Case 1 or Case 2),
 - Never cross any block footprint.
 
 #### Output

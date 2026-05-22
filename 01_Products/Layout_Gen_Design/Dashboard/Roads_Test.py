@@ -255,7 +255,7 @@ if phase == "Phase 06 (Sketch roads)":
     for i, seg in enumerate(rack_segments):
         if seg and len(seg) == 2:
             xs, ys = zip(*seg)
-            ax.plot(xs, ys, color='#d35400', linewidth=3.0, linestyle='-', zorder=3.5, 
+            ax.plot(xs, ys, color='#d35400', linewidth=2, linestyle='-', zorder=3.5, 
                     label='PB-CT Spine (B-1)' if i==0 else "")
             
     # Candidate points (B-2, B-3)
@@ -272,7 +272,7 @@ if phase == "Phase 06 (Sketch roads)":
     if len(water_triangle) == 3:
         # Draw lines connecting them
         wx, wy = zip(*(water_triangle + [water_triangle[0]]))
-        ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1.5, zorder=3.6)
+        ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
 
 
     # Blocks (circles for Tanks + Flare per Groups.SHAPES, rectangles otherwise)

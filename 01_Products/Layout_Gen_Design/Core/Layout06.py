@@ -27,12 +27,14 @@ RACK_BLOCKS = frozenset({
     "Power Block", "Cooling Tower", "WT/WWT",
     "RAW Water Tank", "Demi Water Tank",
 })
-RACK_WIDTH        = 6    # metres
+RACK_WIDTH         = 6   # metres
+RACK_BLOCK_BUFFER  = 24  # edge-to-edge gap required BETWEEN any two rack blocks
+                          # (leaves room for the 6m rack + clearances)
 # Offsets from block edge to rack centerline ("rack buffer line"):
-#   Case 1 — block → rack → road    : rack CL at 8m  (road CL pushed to 16m)
-#   Case 2 — block → road → rack    : road CL at 16m, rack CL at 26m
-RACK_CASE1_OFFSET = 8
-RACK_CASE2_OFFSET = 26
+#   Case 1 — block → rack → road    : rack CL at 4m
+#   Case 2 — block → road → rack    : rack CL at 20m
+RACK_CASE1_OFFSET = 4
+RACK_CASE2_OFFSET = 20
 
 # ── Block catalog ──────────────────────────────────────────────────────────
 # Source of truth: Notes/!Scoring_Logic.md — 10 confirmed blocks
@@ -76,14 +78,21 @@ def _overlaps(ax, ay, aw, ah, bx, by, bw, bh, gap=BLOCK_BUFFER):
                 ay + ah + gap <= by or by + bh + gap <= ay)
 
 def _overlaps_any(name, placed, x, y, w, h, gap=BLOCK_BUFFER):
-    """All real blocks keep `gap` (16m) edge-to-edge.
+    """Two rack blocks keep `RACK_BLOCK_BUFFER` (24m); everything else keeps
+    `gap` (16m) edge-to-edge.
 
     Virtual zones (names with `_` prefix — `_pb_ring_zone`, `_gate_spur_zone`,
     `_ring_spur_zone`) use gap=0 because their rectangle already includes the
     8m road buffer; a block touching the zone edge is already 8m from the
     road centerline."""
+    name_is_rack = name in RACK_BLOCKS
     for bname, (bx, by, bw, bh) in placed.items():
-        current_gap = 0 if bname.startswith("_") else gap
+        if bname.startswith("_"):
+            current_gap = 0
+        elif name_is_rack and bname in RACK_BLOCKS:
+            current_gap = RACK_BLOCK_BUFFER
+        else:
+            current_gap = gap
         if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
             return True
     return False

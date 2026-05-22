@@ -202,20 +202,28 @@ if phase == "Phase 06 (Sketch roads)":
 
     # Two buffer halos per block:
     #  - 8m halo (inner, dashed): road buffer — no fire-road centerline inside
-    #  - 16m halo (outer, dotted): block-to-block clearance — no other block edge inside
+    #  - block-to-block halo (outer, dotted): 24m for rack blocks, 16m for others
     if show_buffer:
-        for k, b in enumerate(blocks):
-            for buf, color, ls, lbl in (
-                (8,  '#34495e', '--', '8m road buffer'),
-                (16, '#c0392b', ':',  '16m block-to-block buffer'),
-            ):
+        rack_set = set(sketch.get("rack_buffers", {}).keys())
+        legended = {"road": False, "b2b_rack": False, "b2b_other": False}
+        for b in blocks:
+            is_rack = b["name"] in rack_set
+            b2b = 24 if is_rack else 16
+            entries = [
+                (8,   '#34495e', '--', '8m road buffer',              "road"),
+                (b2b, '#c0392b', ':',
+                 f'{b2b}m block-to-block ({"rack" if is_rack else "other"})',
+                 "b2b_rack" if is_rack else "b2b_other"),
+            ]
+            for buf, color, ls, lbl, key in entries:
                 xs = [b["x"] - buf, b["x"] + b["width"] + buf,
                       b["x"] + b["width"] + buf, b["x"] - buf, b["x"] - buf]
                 ys = [b["y"] - buf, b["y"] - buf,
                       b["y"] + b["height"] + buf, b["y"] + b["height"] + buf, b["y"] - buf]
                 ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
                         alpha=0.8, zorder=1.8,
-                        label=lbl if k == 0 else "")
+                        label=lbl if not legended[key] else "")
+                legended[key] = True
 
     # Rack-buffer rectangles (Step A) for the 5 "need rack" blocks:
     #  - Case 1 (8m offset, teal dashed): rack between block and road

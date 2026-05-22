@@ -63,19 +63,21 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 
 Single rack type, **width = 6 m**, connects the 5 "need rack" blocks: **PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank**. (Cable Tunnel GIS↔PB is separate logic, not part of this step.)
 
+**Block-to-block gap:**
+- **24 m** edge-to-edge between two "need rack" blocks (leaves room for rack + clearances).
+- **16 m** edge-to-edge otherwise.
+
 #### Step A — Buffer layers per block
 
 Every "need rack" block gets **4** concentric rectangular buffer offsets around its footprint:
-1. **Building buffer** (exists today)
-2. **Road buffer / road centerline** (exists today, 8m from block edge)
-3. **Case 1 rack buffer** — layout `Block → Rack → Road`:
-   `block edge — 2 cells (4m) — rack edge — 2 cells — rack centerline — 1 cell — rack edge — 1 cell — road edge — 2 cells — road centerline`
-4. **Case 2 rack buffer** — layout `Block → Road → Rack`:
-   `block edge — 8 cells (16m) — road centerline — 2 cells — road edge — 1 cell — rack edge — 2 cells — rack centerline — 1 cell — rack edge`
+1. **Building buffer** — block footprint (offset 0).
+2. **Road buffer / road centerline** — offset **8 m** (existing).
+3. **Case 1 rack buffer** — layout `Block → Rack → Road`. Rack centerline at offset **4 m**.
+4. **Case 2 rack buffer** — layout `Block → Road → Rack`. Rack centerline at offset **20 m**.
 
 Non-rack blocks (Gate House, Warehouse, Flare, Admin, GIS) keep only buffers 1 and 2.
 
-Cell size: 2 m throughout. The active buffer per rack block is **chosen at random** between Case 1 and Case 2 (Step B-1).
+Cell size: 2 m throughout. The active rack-buffer rectangle per rack block is **chosen at random** between Case 1 and Case 2 (Step B-1).
 
 #### Step B — Build spine segments
 

@@ -14,10 +14,10 @@ from Core.Pathfind import astar
 
 # ── Constants ──────────────────────────────────────────────────────────
 CELL_SIZE         = 2    # metres per grid cell
-ROAD_BUFFER       = 12   # min distance from block edge to ANY road centerline
-BLOCK_BUFFER      = 16   # min gap between two non-rack block edges
-BOUNDARY_MARGIN   = 21   # min distance from floated block to site boundary (perimeter CL at 9m + 12m road buffer)
-PB_RING_OFFSET    = 13   # ring CL from PB face — 12m road buffer + 1 cell past the buffer line on the 2m grid
+ROAD_BUFFER       = 8    # min distance from block edge to ANY road centerline (default, no rack adjacent)
+BLOCK_BUFFER      = 16   # min gap between two block edges (default, no rack between)
+BOUNDARY_MARGIN   = 17   # min distance from floated block to site boundary (perimeter CL at 9m + 8m road buffer)
+PB_RING_OFFSET    = 9    # ring CL from PB face — 8m road buffer + 1 cell past the buffer line on the 2m grid
 PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← configurable
 PERIMETER_ROAD_W  = 8    # perimeter road width
 PERIMETER_CL_DIST = PERIMETER_SETBACK + PERIMETER_ROAD_W / 2   # 9m from boundary
@@ -28,14 +28,17 @@ RACK_BLOCKS = frozenset({
     "Power Block", "Cooling Tower", "WT/WWT",
     "RAW Water Tank", "Demi Water Tank",
 })
-RACK_WIDTH         = 6   # metres
-RACK_BLOCK_BUFFER  = 24  # edge-to-edge gap required BETWEEN any two rack blocks
-                          # (leaves room for the 6m rack + clearances)
-# Offsets from block edge to rack centerline ("rack buffer line"):
-#   Case 1 — block → rack → road    : rack CL at 4m
-#   Case 2 — block → road → rack    : rack CL at 20m
-RACK_CASE1_OFFSET = 4
-RACK_CASE2_OFFSET = 20
+RACK_WIDTH = 6   # metres
+# Per-side buffer offsets for "need rack" blocks. Two regimes per side:
+#   - "no rack" on this side:    road CL at 8m, block-to-block 16m  (baseline)
+#   - "with rack" on this side:  road CL at 14m, block-to-block 28m (rack takes space)
+# Plus two rack-centerline offsets for the two layouts:
+#   - Case 1 (block → rack → road):  rack CL at 6m
+#   - Case 2 (block → road → rack):  rack CL at 22m
+ROAD_W_RACK_OFFSET   = 14   # road CL on a side that has a rack
+B2B_W_RACK_OFFSET    = 28   # block-to-block on a side that has a rack
+RACK_CASE1_OFFSET    = 6
+RACK_CASE2_OFFSET    = 22
 
 # ── Block catalog ──────────────────────────────────────────────────────────
 # Source of truth: Notes/!Scoring_Logic.md — 10 confirmed blocks
@@ -79,21 +82,18 @@ def _overlaps(ax, ay, aw, ah, bx, by, bw, bh, gap=BLOCK_BUFFER):
                 ay + ah + gap <= by or by + bh + gap <= ay)
 
 def _overlaps_any(name, placed, x, y, w, h, gap=BLOCK_BUFFER):
-    """Two rack blocks keep `RACK_BLOCK_BUFFER` (24m); everything else keeps
-    `gap` (16m) edge-to-edge.
+    """All real blocks keep `gap` (16m) edge-to-edge by default.
 
     Virtual zones (names with `_` prefix — `_pb_ring_zone`, `_gate_spur_zone`,
     `_ring_spur_zone`) use gap=0 because their rectangle already includes the
     8m road buffer; a block touching the zone edge is already 8m from the
-    road centerline."""
-    name_is_rack = name in RACK_BLOCKS
+    road centerline.
+
+    Note: the larger "with-rack" block-to-block gap (`B2B_W_RACK_OFFSET = 28`)
+    is NOT enforced here — it's only relevant on sides that actually get a
+    rack, which is decided later by Step 1.2-RACK B/C."""
     for bname, (bx, by, bw, bh) in placed.items():
-        if bname.startswith("_"):
-            current_gap = 0
-        elif name_is_rack and bname in RACK_BLOCKS:
-            current_gap = RACK_BLOCK_BUFFER
-        else:
-            current_gap = gap
+        current_gap = 0 if bname.startswith("_") else gap
         if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
             return True
     return False
@@ -165,23 +165,39 @@ def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
 def rack_buffer_rect(block, offset):
     """Axis-aligned rectangle around a block's footprint, inflated by `offset`.
 
-    The rectangle's OUTLINE is the candidate centerline path for a rack
-    running on the matching side of the block. Returned as
-    `(x, y, w, h)` so it matches the format of other zone rectangles."""
+    The rectangle's OUTLINE is a candidate buffer line at distance `offset`
+    from the block edge. Returned as `(x, y, w, h)`."""
     bx, by, bw, bh = block["x"], block["y"], block["width"], block["height"]
     return (bx - offset, by - offset, bw + 2 * offset, bh + 2 * offset)
 
 
-def compute_rack_buffers(blocks):
-    """Step A — per-block rack-buffer rectangles for both layout cases.
+# Six offsets per "need rack" block side, in order of distance from block edge:
+#   road_no_rack   8 m   road CL on a side without a rack    (default)
+#   b2b_no_rack   16 m   block-to-block on a side without rack (default)
+#   case1_rack     6 m   rack CL in Case 1 (rack between block and road)
+#   road_w_rack   14 m   road CL on a side that has a rack
+#   case2_rack    22 m   rack CL in Case 2 (road between block and rack)
+#   b2b_w_rack    28 m   block-to-block on a side that has a rack
+RACK_BLOCK_OFFSETS = {
+    "road_no_rack": ROAD_BUFFER,            # 8
+    "b2b_no_rack":  BLOCK_BUFFER,           # 16
+    "case1_rack":   RACK_CASE1_OFFSET,      # 6
+    "road_w_rack":  ROAD_W_RACK_OFFSET,     # 14
+    "case2_rack":   RACK_CASE2_OFFSET,      # 22
+    "b2b_w_rack":   B2B_W_RACK_OFFSET,      # 28
+}
 
-    Returns {block_name: {'case1': rect, 'case2': rect}} for every block
-    in `RACK_BLOCKS`. Blocks not in `RACK_BLOCKS` get no entry.
-    """
+
+def compute_rack_buffers(blocks):
+    """Step A — per-block buffer rectangles for the 6 offsets a rack block uses.
+
+    Returns {block_name: {offset_key: rect}} for every block in `RACK_BLOCKS`.
+    Each rect's outline is the buffer line at that offset. Blocks not in
+    `RACK_BLOCKS` get no entry — they use only the baseline road/b2b buffers."""
     return {
         b["name"]: {
-            "case1": rack_buffer_rect(b, RACK_CASE1_OFFSET),
-            "case2": rack_buffer_rect(b, RACK_CASE2_OFFSET),
+            key: rack_buffer_rect(b, off)
+            for key, off in RACK_BLOCK_OFFSETS.items()
         }
         for b in blocks
         if b["name"] in RACK_BLOCKS

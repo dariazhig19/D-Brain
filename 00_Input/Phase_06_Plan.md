@@ -63,19 +63,26 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 
 Single rack type, **width = 6 m**, connects the 5 "need rack" blocks: **PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank**. (Cable Tunnel GIS↔PB is separate logic, not part of this step.)
 
-**Block-to-block gap:**
-- **24 m** edge-to-edge between two "need rack" blocks (leaves room for rack + clearances).
-- **16 m** edge-to-edge otherwise.
-
 #### Step A — Buffer layers per block
 
-Every "need rack" block gets **4** concentric rectangular buffer offsets around its footprint:
-1. **Building buffer** — block footprint (offset 0).
-2. **Road buffer / road centerline** — offset **8 m** (existing).
-3. **Case 1 rack buffer** — layout `Block → Rack → Road`. Rack centerline at offset **4 m**.
-4. **Case 2 rack buffer** — layout `Block → Road → Rack`. Rack centerline at offset **20 m**.
+**Non-rack blocks** (Gate House, Warehouse, Flare, Admin, GIS) — 2 offsets:
+| Key            | Offset | Meaning                                    |
+| -------------- | ------ | ------------------------------------------ |
+| `road`         |   8 m  | Road centerline must be ≥ 8 m from edge    |
+| `b2b`          |  16 m  | Block-to-block edge-to-edge gap            |
 
-Non-rack blocks (Gate House, Warehouse, Flare, Admin, GIS) keep only buffers 1 and 2.
+**"Need rack" blocks** (PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank) — 6 offsets per block. Two regimes per side: "no rack" (default) and "with rack" (the side actually carries a rack):
+
+| Key             | Offset | Regime    | Meaning                                          |
+| --------------- | ------ | --------- | ------------------------------------------------ |
+| `road_no_rack`  |   8 m  | no rack   | Road CL on a side without a rack (baseline)      |
+| `b2b_no_rack`   |  16 m  | no rack   | Block-to-block on a side without rack (baseline) |
+| `case1_rack`    |   6 m  | with rack | Rack CL — Case 1 (block → rack → road)           |
+| `road_w_rack`   |  14 m  | with rack | Road CL on a side that has a rack                |
+| `case2_rack`    |  22 m  | with rack | Rack CL — Case 2 (block → road → rack)           |
+| `b2b_w_rack`    |  28 m  | with rack | Block-to-block on a side that has a rack         |
+
+Block-side decision (which regime applies) is made by Step B/C of rack routing. During Step 1.3 floated-block placement the **baseline** offsets are used for all blocks; the larger "with-rack" offsets are precomputed in Step A and enforced later if/when a rack lands on that side.
 
 Cell size: 2 m throughout. The active rack-buffer rectangle per rack block is **chosen at random** between Case 1 and Case 2 (Step B-1).
 

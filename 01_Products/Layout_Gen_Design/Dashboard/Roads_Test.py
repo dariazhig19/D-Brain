@@ -26,7 +26,7 @@ from Core.Groups import draw_group, draw_rack, SHAPES
 from Core.Rules import RULES
 from Core.Main import generate_layouts
 from Core.Roads import build_road_network
-from Core.Layout06 import generate_sketch, CELL_SIZE
+from Core.Layout06 import generate_sketch, CELL_SIZE, ROAD_BUFFER
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -79,7 +79,7 @@ if phase == "Phase 06 (Sketch roads)":
 
     st.sidebar.header("Phase 06 Settings")
     show_grid     = st.sidebar.checkbox("2m Grid lines", value=False)
-    show_buffer   = st.sidebar.checkbox("Block 8m + 16m buffers", value=True)
+    show_buffer   = st.sidebar.checkbox(f"Block {ROAD_BUFFER}m + 16m/24m buffers", value=True)
     show_rack_buf = st.sidebar.checkbox("Rack buffers (Case 1 & 2)", value=True)
     show_raw      = st.sidebar.checkbox("Raw stubs (pre-prune)", value=False)
     show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
@@ -201,7 +201,7 @@ if phase == "Phase 06 (Sketch roads)":
                     label=lbl)
 
     # Two buffer halos per block:
-    #  - 8m halo (inner, dashed): road buffer — no fire-road centerline inside
+    #  - road halo (inner, dashed): ROAD_BUFFER — no fire-road centerline inside
     #  - block-to-block halo (outer, dotted): 24m for rack blocks, 16m for others
     if show_buffer:
         rack_set = set(sketch.get("rack_buffers", {}).keys())
@@ -210,8 +210,8 @@ if phase == "Phase 06 (Sketch roads)":
             is_rack = b["name"] in rack_set
             b2b = 24 if is_rack else 16
             entries = [
-                (8,   '#34495e', '--', '8m road buffer',              "road"),
-                (b2b, '#c0392b', ':',
+                (ROAD_BUFFER, '#34495e', '--', f'{ROAD_BUFFER}m road buffer', "road"),
+                (b2b,         '#c0392b', ':',
                  f'{b2b}m block-to-block ({"rack" if is_rack else "other"})',
                  "b2b_rack" if is_rack else "b2b_other"),
             ]
@@ -226,21 +226,21 @@ if phase == "Phase 06 (Sketch roads)":
                 legended[key] = True
 
     # Rack-buffer rectangles (Step A) for the 5 "need rack" blocks:
-    #  - Case 1 (8m offset, teal dashed): rack between block and road
-    #  - Case 2 (26m offset, purple dotted): road between block and rack
+    #  - Case 1 (4m offset, bright teal solid): rack between block and road
+    #  - Case 2 (20m offset, purple dotted): road between block and rack
     if show_rack_buf:
         rack_buf = sketch.get("rack_buffers", {})
         legended = {"case1": False, "case2": False}
         for bname, cases in rack_buf.items():
-            for case_key, color, ls, lbl in (
-                ("case1", '#16a085', '--', 'Rack buffer Case 1 (8m)'),
-                ("case2", '#8e44ad', ':',  'Rack buffer Case 2 (26m)'),
+            for case_key, color, ls, lw, lbl in (
+                ("case1", '#00b894', '-',  1.6, 'Rack buffer Case 1 (4m)'),
+                ("case2", '#8e44ad', ':',  1.2, 'Rack buffer Case 2 (20m)'),
             ):
                 rx, ry, rw, rh = cases[case_key]
                 xs = [rx, rx + rw, rx + rw, rx, rx]
                 ys = [ry, ry, ry + rh, ry + rh, ry]
-                ax.plot(xs, ys, color=color, linestyle=ls, linewidth=1.0,
-                        alpha=0.7, zorder=1.75,
+                ax.plot(xs, ys, color=color, linestyle=ls, linewidth=lw,
+                        alpha=0.95, zorder=2.5,
                         label=lbl if not legended[case_key] else "")
                 legended[case_key] = True
 

@@ -14,9 +14,10 @@ from Core.Pathfind import astar
 
 # ── Constants ──────────────────────────────────────────────────────────
 CELL_SIZE         = 2    # metres per grid cell
-BLOCK_BUFFER      = 16   # min gap between adjacent block edges (block-to-block)
-BOUNDARY_MARGIN   = 17   # min distance from any floated block to site boundary (perimeter road CL at 9m + 8m buffer = 17m)
-PB_RING_OFFSET    = 9    # ring centerline from PB face — 9m (1 cell past the 8m buffer line) so on the 2m grid all four ring sides rasterise to the same offset
+ROAD_BUFFER       = 12   # min distance from block edge to ANY road centerline
+BLOCK_BUFFER      = 16   # min gap between two non-rack block edges
+BOUNDARY_MARGIN   = 21   # min distance from floated block to site boundary (perimeter CL at 9m + 12m road buffer)
+PB_RING_OFFSET    = 13   # ring CL from PB face — 12m road buffer + 1 cell past the buffer line on the 2m grid
 PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← configurable
 PERIMETER_ROAD_W  = 8    # perimeter road width
 PERIMETER_CL_DIST = PERIMETER_SETBACK + PERIMETER_ROAD_W / 2   # 9m from boundary
@@ -209,10 +210,10 @@ def build_gate_spur(gate_pt, perimeter_road):
 _FIXED_BLOCKS = ("Gate House", "GIS", "RAW Water Tank")
 
 
-def _spur_exclusion_rect(line, buffer=8):
+def _spur_exclusion_rect(line, buffer=ROAD_BUFFER):
     """Axis-aligned bounding box of a 2-point spur line inflated by `buffer`
     on all sides. Used as a virtual exclusion zone during floated-block
-    placement so blocks stay 8m away from any spur centerline."""
+    placement so blocks stay `buffer` metres away from any spur centerline."""
     if not line or len(line) < 2:
         return None
     xs = [p[0] for p in line]
@@ -449,10 +450,10 @@ def find_nearest_road_point(block_center, road_polyline):
                 best_pt = (rx, ry)
     return best_pt
 
-def closest_buffer_point(b, goal_pt, sw, sl, offset=8):
+def closest_buffer_point(b, goal_pt, sw, sl, offset=ROAD_BUFFER):
     """Closest point on the block's road-buffer rectangle OUTLINE to goal_pt.
 
-    A stub starts here so it begins exactly at the side of the block's 8m
+    A stub starts here so it begins exactly at the side of the block's road
     buffer that faces the goal road — not at a fixed N/S/E/W midpoint. If the
     natural closest point falls outside the site (a fixed anchor flush against
     the boundary), the result is clamped to the nearest in-site point on the
@@ -699,7 +700,7 @@ def generate_sketch(
 
         # Virtual exclusion zone to keep floated blocks exactly 8m away from the ring road centerline:
         # PB_RING_OFFSET = 8m (centerline from face) + Road Buffer = 8m (keep block 8m from centerline) = 16m total from PB face
-        ring_outer = PB_RING_OFFSET + 8   # 16m from PB face
+        ring_outer = PB_RING_OFFSET + ROAD_BUFFER   # PB ring CL + road buffer
         placed["_pb_ring_zone"] = (
             pb_x - ring_outer,
             pb_y - ring_outer,
@@ -720,7 +721,7 @@ def generate_sketch(
                                     fixed_blocks_so_far, gate_pt)
         for zone_name, line in (("_gate_spur_zone", gate_spur),
                                 ("_ring_spur_zone", ring_spur)):
-            rect = _spur_exclusion_rect(line, buffer=8)
+            rect = _spur_exclusion_rect(line, buffer=ROAD_BUFFER)
             if rect:
                 placed[zone_name] = rect
 
@@ -787,17 +788,16 @@ def generate_sketch(
 
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
-        # Use 7m (not 8m) on the 2m grid: a path is allowed to run ON the 8m
-        # buffer line, so the cell whose center is exactly 8m from the block
-        # edge must be free. With 8m inflation the same cell gets blocked due
-        # to ceil/floor rounding; 7m leaves it free.
-        ROUTE_INFLATE = 7
+        # Use ROAD_BUFFER - 1m (cell quantization slack) on the 2m grid: a path
+        # is allowed to run ON the road-buffer line, so the cell whose center
+        # is exactly ROAD_BUFFER from the block edge must be free.
+        ROUTE_INFLATE = ROAD_BUFFER - 1
         stubs = {}
         for b in blocks:
             if b["name"] == "Gate House":
                 continue
 
-            grid = Grid(sw, sl, cell_size=2)
+            grid = Grid(sw, sl, cell_size=CELL_SIZE)
             for other in blocks:
                 if other["name"] != b["name"]:
                     grid.mark_building(other, inflate_m=ROUTE_INFLATE)
@@ -811,11 +811,11 @@ def generate_sketch(
             block_stubs = {}
             for road_name, goal_pt, key in [("Ring Road", pt_ring, "ring_stub"), ("Perimeter Road", pt_peri, "perimeter_stub")]:
                 # Deterministic start: the geometric closest point on this
-                # block's 8m buffer outline to the goal road anchor. Ring stub
-                # starts on the PB-facing side; perimeter stub on the perimeter
-                # side. Not restricted to N/S/E/W midpoints — can land on any
-                # edge or corner of the buffer rectangle.
-                best_cand = closest_buffer_point(b, goal_pt, sw, sl, offset=8)
+                # block's road-buffer outline to the goal road anchor. Ring
+                # stub starts on the PB-facing side; perimeter stub on the
+                # perimeter side. Not restricted to N/S/E/W midpoints — can
+                # land on any edge or corner of the buffer rectangle.
+                best_cand = closest_buffer_point(b, goal_pt, sw, sl, offset=ROAD_BUFFER)
                 start_cell = grid.world_to_cell(*best_cand)
                 goal_cell  = grid.world_to_cell(*goal_pt)
 
@@ -860,11 +860,11 @@ def generate_sketch(
             # Pick a side buffer edge perpendicular to that boundary, then drop
             # axis-aligned onto the perimeter CL.
             if side in ("N", "S"):
-                buf_x = bx + bw + 8 if bx + bw + 8 < sw - 2 else bx - 8
+                buf_x = bx + bw + ROAD_BUFFER if bx + bw + ROAD_BUFFER < sw - 2 else bx - ROAD_BUFFER
                 peri_y = sl - PERIMETER_CL_DIST if side == "N" else PERIMETER_CL_DIST
                 gh_stub = [(buf_x, cy), (buf_x, peri_y)]
             else:
-                buf_y = by + bh + 8 if by + bh + 8 < sl - 2 else by - 8
+                buf_y = by + bh + ROAD_BUFFER if by + bh + ROAD_BUFFER < sl - 2 else by - ROAD_BUFFER
                 peri_x = sw - PERIMETER_CL_DIST if side == "E" else PERIMETER_CL_DIST
                 gh_stub = [(cx, buf_y), (peri_x, buf_y)]
             stubs["Gate House"] = {"ring_stub": [], "perimeter_stub": gh_stub}

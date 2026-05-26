@@ -212,6 +212,8 @@ There will be 2 parts for B:
 - **Pass 3 — Orphans:** For any block still unconnected, take its EXACT road buffer line (edge) farthest from PB and use that as its fire road segment.
 
 
+
+
 ### 1.4 Connect Blocks to Fire Road Network
 
 For each block (except Gate House which sits on the perimeter road):

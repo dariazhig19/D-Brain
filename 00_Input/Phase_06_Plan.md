@@ -214,16 +214,6 @@ There will be 2 parts for B:
 
 
 
-### 1.4 Connect Blocks to Fire Road Network
-
-For each block (except Gate House which sits on the perimeter road):
-1. Find **nearest point** on PB Ring Road → draw **obstacle-avoiding** connection line (routes around other blocks)
-2. Find **nearest point** on Perimeter Fire Road → draw **obstacle-avoiding** connection line
-
-Each block gets exactly **2 stub connections** — one to each fire road.  
-All stubs become candidate road segments added to the road graph.
-
-
 ### 1.6 Road Classification
 
 After pruning, classify each remaining segment:

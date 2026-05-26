@@ -185,7 +185,7 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
 
 **A-2. Block Access Logic (8m Roads)**
 This defines how the remaining blocks connect to the road network.
-**Important:** We work with a pure **8m road buffer** for every block in this step (not the rack buffers or physical footprint)! Each block is a rectangle with 4 corners, meaning each corner is formed by 2 intersecting buffer lines.
+**Important:** We work with each block's specific **road buffer lines** (14m for rack blocks, 8m for no-rack blocks), not the physical block footprint itself! Each block is a rectangle with 4 corners, meaning each corner is formed by 2 intersecting buffer lines.
 
 **Corner Selection Rules:**
 - **"Corner near boundary":** Select the buffer corner closest to the plot boundary, and select its 2 lines.

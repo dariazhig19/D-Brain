@@ -208,8 +208,10 @@ There will be 2 parts for B:
 - **Pass 1 — Direct intersections:** For every pair of fire-road blocks, check if their exact road buffer lines intersect. If a block has multiple intersections, take ALL possible line intersections (this helps stitch closely packed blocks together).
 - **Pass 2 — Tolerance pass:** (only for blocks not yet connected): Expand the road buffer by +6m and re-check.
   - 2a) Line intersection → use it.
-  - 2b) Surface (rectangle overlap) intersection → take the longest centerline through the overlap region. **Exception:** If the surface overlap is shared with the Power Block's road buffer, do NOT create a new centerline segment. Instead, move the block's road buffer line like a magnet to perfectly share/snap to the Power Block's line.
+  - 2b) Surface (rectangle overlap) intersection → Find the centerline (middle line) through the overlap region. Do NOT create a new independent segment. Instead, move **both** blocks' road buffer lines like a magnet so they perfectly share and snap to that centerline. (Note: The Power Block is immovable; if overlapping with PB, the other block snaps entirely to the PB line).
 - **Pass 3 — Orphans:** For any block still unconnected, take its EXACT road buffer line (edge) farthest from PB and use that as its fire road segment.
+
+
 ### 1.4 Connect Blocks to Fire Road Network
 
 For each block (except Gate House which sits on the perimeter road):

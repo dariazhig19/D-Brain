@@ -528,51 +528,63 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
     symin, symax = min(y1, y2), max(y1, y2)
     if sxmax <= rx or sxmin >= rx + rw:
         return False
-    if symax <= ry or symin >= ry + rh:
-        return False
-    return True
-def get_snapped_buffer(name, bounds, placed, tolerance=6):
-    """Returns the (x, y, w, h) road buffer for a block, snapping it to the Power Block's buffer if within tolerance."""
-    offset = 14 if name in RACK_BLOCKS else 8
-    x, y, w, h = bounds
-    l, t, r, b = x - offset, y - offset, x + w + offset, y + h + offset
-    
-    if "Power Block" in placed and name != "Power Block":
-        pb_bounds = placed["Power Block"]
-        pb_offset = 14 if "Power Block" in RACK_BLOCKS else 8
-        px, py, pw, ph = pb_bounds
-        pl = px - pb_offset
-        pr = px + pw + pb_offset
-        pt = py - pb_offset
-        pb_bottom = py + ph + pb_offset
-        
-        # Check right edge
-        if 0 < pl - r <= tolerance:
-            if b > pt and t < pb_bottom:
-                r = pl
-        # Check left edge
-        if 0 < l - pr <= tolerance:
-            if b > pt and t < pb_bottom:
-                l = pr
-        # Check bottom edge
-        if 0 < pt - b <= tolerance:
-            if r > pl and l < pr:
-                b = pt
-        # Check top edge
-        if 0 < t - pb_bottom <= tolerance:
-            if r > pl and l < pr:
-                t = pb_bottom
-                
-    return (l, t, r - l, b - t)
-
-def generate_perimeter_segments(placed, pb_cx, pb_cy):
-    """B-1 Algorithm for generating perimeter road segments from block buffers."""
-    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House", "Power Block"}
-    blocks = {name: bounds for name, bounds in placed.items() if name in FIRE_ROAD_BLOCKS}
-    
-    def get_buffer(bounds, offset):
+def compute_snapped_buffers(placed, tolerance=6):
+    """Computes road buffers for all blocks, snapping them together if within 2*tolerance (12m).
+    PB is an immovable magnet (snaps if within tolerance=6m)."""
+    buffers = {}
+    for name, bounds in placed.items():
+        if name.startswith("_"): continue
+        offset = 14 if name in RACK_BLOCKS else 8
         x, y, w, h = bounds
-        return (x - offset, y - offset, w + 2*offset, h + 2*offset)
+        buffers[name] = [x - offset, y - offset, x + w + offset, y + h + offset]
+        
+    if "Power Block" in buffers:
+        pb = buffers["Power Block"]
+        for name, b in buffers.items():
+            if name == "Power Block": continue
+            if 0 <= pb[0] - b[2] <= tolerance:
+                if b[3] > pb[1] and b[1] < pb[3]: b[2] = pb[0]
+            if 0 <= b[0] - pb[2] <= tolerance:
+                if b[3] > pb[1] and b[1] < pb[3]: b[0] = pb[2]
+            if 0 <= pb[1] - b[3] <= tolerance:
+                if b[2] > pb[0] and b[0] < pb[2]: b[3] = pb[1]
+            if 0 <= b[1] - pb[3] <= tolerance:
+                if b[2] > pb[0] and b[0] < pb[2]: b[1] = pb[3]
+
+    names = list(buffers.keys())
+    for i in range(len(names)):
+        for j in range(i+1, len(names)):
+            n1, n2 = names[i], names[j]
+            if "Power Block" in (n1, n2): continue
+            b1, b2 = buffers[n1], buffers[n2]
+            
+            if 0 <= b2[0] - b1[2] <= 2 * tolerance:
+                if b1[3] > b2[1] and b1[1] < b2[3]:
+                    mid = (b1[2] + b2[0]) / 2
+                    b1[2] = b2[0] = mid
+            elif 0 <= b1[0] - b2[2] <= 2 * tolerance:
+                if b1[3] > b2[1] and b1[1] < b2[3]:
+                    mid = (b1[0] + b2[2]) / 2
+                    b1[0] = b2[2] = mid
+                    
+            if 0 <= b2[1] - b1[3] <= 2 * tolerance:
+                if b1[2] > b2[0] and b1[0] < b2[2]:
+                    mid = (b1[3] + b2[1]) / 2
+                    b1[3] = b2[1] = mid
+            elif 0 <= b1[1] - b2[3] <= 2 * tolerance:
+                if b1[2] > b2[0] and b1[0] < b2[2]:
+                    mid = (b1[1] + b2[3]) / 2
+                    b1[1] = b2[3] = mid
+
+    for name, b in buffers.items():
+        buffers[name] = (b[0], b[1], b[2] - b[0], b[3] - b[1])
+        
+    return buffers
+
+def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):
+    """B-1 Algorithm for generating perimeter road segments from snapped block buffers."""
+    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House", "Power Block"}
+    blocks = {name: bounds for name, bounds in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
         
     def get_overlap(r1, r2, tol=0.1):
         x1, y1, w1, h1 = r1
@@ -599,14 +611,10 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
     
     def process_pass(buffer_expansion, blocks_to_process):
         block_intersections = {name: [] for name in blocks_to_process}
-        for name1, bounds1 in blocks.items():
+        for name1, r1_orig in blocks.items():
             if name1 not in blocks_to_process: continue
-            for name2, bounds2 in blocks.items():
+            for name2, r2_orig in blocks.items():
                 if name1 == name2: continue
-                # Get the snapped buffers
-                r1_orig = get_snapped_buffer(name1, bounds1, placed)
-                r2_orig = get_snapped_buffer(name2, bounds2, placed)
-                
                 # Expand them uniformly for Pass 2
                 r1 = (r1_orig[0] - buffer_expansion, r1_orig[1] - buffer_expansion, r1_orig[2] + 2*buffer_expansion, r1_orig[3] + 2*buffer_expansion)
                 r2 = (r2_orig[0] - buffer_expansion, r2_orig[1] - buffer_expansion, r2_orig[2] + 2*buffer_expansion, r2_orig[3] + 2*buffer_expansion)
@@ -634,9 +642,8 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
     process_pass(6, unconnected_before_pass2)
                 
     # Pass 3: Orphans
-    for name1, bounds1 in blocks.items():
+    for name1, r1 in blocks.items():
         if name1 in connected: continue
-        r1 = get_snapped_buffer(name1, bounds1, placed)
         x, y, w, h = r1
         edges = [
             ((x, y), (x+w, y)),         # bottom
@@ -658,7 +665,7 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             
     return segments
 
-def generate_group_a_access(placed, site_w, site_l, gate_cx, gate_cy):
+def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):
     """A-2 Algorithm for finding 8m road access lines for Group A blocks."""
     GROUP_A_BLOCKS = {"GIS", "RAW Water Tank", "Cooling Tower", "WT/WWT", "Warehouse", "Admin Building"}
     
@@ -679,12 +686,10 @@ def generate_group_a_access(placed, site_w, site_l, gate_cx, gate_cy):
 
     segments = []
     
-    for name, bounds in placed.items():
+    for name, buffer_bounds in computed_buffers.items():
         if name not in GROUP_A_BLOCKS:
             continue
             
-        buffer_bounds = get_snapped_buffer(name, bounds, placed)
-        
         corners = get_corners_and_lines(buffer_bounds)
         
         if name == "Admin Building":
@@ -1478,7 +1483,8 @@ def generate_sketch(
                 # Add to rack_buffers for dashboard visualization
                 rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
 
-        perimeter_segments = generate_perimeter_segments(placed, pb_cx, pb_cy)
+        computed_buffers = compute_snapped_buffers(placed)
+        perimeter_segments = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
 
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
@@ -1563,7 +1569,7 @@ def generate_sketch(
                 gh_stub = [(cx, buf_y), (peri_x, buf_y)]
             stubs["Gate House"] = {"ring_stub": [], "perimeter_stub": gh_stub}
 
-        group_a_segments = generate_group_a_access(placed, sw, sl, gate_pt[0], gate_pt[1])
+        group_a_segments = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
 
         # 7. Road graph (no pruning, per user request)
         graph_grid = Grid(sw, sl, cell_size=CELL_SIZE)

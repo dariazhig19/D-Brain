@@ -561,6 +561,30 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             mid_x = ox + ow / 2
             return ((mid_x, oy), (mid_x, oy + oh))
 
+    def get_snapped_line(overlap, bounds1, bounds2, b1_orig, b2_orig, name1, name2):
+        ox, oy, ow, oh = overlap
+        pb_bounds, pb_dist = None, None
+        if name1 == "Power Block":
+            pb_bounds, pb_dist = bounds1, b1_orig
+        elif name2 == "Power Block":
+            pb_bounds, pb_dist = bounds2, b2_orig
+            
+        if pb_bounds:
+            px, py, pw, ph = pb_bounds
+            pb_l = px - pb_dist
+            pb_r = px + pw + pb_dist
+            pb_t = py - pb_dist
+            pb_b = py + ph + pb_dist
+            if ow > oh:
+                mid_y = oy + oh / 2
+                y = pb_t if abs(pb_t - mid_y) < abs(pb_b - mid_y) else pb_b
+                return ((ox, y), (ox + ow, y))
+            else:
+                mid_x = ox + ow / 2
+                x = pb_l if abs(pb_l - mid_x) < abs(pb_r - mid_x) else pb_r
+                return ((x, oy), (x, oy + oh))
+        return get_centerline(overlap)
+
     def get_block_buffer_dist(name):
         return 14 if name in RACK_BLOCKS else 8
 
@@ -573,15 +597,20 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             if name1 not in blocks_to_process: continue
             for name2, bounds2 in blocks.items():
                 if name1 == name2: continue
-                b1 = get_block_buffer_dist(name1) + buffer_expansion
-                b2 = get_block_buffer_dist(name2) + buffer_expansion
+                b1_orig = get_block_buffer_dist(name1)
+                b2_orig = get_block_buffer_dist(name2)
+                b1 = b1_orig + buffer_expansion
+                b2 = b2_orig + buffer_expansion
                 r1 = get_buffer(bounds1, b1)
                 r2 = get_buffer(bounds2, b2)
                 overlap = get_overlap(r1, r2)
                 if overlap:
                     ox, oy, ow, oh = overlap
                     length = max(ow, oh)
-                    seg = get_centerline(overlap)
+                    if buffer_expansion > 0:
+                        seg = get_snapped_line(overlap, bounds1, bounds2, b1_orig, b2_orig, name1, name2)
+                    else:
+                        seg = get_centerline(overlap)
                     block_intersections[name1].append((length, seg, name2))
                     
         for name, inters in block_intersections.items():

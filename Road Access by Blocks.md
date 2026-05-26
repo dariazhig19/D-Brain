@@ -29,14 +29,14 @@
 
 Blocks that need an 8m road connection on at least one side:
 
-| #   | Block         | 8m Count | Access Point Position                  |
-| --- | ------------- | -------- | -------------------------------------- |
-| 2   | GIS           | 2        | Corner near boundary + corner near PB  |
-| 3   | RAW Water     | 1        | Corner near boundary                   |
-| 5   | Cooling Tower | 2        | Corner near perimeter + corner near PB |
-| 6   | WT/WWT        | 1        | Corner near perimeter                  |
-| 7   | Warehouse     | 2        | Corner near perimeter + corner near PB |
-| 9   | Admin         | 1        | Corner near Gate                       |
+| #   | Block         | 8m Count | Access Point Position                  |     |     |
+| --- | ------------- | -------- | -------------------------------------- | --- | --- |
+| 2   | GIS           | 2        | Corner near boundary + corner near PB  |     |     |
+| 3   | RAW Water     | 1        | Corner near boundary                   |     |     |
+| 5   | Cooling Tower | 2        | Corner near perimeter + corner near PB |     |     |
+| 6   | WT/WWT        | 1        | Corner near perimeter                  |     |     |
+| 7   | Warehouse     | 2        | Corner near perimeter + corner near PB |     |     |
+| 9   | Admin         | 1        | Corner near Gate                       |     |     |
 
 **Group C total: 9 × 8m connections across 6 blocks**
 

@@ -55,23 +55,3 @@ Blocks that need a 6m road connection on at least one side:
 | 10 | Demi Water | 1 | Corner near pump skid (PB-facing) |
 
 **Group D total: 5 × 6m connections across 5 blocks**
-
----
-
-### Blocks Appearing in Both Groups (have both road types)
-
-| # | Block | 8m | 6m |
-|---|---|---|---|
-| 3 | RAW Water | ✓ | ✓ |
-| 6 | WT/WWT | ✓ | ✓ |
-| 9 | Admin | ✓ | ✓ |
-
----
-
-### Grand Totals
-
-| | Count |
-|---|---|
-| 8m connections (Group C + Gate + PB) | 9 + 1 + 1 = **11** |
-| 6m connections (Group D) | **5** |
-| **Total road connections** | **16** |

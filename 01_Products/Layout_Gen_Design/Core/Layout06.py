@@ -1534,17 +1534,13 @@ def generate_sketch(
 
         group_a_segments = generate_group_a_access(placed, sw, sl, gate_pt[0], gate_pt[1])
 
-        # 7. Road graph + 2-path verification + pruning (Steps 1.5-1.6)
-        # gate_spur + ring_spur already built in step 3b (so their 8m buffer
-        # constrains floated-block placement). Reused here as primary edges.
+        # 7. Road graph (no pruning, per user request)
         graph_grid = Grid(sw, sl, cell_size=CELL_SIZE)
         road_graph, gate_node = build_road_graph(
             graph_grid, ring_road, perimeter_segments, stubs, gate_pt,
             gate_spur=gate_spur, ring_spur=ring_spur,
         )
-        pruned_graph, used_edges, kept_traces = verify_and_prune(
-            road_graph, gate_node, stubs, graph_grid,
-        )
+        pruned_graph = road_graph
         _, secondary_segs = classify_edges(pruned_graph, graph_grid)
         
         # Override rasterized primary roads with exact vector polylines
@@ -1557,20 +1553,8 @@ def generate_sketch(
         for seg in perimeter_segments:
             fire_segments.append(seg)
 
-        # Segments that exist in the full graph but were pruned (for debug viz)
         pruned_segments = []
-        kept = set(tuple(sorted([u, v])) for u, v in pruned_graph.edges())
-        for u, v in road_graph.edges():
-            if tuple(sorted([u, v])) not in kept:
-                pruned_segments.append((graph_grid.cell_to_world(*u),
-                        graph_grid.cell_to_world(*v)))
-
-        # Per-block trace = the SHORTER of the two candidate paths (Power Block excluded)
-        path_traces = [
-            {"block": bname, "via": tr["via"],
-             "world": [graph_grid.cell_to_world(*c) for c in tr["cells"]]}
-            for bname, tr in kept_traces.items()
-        ]
+        path_traces = []
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

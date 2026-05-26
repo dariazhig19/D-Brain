@@ -219,18 +219,6 @@ For each block (except Gate House which sits on the perimeter road):
 Each block gets exactly **2 stub connections** — one to each fire road.  
 All stubs become candidate road segments added to the road graph.
 
-### 1.5 Path Verification (2-Path Check)
-
-For each block **except Power Block**, find **2 candidate paths to Gate** using the two stub connections:
-
-- **Path 1:** Block → *PB Ring Road stub* → traverse fire road graph → Gate *(shortest)*
-- **Path 2:** Block → *Perimeter Fire Road stub* → traverse fire road graph → Gate *(shortest)*
-
-Compare the lengths of Path 1 and Path 2 (numerically — no need to draw both at this step). **Keep only the shorter path**; discard the longer one. Draw only the shorter path.
-
-After choosing 1 path for **each block** (Power Block excluded), apply this rule to every road segment:
-- Segments **used by ≥1 kept path** of any block → **keep**
-- Segments **used by no kept path** → **prune**
 
 ### 1.6 Road Classification
 

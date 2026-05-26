@@ -627,6 +627,52 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             
     return segments
 
+def generate_group_a_access(placed, site_w, site_l, gate_cx, gate_cy):
+    """A-2 Algorithm for finding 8m road access lines for Group A blocks."""
+    GROUP_A_BLOCKS = {"GIS", "RAW Water Tank", "Cooling Tower", "WT/WWT", "Warehouse", "Admin Building"}
+    
+    def get_corners_and_lines(bounds):
+        x, y, w, h = bounds
+        return [
+            ("BL", (x, y), [((x, y), (x+w, y)), ((x, y), (x, y+h))]),
+            ("BR", (x+w, y), [((x, y), (x+w, y)), ((x+w, y), (x+w, y+h))]),
+            ("TL", (x, y+h), [((x, y+h), (x+w, y+h)), ((x, y), (x, y+h))]),
+            ("TR", (x+w, y+h), [((x, y+h), (x+w, y+h)), ((x+w, y), (x+w, y+h))])
+        ]
+
+    def dist_to_boundary(cx, cy):
+        return min(cx, site_w - cx, cy, site_l - cy)
+        
+    def dist_sq(cx, cy, tx, ty):
+        return (cx - tx)**2 + (cy - ty)**2
+
+    segments = []
+    
+    for name, bounds in placed.items():
+        if name not in GROUP_A_BLOCKS:
+            continue
+            
+        offset = 14 if name in RACK_BLOCKS else 8
+        bx, by, bw, bh = bounds
+        buffer_bounds = (bx - offset, by - offset, bw + 2*offset, bh + 2*offset)
+        
+        corners = get_corners_and_lines(buffer_bounds)
+        
+        if name == "Admin Building":
+            best_corner = min(corners, key=lambda c: dist_sq(c[1][0], c[1][1], gate_cx, gate_cy))
+            segments.extend(best_corner[2])
+        elif name in ("RAW Water Tank", "WT/WWT"):
+            best_corner = min(corners, key=lambda c: dist_to_boundary(c[1][0], c[1][1]))
+            segments.extend(best_corner[2])
+        elif name in ("GIS", "Cooling Tower", "Warehouse"):
+            corners_sorted = sorted(corners, key=lambda c: dist_to_boundary(c[1][0], c[1][1]))
+            best_corner = corners_sorted[0]
+            segments.extend(best_corner[2])
+            opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
+            opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
+            segments.extend(opp_corner[2])
+
+    return segments
 
 def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
@@ -1477,6 +1523,8 @@ def generate_sketch(
                 gh_stub = [(cx, buf_y), (peri_x, buf_y)]
             stubs["Gate House"] = {"ring_stub": [], "perimeter_stub": gh_stub}
 
+        group_a_segments = generate_group_a_access(placed, sw, sl, gate_pt[0], gate_pt[1])
+
         # 7. Road graph + 2-path verification + pruning (Steps 1.5-1.6)
         # gate_spur + ring_spur already built in step 3b (so their 8m buffer
         # constrains floated-block placement). Reused here as primary edges.
@@ -1533,6 +1581,7 @@ def generate_sketch(
             "boom_barrier":    boom_barrier,
             "ring_road":       ring_road,
             "perimeter_segments": perimeter_segments,
+            "group_a_segments": group_a_segments,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,

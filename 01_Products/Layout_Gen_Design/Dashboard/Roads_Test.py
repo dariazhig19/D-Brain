@@ -76,6 +76,7 @@ st.sidebar.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 if phase == "Phase 06 (Sketch roads)":
     st.title("Phase 06 — Block + Road Sketch")
+    st.markdown("Reference: [Phase 06 Plan](file:///x:/CST%EB%B3%B8%EB%B6%80%20%28%EA%B5%AC%20%EA%B8%B0%EC%88%A0%EC%A7%80%EC%9B%90%EB%B6%80%20%ED%8F%B4%EB%8D%94%29/15.%20%EB%8B%A4%EB%A6%AC%EC%95%84/D-Brain/00_Input/Phase_06_Plan.md)")
     st.caption("Steps 1.1–1.5: blocks · ring + perimeter fire roads · stubs · 2-path verification + pruning")
 
     st.sidebar.header("Phase 06 Settings")
@@ -83,6 +84,8 @@ if phase == "Phase 06 (Sketch roads)":
     show_buffer       = st.sidebar.checkbox(f"Block {ROAD_BUFFER}m + 16m buffers (default)", value=True)
     show_rack_no_rack = st.sidebar.checkbox("Rack-block baseline buffers (8m / 16m)", value=False)
     show_rack_w_rack  = st.sidebar.checkbox("Rack-block w-rack buffers (Case 1 6m / road 14m / Case 2 22m / b2b 28m)", value=True)
+    show_b1_perimeter = st.sidebar.checkbox("Show B-1 Perimeter Segments", value=False)
+    show_a2_access    = st.sidebar.checkbox("Show A-2 Group A Access", value=True)
     show_raw      = st.sidebar.checkbox("Raw stubs (pre-prune)", value=False)
     show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
     show_kept     = st.sidebar.checkbox("Kept graph (fire + secondary)", value=True)
@@ -135,9 +138,10 @@ if phase == "Phase 06 (Sketch roads)":
         for j in range(int(sl // cs) + 1):
             ax.axhline(j * cs, color='#dddddd', lw=0.2, zorder=0.1)
 
-    for k, ((x1, y1), (x2, y2)) in enumerate(perimeter):
-        ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
-                solid_capstyle='round', label='Perimeter CL (raw)' if k == 0 else "")
+    if show_b1_perimeter:
+        for k, ((x1, y1), (x2, y2)) in enumerate(perimeter):
+            ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
+                    solid_capstyle='round', label='Perimeter CL (raw)' if k == 0 else "")
     rx, ry = zip(*ring_road)
     ax.plot(rx, ry, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
             linestyle='--', solid_capstyle='round', label='Ring CL (raw)')
@@ -147,6 +151,14 @@ if phase == "Phase 06 (Sketch roads)":
         gsx, gsy = zip(*gs)
         ax.plot(gsx, gsy, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
                 linestyle='--', solid_capstyle='round', label='Gate spur (raw)')
+
+    # A-2 Group A Access lines
+    if show_a2_access:
+        group_a = sketch.get("group_a_segments", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(group_a):
+            ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
+                    solid_capstyle='round', label='Group A Access' if k == 0 else "")
+
     # Ring spur (ring → perimeter) — primary connector around blocks
     rs = sketch.get("ring_spur") or []
     if len(rs) >= 2:

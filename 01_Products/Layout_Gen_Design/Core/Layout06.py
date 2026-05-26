@@ -534,7 +534,7 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
 
 def generate_perimeter_segments(placed, pb_cx, pb_cy):
     """B-1 Algorithm for generating perimeter road segments from block buffers."""
-    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House"}
+    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House", "Power Block"}
     blocks = {name: bounds for name, bounds in placed.items() if name in FIRE_ROAD_BLOCKS}
     
     def get_buffer(bounds, offset):
@@ -586,13 +586,11 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
                     
         for name, inters in block_intersections.items():
             if inters:
-                inters.sort(key=lambda x: x[0], reverse=True)
-                best_seg = inters[0][1]
-                best_target = inters[0][2]
-                if best_seg not in segments and (best_seg[1], best_seg[0]) not in segments:
-                    segments.append(best_seg)
-                connected.add(name)
-                connected.add(best_target)
+                for length, seg, target_name in inters:
+                    if seg not in segments and (seg[1], seg[0]) not in segments:
+                        segments.append(seg)
+                    connected.add(name)
+                    connected.add(target_name)
 
     # Pass 1: Direct intersections (exact buffer)
     process_pass(0, list(blocks.keys()))

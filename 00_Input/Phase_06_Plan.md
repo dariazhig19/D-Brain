@@ -205,7 +205,7 @@ For blocks that require 2 corners (like GIS, Cooling Tower, Warehouse):
 There will be 2 parts for B:
 
 **B-1 Segment Generation Algorithm**
-- **Pass 1 — Direct intersections:** For every pair of fire-road blocks, check if their exact road buffer lines intersect. If a block has more than 1 intersection, take the longest line intersection only.
+- **Pass 1 — Direct intersections:** For every pair of fire-road blocks, check if their exact road buffer lines intersect. If a block has multiple intersections, take ALL possible line intersections (this helps stitch closely packed blocks together).
 - **Pass 2 — Tolerance pass:** (only for blocks not yet connected): Expand the road buffer by +6m and re-check.
   - 2a) Line intersection → use it.
   - 2b) Surface (rectangle overlap) intersection → take the longest centerline through the overlap region *(this will naturally lay in the empty space between their original road buffers)*.

@@ -166,7 +166,7 @@ After unifying the main rack network, we must connect the **Flare** block to thi
 
 A single connected rack polyline network (centerlines, 6 m wide). The network becomes an obstacle for later perimeter/spur/stub placement.
 
-**A. PB Ring Road**
+**A-1. PB Ring Road & Gate House (Special Cases)**
 - Centerline offset: **8m** from each PB block face
   `= 4m setback (block edge → road edge) + 4m (half of 8m road width)`
 - Visual rule: `block ←4m gap— road edge ——4m—→ centerline`
@@ -182,6 +182,21 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
      - The Boom Barrier line splits this surface into two halves.
      - Select the half that contains the *projectable* corner from step 2.
      - This resulting rectangular area is the "Gate Death Zone" (to be used later when placing the Perimeter Fire Road).
+
+**A-2. Block Access Logic (8m Roads)**
+This defines how the remaining blocks connect to the road network.
+**Important:** We work with the block's **rack buffer lines**, not the physical block footprint itself! Each block is a rectangle with 4 corners, meaning each corner is formed by 2 intersecting buffer lines.
+
+**Corner Selection Rules:**
+- **"Corner near boundary":** Select the buffer corner closest to the plot boundary, and select its 2 lines.
+- **"Corner near PB":** Select the buffer corner closest to the Power Block, and select its 2 lines.
+- **Tie-breaker:** If multiple corners are exactly the same distance to the boundary or PB, pick one randomly.
+
+**Priority Rule (For blocks needing 2 corners):**
+`Perimeter corner > PB corner`
+For blocks that require 2 corners (like GIS, Cooling Tower, Warehouse):
+1. First, find the closest corner to the perimeter (select randomly if there's a tie).
+2. Then, choose the **opposite diagonal corner** for the second point (no need to independently search for the closest point to the PB).
 
 **B. Perimeter Fire Road**
 

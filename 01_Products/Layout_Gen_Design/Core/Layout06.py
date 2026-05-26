@@ -1257,115 +1257,11 @@ def generate_sketch(
         computed_buffers = compute_snapped_buffers(placed)
         perimeter_segments = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
 
-        # 6. Obstacle-avoiding connection stubs (Step 1.4)
-        # Inflate OTHER blocks so their road buffer is treated as an obstacle.
-        # Use ROAD_BUFFER - 1m (cell quantization slack) on the 2m grid: a path
-        # is allowed to run ON the road-buffer line, so the cell whose center
-        # is exactly ROAD_BUFFER from the block edge must be free.
-        ROUTE_INFLATE = ROAD_BUFFER - 1
-        stubs = {}
-        for b in blocks:
-            if b["name"] == "Gate House":
-                continue
-
-            grid = Grid(sw, sl, cell_size=CELL_SIZE)
-            for other in blocks:
-                if other["name"] != b["name"]:
-                    grid.mark_building(other, inflate_m=ROUTE_INFLATE)
-
-            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
-            bc = (bx + bw/2, by + bh/2)
-
-            pt_ring = find_nearest_road_point(bc, ring_road)
-            pt_peri = find_nearest_road_point(bc, perimeter_segments)
-
-            block_stubs = {}
-            for road_name, goal_pt, key in [("Ring Road", pt_ring, "ring_stub"), ("Perimeter Road", pt_peri, "perimeter_stub")]:
-                # Deterministic start: the geometric closest point on this
-                # block's road-buffer outline to the goal road anchor. Ring
-                # stub starts on the PB-facing side; perimeter stub on the
-                # perimeter side. Not restricted to N/S/E/W midpoints — can
-                # land on any edge or corner of the buffer rectangle.
-                best_cand = closest_buffer_point(b, goal_pt, sw, sl, offset=ROAD_BUFFER)
-                start_cell = grid.world_to_cell(*best_cand)
-                goal_cell  = grid.world_to_cell(*goal_pt)
-
-                was_blocked_start = grid.blocked[start_cell]
-                was_blocked_goal  = grid.blocked[goal_cell]
-                grid.blocked[start_cell] = False
-                grid.blocked[goal_cell]  = False
-
-                # 4-connected only: roads run in straight (axis-aligned) segments,
-                # no diagonal moves.
-                path = astar(grid, start_cell, goal_cell, width_cells=0,
-                             allow_diagonal=False)
-
-                grid.blocked[start_cell] = was_blocked_start
-                grid.blocked[goal_cell]  = was_blocked_goal
-
-                if path:
-                    # Use raw cell-center coords — keeps every segment
-                    # axis-aligned. Endpoints sit at the cell center (≤1m
-                    # offset from the actual buffer point / road CL).
-                    block_stubs[key] = [grid.cell_to_world(*c) for c in path]
-                else:
-                    # Fallback: direct line from chosen candidate (may be
-                    # diagonal — only happens when A* finds no path).
-                    block_stubs[key] = [best_cand, goal_pt]
-
-            stubs[b["name"]] = block_stubs
-
-        # Gate House sits on the perimeter — give it a short axis-aligned stub
-        # from a side-buffer point to the perimeter CL so it shows up in the
-        # kept road graph (not just in path_traces).
-        gh = next((b for b in blocks if b["name"] == "Gate House"), None)
-        if gh is not None:
-            bx, by, bw, bh = gh["x"], gh["y"], gh["width"], gh["height"]
-            cx, cy = bx + bw / 2, by + bh / 2
-            # Which boundary the GH sits flush against:
-            if   by + bh >= sl - 0.01: side = "N"
-            elif by <= 0.01:           side = "S"
-            elif bx + bw >= sw - 0.01: side = "E"
-            elif bx <= 0.01:           side = "W"
-            else:                       side = "N"
-            # Pick a side buffer edge perpendicular to that boundary, then drop
-            # axis-aligned onto the perimeter CL.
-            if side in ("N", "S"):
-                buf_x = bx + bw + ROAD_BUFFER if bx + bw + ROAD_BUFFER < sw - 2 else bx - ROAD_BUFFER
-                peri_y = sl - PERIMETER_CL_DIST if side == "N" else PERIMETER_CL_DIST
-                gh_stub = [(buf_x, cy), (buf_x, peri_y)]
-            else:
-                buf_y = by + bh + ROAD_BUFFER if by + bh + ROAD_BUFFER < sl - 2 else by - ROAD_BUFFER
-                peri_x = sw - PERIMETER_CL_DIST if side == "E" else PERIMETER_CL_DIST
-                gh_stub = [(cx, buf_y), (peri_x, buf_y)]
-            stubs["Gate House"] = {"ring_stub": [], "perimeter_stub": gh_stub}
-
         group_a_segments = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
-
-        # 7. Road graph (no pruning, per user request)
-        graph_grid = Grid(sw, sl, cell_size=CELL_SIZE)
-        road_graph, gate_node = build_road_graph(
-            graph_grid, ring_road, perimeter_segments, stubs, gate_pt,
-            gate_spur=gate_spur, ring_spur=ring_spur,
-        )
-        pruned_graph = road_graph
-        _, secondary_segs = classify_edges(pruned_graph, graph_grid)
-        
-        # Override rasterized primary roads with exact vector polylines
-        # to prevent the 1m visual quantization offset on the 2m grid.
-        fire_segments = []
-        for poly in (ring_road, gate_spur, ring_spur):
-            if poly:
-                for i in range(len(poly) - 1):
-                    fire_segments.append((poly[i], poly[i+1]))
-        for seg in perimeter_segments:
-            fire_segments.append(seg)
-
-        pruned_segments = []
-        path_traces = []
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []
+        gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:
             bx, by, bw, bh = gh["x"], gh["y"], gh["width"], gh["height"]
             cx, cy = bx + bw / 2, by + bh / 2
@@ -1390,15 +1286,8 @@ def generate_sketch(
             "rack_candidates": candidate_points,
             "active_rack_cases": active_cases,
             "water_triangle":  water_triangle,
-            "stubs":           stubs,
-            "road_graph":      pruned_graph,
-            "fire_segments":   fire_segments,
-            "secondary_segs":  secondary_segs,
-            "pruned_segments": pruned_segments,
-            "path_traces":     path_traces,
             "gate_point":      gate_pt,
             "gate_death_zone": gate_death_zone,
-            "gate_node":       gate_node,
             "pb_center":       (pb_cx, pb_cy),
             "cell_size":       CELL_SIZE,
             "block_buffer":    BLOCK_BUFFER,

@@ -41,7 +41,7 @@
 		{"id":"2c9cac12fe7e0d6b","type":"text","text":"# Phase_05","x":10640,"y":1628,"width":750,"height":50,"color":"4"},
 		{"id":"a9e9c8d03eb544d9","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png","x":9265,"y":-53,"width":399,"height":199},
 		{"id":"608e1f9986ffc011","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md","x":7680,"y":480,"width":1420,"height":880},
-		{"id":"6bd66210e28f6bdf","x":11592,"y":1032,"width":1528,"height":528,"type":"file","file":"Road Access by Blocks.md"}
+		{"id":"6bd66210e28f6bdf","x":11592,"y":1032,"width":1528,"height":948,"type":"file","file":"Road Access by Blocks.md"}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

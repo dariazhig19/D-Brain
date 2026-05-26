@@ -14,18 +14,64 @@
 | 10  | Demi Water    | 0        | 1        | 1           | Corner near pump skid (PB-facing)                       | Low-traffic, single access sufficient      |
 |     |               |          |          |             |                                                         |                                            |
 
-## Access point placement rules
+## Road Access — Grouped by Road Type
 
-| Rule | Value |
+### Special Cases (kept separate)
+
+| # | Block | Road | Access Points |
+|---|---|---|---|
+| 1 | Gate House | 8m (perimeter) | 1 — the gate itself |
+| 4 | Power Block | 8m (ring road) | 4 corners of ring |
+
+---
+
+### Group A — 8m Road Side
+
+Blocks that need an 8m road connection on at least one side:
+
+| #   | Block         | 8m Count | Access Point Position                  |
+| --- | ------------- | -------- | -------------------------------------- |
+| 2   | GIS           | 2        | Corner near boundary + corner near PB  |
+| 3   | RAW Water     | 1        | Corner near boundary                   |
+| 5   | Cooling Tower | 2        | Corner near perimeter + corner near PB |
+| 6   | WT/WWT        | 1        | Corner near perimeter                  |
+| 7   | Warehouse     | 2        | Corner near perimeter + corner near PB |
+| 9   | Admin         | 1        | Corner near Gate                       |
+
+**Group C total: 9 × 8m connections across 6 blocks**
+
+---
+
+### Group B — 6m Road Side
+
+Blocks that need a 6m road connection on at least one side:
+
+| # | Block | 6m Count | Access Point Position |
+|---|---|---|---|
+| 3 | RAW Water | 1 | Corner near WT/WWT |
+| 6 | WT/WWT | 1 | Corner near RAW Water |
+| 8 | Flare | 1 | Corner on plant-facing side |
+| 9 | Admin | 1 | Corner opposite to Gate |
+| 10 | Demi Water | 1 | Corner near pump skid (PB-facing) |
+
+**Group D total: 5 × 6m connections across 5 blocks**
+
+---
+
+### Blocks Appearing in Both Groups (have both road types)
+
+| # | Block | 8m | 6m |
+|---|---|---|---|
+| 3 | RAW Water | ✓ | ✓ |
+| 6 | WT/WWT | ✓ | ✓ |
+| 9 | Admin | ✓ | ✓ |
+
+---
+
+### Grand Totals
+
+| | Count |
 |---|---|
-| Offset from block corner | 2–5m (random within range for natural variation) |
-| Minimum distance between 2 access points on same block | ≥ half the block's perimeter (forces opposite/adjacent sides) |
-| Access point width | 6m (truck width + clearance) |
-| Hydrant placement | Within 15–30m of each access point |
-
-## Summary
-
-- 8m fire road touches: 8 blocks (perimeter loop serves Gate, GIS, RAW Water, PB ring, CT, WT/WWT, Warehouse, Admin)
-- 6m stub serves: 11 access points (every block except Gate House gets at least one stub; PB gets 3)
-- Total access points: 19 across all 10 blocks
-- Single-access blocks (no 2-path redundancy): Gate House, Flare, Demi Water — intentional exceptions due to role/hazard
+| 8m connections (Group C + Gate + PB) | 9 + 1 + 1 = **11** |
+| 6m connections (Group D) | **5** |
+| **Total road connections** | **16** |

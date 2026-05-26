@@ -109,6 +109,8 @@ def _overlaps_any(name, placed, x, y, w, h):
     8m road buffer; a block touching the zone edge is already 8m from the
     road centerline."""
     for bname, (bx, by, bw, bh) in placed.items():
+        if bname == "_gate_death_zone" and name not in ("Cooling Tower", "WT/WWT", "Warehouse", "Flare", "Admin", "Demi Water"):
+            continue
         current_gap = 0 if bname.startswith("_") else pair_min_gap(name, bname)
         if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
             return True
@@ -459,16 +461,9 @@ def build_rack_spines(rack_buffers, blocks, sw, sl):
             kept_source = best_proj_pair[0]
             wwt_pt = best_proj_pair[1]
         else:
-            candidate_points.sort(key=lambda c: (c[0]-pb_spine_mid[0])**2 + (c[1]-pb_spine_mid[1])**2)
-            kept_source = candidate_points[0]
-            closest_dist = float('inf')
-            closest_proj = None
-            for s1, s2 in wwt_sides:
-                _, proj, d = pt_to_segment(kept_source, s1, s2)
-                if d < closest_dist:
-                    closest_dist = d
-                    closest_proj = proj
-            wwt_pt = closest_proj
+            wwt_corners = get_corners(wwt_rect)
+            wwt_pt = min(wwt_corners, key=lambda c: (c[0]-raw_cx)**2 + (c[1]-raw_cy)**2)
+            kept_source = min(candidate_points, key=lambda c: (c[0]-wwt_pt[0])**2 + (c[1]-wwt_pt[1])**2)
             
         def dist(p1, p2):
             return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
@@ -490,17 +485,14 @@ def build_rack_spines(rack_buffers, blocks, sw, sl):
     return spine_centerlines, candidate_points, active_cases, water_triangle
 
 
-def build_gate_spur(gate_pt, perimeter_road):
-    """Short primary-road segment connecting the gate (on the boundary) to the
-    perimeter road centerline. Always axis-aligned (perpendicular drop): paths
-    use only straight lines, so we project the gate orthogonally to whichever
-    perimeter edge it sits outside of, rather than sampling for the nearest
-    polyline point (which can be 1m off-axis due to the 2m sampling step)."""
+def build_gate_spur(site_w, site_l, gate_pt):
+    """Primary-road polyline from the gate (on the boundary) to the perimeter
+    road centerline. Always axis-aligned.
+    """
     gx, gy = gate_pt
-    xs = [p[0] for p in perimeter_road]
-    ys = [p[1] for p in perimeter_road]
-    px_min, px_max = min(xs), max(xs)
-    py_min, py_max = min(ys), max(ys)
+    px_min, px_max = 9, site_w - 9
+    py_min, py_max = 9, site_l - 9
+
     if gy > py_max: return [gate_pt, (gx, py_max)]
     if gy < py_min: return [gate_pt, (gx, py_min)]
     if gx > px_max: return [gate_pt, (px_max, gy)]
@@ -540,8 +532,103 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
         return False
     return True
 
+def generate_perimeter_segments(placed, pb_cx, pb_cy):
+    """B-1 Algorithm for generating perimeter road segments from block buffers."""
+    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House"}
+    blocks = {name: bounds for name, bounds in placed.items() if name in FIRE_ROAD_BLOCKS}
+    
+    def get_buffer(bounds, offset):
+        x, y, w, h = bounds
+        return (x - offset, y - offset, w + 2*offset, h + 2*offset)
+        
+    def get_overlap(r1, r2, tol=0.1):
+        x1, y1, w1, h1 = r1
+        x2, y2, w2, h2 = r2
+        l = max(x1, x2)
+        r = min(x1 + w1, x2 + w2)
+        t = max(y1, y2)
+        b = min(y1 + h1, y2 + h2)
+        if r >= l - tol and b >= t - tol:
+            return (l, t, r - l, b - t)
+        return None
 
-def build_ring_spur(site_w, site_l, ring_road, perimeter_road, blocks, gate_pt):
+    def get_centerline(overlap):
+        ox, oy, ow, oh = overlap
+        if ow > oh:
+            mid_y = oy + oh / 2
+            return ((ox, mid_y), (ox + ow, mid_y))
+        else:
+            mid_x = ox + ow / 2
+            return ((mid_x, oy), (mid_x, oy + oh))
+
+    def get_block_buffer_dist(name):
+        return 14 if name in RACK_BLOCKS else 8
+
+    segments = []
+    connected = set()
+    
+    def process_pass(buffer_expansion, blocks_to_process):
+        block_intersections = {name: [] for name in blocks_to_process}
+        for name1, bounds1 in blocks.items():
+            if name1 not in blocks_to_process: continue
+            for name2, bounds2 in blocks.items():
+                if name1 == name2: continue
+                b1 = get_block_buffer_dist(name1) + buffer_expansion
+                b2 = get_block_buffer_dist(name2) + buffer_expansion
+                r1 = get_buffer(bounds1, b1)
+                r2 = get_buffer(bounds2, b2)
+                overlap = get_overlap(r1, r2)
+                if overlap:
+                    ox, oy, ow, oh = overlap
+                    length = max(ow, oh)
+                    seg = get_centerline(overlap)
+                    block_intersections[name1].append((length, seg, name2))
+                    
+        for name, inters in block_intersections.items():
+            if inters:
+                inters.sort(key=lambda x: x[0], reverse=True)
+                best_seg = inters[0][1]
+                best_target = inters[0][2]
+                if best_seg not in segments and (best_seg[1], best_seg[0]) not in segments:
+                    segments.append(best_seg)
+                connected.add(name)
+                connected.add(best_target)
+
+    # Pass 1: Direct intersections (exact buffer)
+    process_pass(0, list(blocks.keys()))
+                
+    # Pass 2: Tolerance pass (+6m buffer) for unconnected blocks
+    unconnected_before_pass2 = [n for n in blocks.keys() if n not in connected]
+    process_pass(6, unconnected_before_pass2)
+                
+    # Pass 3: Orphans
+    for name1, bounds1 in blocks.items():
+        if name1 in connected: continue
+        b1 = get_block_buffer_dist(name1)
+        r1 = get_buffer(bounds1, b1)
+        x, y, w, h = r1
+        edges = [
+            ((x, y), (x+w, y)),         # bottom
+            ((x, y+h), (x+w, y+h)),     # top
+            ((x, y), (x, y+h)),         # left
+            ((x+w, y), (x+w, y+h))      # right
+        ]
+        best_edge = None
+        max_dist = -1
+        for e in edges:
+            mid_x = (e[0][0] + e[1][0]) / 2
+            mid_y = (e[0][1] + e[1][1]) / 2
+            dist = (mid_x - pb_cx)**2 + (mid_y - pb_cy)**2
+            if dist > max_dist:
+                max_dist = dist
+                best_edge = e
+        if best_edge:
+            segments.append(best_edge)
+            
+    return segments
+
+
+def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
 
     Picks a perpendicular drop on the side facing the gate; slides the anchor
@@ -558,11 +645,10 @@ def build_ring_spur(site_w, site_l, ring_road, perimeter_road, blocks, gate_pt):
              for b in blocks if b["name"] in _FIXED_BLOCKS]
 
     rxs, rys = zip(*ring_road)
-    pxs, pys = zip(*perimeter_road)
     rxmin, rxmax = min(rxs), max(rxs)
     rymin, rymax = min(rys), max(rys)
-    pxmin, pxmax = min(pxs), max(pxs)
-    pymin, pymax = min(pys), max(pys)
+    pxmin, pxmax = 9, site_w - 9
+    pymin, pymax = 9, site_l - 9
 
     gx, gy = gate_pt
     dists = [(site_l - gy, "N"), (gy, "S"), (site_w - gx, "E"), (gx, "W")]
@@ -628,18 +714,30 @@ def get_line_points(p1, p2, step=2.0):
         points.append((x1 + dx * t, y1 + dy * t))
     return points
 
-def find_nearest_road_point(block_center, road_polyline):
-    """Find the point along the road polyline closest to block_center."""
+def find_nearest_road_point(block_center, road_geometry):
+    """Find the point along the road geometry (polyline or list of segments) closest to block_center."""
     cx, cy = block_center
     best_pt = None
     best_dist = math.inf
-    for i in range(len(road_polyline) - 1):
-        pts = get_line_points(road_polyline[i], road_polyline[i+1], step=2.0)
-        for rx, ry in pts:
-            d = (rx - cx)**2 + (ry - cy)**2
-            if d < best_dist:
-                best_dist = d
-                best_pt = (rx, ry)
+    
+    is_segments = road_geometry and isinstance(road_geometry[0][0], (list, tuple))
+    
+    if is_segments:
+        for p1, p2 in road_geometry:
+            pts = get_line_points(p1, p2, step=2.0)
+            for rx, ry in pts:
+                d = (rx - cx)**2 + (ry - cy)**2
+                if d < best_dist:
+                    best_dist = d
+                    best_pt = (rx, ry)
+    else:
+        for i in range(len(road_geometry) - 1):
+            pts = get_line_points(road_geometry[i], road_geometry[i+1], step=2.0)
+            for rx, ry in pts:
+                d = (rx - cx)**2 + (ry - cy)**2
+                if d < best_dist:
+                    best_dist = d
+                    best_pt = (rx, ry)
     return best_pt
 
 def closest_buffer_point(b, goal_pt, sw, sl, offset=ROAD_BUFFER):
@@ -732,7 +830,8 @@ def build_road_graph(grid, ring_road, perimeter_road, stubs, gate_pt,
     """
     G = nx.Graph()
     _add_cell_sequence(G, _rasterise_polyline(grid, ring_road),      "primary",   grid)
-    _add_cell_sequence(G, _rasterise_polyline(grid, perimeter_road), "primary",   grid)
+    for seg in perimeter_road:
+        _add_cell_sequence(G, _rasterise_polyline(grid, seg), "primary",   grid)
     if gate_spur and len(gate_spur) >= 2:
         _add_cell_sequence(G, _rasterise_polyline(grid, gate_spur),  "primary",   grid)
     if ring_spur and len(ring_spur) >= 2:
@@ -835,6 +934,7 @@ def generate_sketch(
     site_w, site_l, wind_dir,
     gate_side="N", gate_ratio=0.5,
     gh_edge="N",    gh_ratio=0.5,  gh_offset=0,
+    bb_edge="S",
     gis_edge="N",   gis_ratio=0.8, gis_offset=0,
     water_edge="E", water_ratio=0.2, water_offset=0,
     max_pool=300,
@@ -903,14 +1003,85 @@ def generate_sketch(
         # 3b. Perimeter Fire Road + both spurs — built before floated blocks so
         # their 8m road buffer can act as a placement exclusion zone (otherwise
         # a floated block may land right next to a spur centerline).
-        perimeter_road = build_perimeter_road(sw, sl)
+        # Perimeter road is now generated later from block buffers.
         fixed_blocks_so_far = [
             {"name": n, "x": x, "y": y, "width": w, "height": h}
             for n, (x, y, w, h) in placed.items() if not n.startswith("_")
         ]
-        gate_spur = build_gate_spur(gate_pt, perimeter_road)
-        ring_spur = build_ring_spur(sw, sl, ring_road, perimeter_road,
-                                    fixed_blocks_so_far, gate_pt)
+        
+        bb_mid = None
+        exit_helper = None
+        other_corner = None
+        if "Gate House" in placed:
+            gh_x, gh_y, gh_w, gh_h = placed["Gate House"]
+            cx, cy = gh_x + gh_w / 2, gh_y + gh_h / 2
+            if bb_edge == "N":   bb_mid = (cx, gh_y + gh_h + 8)
+            elif bb_edge == "S": bb_mid = (cx, gh_y - 8)
+            elif bb_edge == "E": bb_mid = (gh_x + gh_w + 8, cy)
+            elif bb_edge == "W": bb_mid = (gh_x - 8, cy)
+
+            if bb_edge in ("N", "S"):
+                p1 = (gh_x - 8, bb_mid[1])
+                p2 = (gh_x + gh_w + 8, bb_mid[1])
+                min_x, max_x = min(bb_mid[0], gate_pt[0]), max(bb_mid[0], gate_pt[0])
+                p1_proj = min_x <= p1[0] <= max_x
+                p2_proj = min_x <= p2[0] <= max_x
+                if p1_proj and not p2_proj:
+                    exit_helper, other_corner = p2, p1
+                elif p2_proj and not p1_proj:
+                    exit_helper, other_corner = p1, p2
+                else:
+                    if abs(p1[0] - sw/2) < abs(p2[0] - sw/2):
+                        exit_helper, other_corner = p1, p2
+                    else:
+                        exit_helper, other_corner = p2, p1
+            else:
+                p1 = (bb_mid[0], gh_y - 8)
+                p2 = (bb_mid[0], gh_y + gh_h + 8)
+                min_y, max_y = min(bb_mid[1], gate_pt[1]), max(bb_mid[1], gate_pt[1])
+                p1_proj = min_y <= p1[1] <= max_y
+                p2_proj = min_y <= p2[1] <= max_y
+                if p1_proj and not p2_proj:
+                    exit_helper, other_corner = p2, p1
+                elif p2_proj and not p1_proj:
+                    exit_helper, other_corner = p1, p2
+                else:
+                    if abs(p1[1] - sl/2) < abs(p2[1] - sl/2):
+                        exit_helper, other_corner = p1, p2
+                    else:
+                        exit_helper, other_corner = p2, p1
+
+        if bb_mid and exit_helper and other_corner:
+            # Calculate Gate Death Zone
+            if bb_edge in ("N", "S"):
+                gdz_x_min = bb_mid[0] if other_corner[0] >= bb_mid[0] else 0
+                gdz_x_max = sw if other_corner[0] >= bb_mid[0] else bb_mid[0]
+                gdz_y_min = bb_mid[1] if gate_pt[1] >= bb_mid[1] else 0
+                gdz_y_max = sl if gate_pt[1] >= bb_mid[1] else bb_mid[1]
+            else:
+                gdz_x_min = bb_mid[0] if gate_pt[0] >= bb_mid[0] else 0
+                gdz_x_max = sw if gate_pt[0] >= bb_mid[0] else bb_mid[0]
+                gdz_y_min = bb_mid[1] if other_corner[1] >= bb_mid[1] else 0
+                gdz_y_max = sl if other_corner[1] >= bb_mid[1] else bb_mid[1]
+            gate_death_zone = (gdz_x_min, gdz_y_min, gdz_x_max - gdz_x_min, gdz_y_max - gdz_y_min)
+            placed["_gate_death_zone"] = gate_death_zone
+
+            dummy_ring_spur = build_ring_spur(sw, sl, ring_road, fixed_blocks_so_far, exit_helper)
+            pt_on_ring = dummy_ring_spur[0]
+            
+            if gate_side in ("N", "S"):
+                ring_spur = [pt_on_ring, (pt_on_ring[0], exit_helper[1]), exit_helper]
+            else:
+                ring_spur = [pt_on_ring, (exit_helper[0], pt_on_ring[1]), exit_helper]
+                
+            if bb_edge in ("N", "S"):
+                gate_spur = [exit_helper, bb_mid, other_corner, (other_corner[0], gate_pt[1]), gate_pt]
+            else:
+                gate_spur = [exit_helper, bb_mid, other_corner, (gate_pt[0], other_corner[1]), gate_pt]
+        else:
+            gate_death_zone = None
+            gate_spur = build_gate_spur(sw, sl, gate_pt)
+            ring_spur = build_ring_spur(sw, sl, ring_road, fixed_blocks_so_far, gate_pt)
         for zone_name, line in (("_gate_spur_zone", gate_spur),
                                 ("_ring_spur_zone", ring_spur)):
             rect = _spur_exclusion_rect(line, buffer=ROAD_BUFFER)
@@ -976,6 +1147,39 @@ def generate_sketch(
         water_cluster_segments = []
         rack_segments = list(spine_centerlines)
 
+        valid_xs = set()
+        valid_ys = set()
+        for b_name in RACK_BLOCKS:
+            if b_name in rack_buffers and b_name in active_cases:
+                rx, ry, rw, rh = rack_buffers[b_name][active_cases[b_name]]
+                valid_xs.update([rx, rx+rw])
+                valid_ys.update([ry, ry+rh])
+        for pt in water_triangle:
+            valid_xs.add(pt[0])
+            valid_ys.add(pt[1])
+        for seg in pb_ct_segments:
+            valid_xs.update([seg[0][0], seg[1][0]])
+            valid_ys.update([seg[0][1], seg[1][1]])
+
+        flare_b = next((b for b in blocks if b["name"] == "Flare"), None)
+        if flare_b:
+            f_off = RACK_CASE1_OFFSET
+            valid_xs.update([flare_b["x"] - f_off, flare_b["x"] + flare_b["width"] + f_off])
+            valid_ys.update([flare_b["y"] - f_off, flare_b["y"] + flare_b["height"] + f_off])
+
+        def snap_pt(px, py):
+            best_x, best_y = px - CELL_SIZE / 2, py - CELL_SIZE / 2
+            min_dx, min_dy = 1.5, 1.5
+            for vx in valid_xs:
+                if abs(vx - px) < min_dx:
+                    min_dx = abs(vx - px)
+                    best_x = vx
+            for vy in valid_ys:
+                if abs(vy - py) < min_dy:
+                    min_dy = abs(vy - py)
+                    best_y = vy
+            return (best_x, best_y)
+
         # B-5: Water cluster spine
         if len(water_triangle) == 3:
             grid_b5 = Grid(sw, sl, cell_size=CELL_SIZE)
@@ -992,7 +1196,7 @@ def generate_sketch(
                 path = astar(grid_b5, c1, c2, width_cells=0, allow_diagonal=False)
                 grid_b5.blocked[c1] = was1
                 grid_b5.blocked[c2] = was2
-                return [grid_b5.cell_to_world(*c) for c in path] if path else []
+                return [snap_pt(*grid_b5.cell_to_world(*c)) for c in path] if path else []
                 
             raw_pt, demi_pt, wwt_pt = water_triangle[0], water_triangle[1], water_triangle[2]
             
@@ -1127,7 +1331,7 @@ def generate_sketch(
                     path_cells.reverse()
 
                     if len(path_cells) > 1:
-                        path_pts = [grid_c.cell_to_world(*c) for c in path_cells]
+                        path_pts = [snap_pt(*grid_c.cell_to_world(*c)) for c in path_cells]
                         simplified = [path_pts[0]]
                         for i in range(1, len(path_pts)-1):
                             p0, p1, p2 = simplified[-1], path_pts[i], path_pts[i+1]
@@ -1163,6 +1367,33 @@ def generate_sketch(
                 else:
                     route_between(water_cluster_segments + ct_line, pb_line)
 
+            # Step C-2: Flare Pipe Rack
+            flare_block = next((b for b in blocks if b["name"] == "Flare"), None)
+            if flare_block:
+                fx, fy, fw, fh = flare_block["x"], flare_block["y"], flare_block["width"], flare_block["height"]
+                flare_offset = RACK_CASE1_OFFSET
+                fx0, fy0 = fx - flare_offset, fy - flare_offset
+                fx1, fy1 = fx + fw + flare_offset, fy + fh + flare_offset
+                
+                def touches_flare(segments):
+                    for p1, p2 in segments:
+                        sxmin, sxmax = min(p1[0], p2[0]), max(p1[0], p2[0])
+                        symin, symax = min(p1[1], p2[1]), max(p1[1], p2[1])
+                        if sxmax < fx0 or sxmin > fx1: continue
+                        if symax < fy0 or symin > fy1: continue
+                        return True
+                    return False
+
+                if not touches_flare(rack_segments):
+                    flare_corners = [(fx0, fy0), (fx1, fy0), (fx1, fy1), (fx0, fy1)]
+                    flare_corner_segs = [[c, c] for c in flare_corners]
+                    route_between(flare_corner_segs, rack_segments)
+
+                # Add to rack_buffers for dashboard visualization
+                rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
+
+        perimeter_segments = generate_perimeter_segments(placed, pb_cx, pb_cy)
+
         # 6. Obstacle-avoiding connection stubs (Step 1.4)
         # Inflate OTHER blocks so their road buffer is treated as an obstacle.
         # Use ROAD_BUFFER - 1m (cell quantization slack) on the 2m grid: a path
@@ -1183,7 +1414,7 @@ def generate_sketch(
             bc = (bx + bw/2, by + bh/2)
 
             pt_ring = find_nearest_road_point(bc, ring_road)
-            pt_peri = find_nearest_road_point(bc, perimeter_road)
+            pt_peri = find_nearest_road_point(bc, perimeter_segments)
 
             block_stubs = {}
             for road_name, goal_pt, key in [("Ring Road", pt_ring, "ring_stub"), ("Perimeter Road", pt_peri, "perimeter_stub")]:
@@ -1251,13 +1482,23 @@ def generate_sketch(
         # constrains floated-block placement). Reused here as primary edges.
         graph_grid = Grid(sw, sl, cell_size=CELL_SIZE)
         road_graph, gate_node = build_road_graph(
-            graph_grid, ring_road, perimeter_road, stubs, gate_pt,
+            graph_grid, ring_road, perimeter_segments, stubs, gate_pt,
             gate_spur=gate_spur, ring_spur=ring_spur,
         )
         pruned_graph, used_edges, kept_traces = verify_and_prune(
             road_graph, gate_node, stubs, graph_grid,
         )
-        fire_segments, secondary_segs = classify_edges(pruned_graph, graph_grid)
+        _, secondary_segs = classify_edges(pruned_graph, graph_grid)
+        
+        # Override rasterized primary roads with exact vector polylines
+        # to prevent the 1m visual quantization offset on the 2m grid.
+        fire_segments = []
+        for poly in (ring_road, gate_spur, ring_spur):
+            if poly:
+                for i in range(len(poly) - 1):
+                    fire_segments.append((poly[i], poly[i+1]))
+        for seg in perimeter_segments:
+            fire_segments.append(seg)
 
         # Segments that exist in the full graph but were pruned (for debug viz)
         pruned_segments = []
@@ -1265,7 +1506,7 @@ def generate_sketch(
         for u, v in road_graph.edges():
             if tuple(sorted([u, v])) not in kept:
                 pruned_segments.append((graph_grid.cell_to_world(*u),
-                                        graph_grid.cell_to_world(*v)))
+                        graph_grid.cell_to_world(*v)))
 
         # Per-block trace = the SHORTER of the two candidate paths (Power Block excluded)
         path_traces = [
@@ -1274,11 +1515,24 @@ def generate_sketch(
             for bname, tr in kept_traces.items()
         ]
 
+        # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
+        boom_barrier = []
+        if gh is not None:
+            bx, by, bw, bh = gh["x"], gh["y"], gh["width"], gh["height"]
+            cx, cy = bx + bw / 2, by + bh / 2
+            if bb_edge == "N":   boom_barrier = [(cx, by + bh), (cx, by + bh + 16)]
+            elif bb_edge == "S": boom_barrier = [(cx, by), (cx, by - 16)]
+            elif bb_edge == "E": boom_barrier = [(bx + bw, cy), (bx + bw + 16, cy)]
+            elif bb_edge == "W": boom_barrier = [(bx, cy), (bx - 16, cy)]
 
+        # ---------------------------------------------------------------------
+        # Final Assembly
+        # ---------------------------------------------------------------------
         return {
             "blocks":          blocks,
+            "boom_barrier":    boom_barrier,
             "ring_road":       ring_road,
-            "perimeter_road":  perimeter_road,
+            "perimeter_segments": perimeter_segments,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,
@@ -1293,6 +1547,7 @@ def generate_sketch(
             "pruned_segments": pruned_segments,
             "path_traces":     path_traces,
             "gate_point":      gate_pt,
+            "gate_death_zone": gate_death_zone,
             "gate_node":       gate_node,
             "pb_center":       (pb_cx, pb_cy),
             "cell_size":       CELL_SIZE,

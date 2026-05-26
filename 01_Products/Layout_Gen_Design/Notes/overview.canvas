@@ -34,14 +34,15 @@
 		{"id":"b66900d9e49c36ef","type":"text","text":"# Phase_04","x":9004,"y":1603,"width":750,"height":50,"color":"4"},
 		{"id":"a9e9c8d03eb544d9","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Dashboard_V5.png","x":9265,"y":-53,"width":399,"height":199},
 		{"id":"22e0de2d54ec8cef","type":"text","text":"roa","x":9436,"y":160,"width":250,"height":60},
-		{"id":"2c9cac12fe7e0d6b","type":"text","text":"# Phase_05","x":10640,"y":1628,"width":750,"height":50,"color":"4"},
 		{"id":"d7674efd8c7b8d49","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md","x":9004,"y":1916,"width":1200,"height":650},
 		{"id":"0a90cd5969e2d4fc","type":"file","file":"Pasted image 20260522112630.png","x":11100,"y":-460,"width":400,"height":228},
 		{"id":"9d4b42815ae1a626","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png","x":11140,"y":-71,"width":400,"height":223},
 		{"id":"3b19a4d665993430","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png","x":11600,"y":-180,"width":400,"height":400},
 		{"id":"fdcdb3b135305211","type":"file","file":"Pasted image 20260519172928.png","x":11060,"y":325,"width":454,"height":260},
 		{"id":"ade762dc895fda5b","type":"file","file":"Pasted image 20260522153343.png","x":11520,"y":322,"width":440,"height":263},
-		{"id":"a60d746c3fbc1236","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png","x":10640,"y":-65,"width":400,"height":211}
+		{"id":"a60d746c3fbc1236","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png","x":10640,"y":-65,"width":400,"height":211},
+		{"id":"cae23e5286c4f364","x":11183,"y":778,"width":1157,"height":482,"type":"text","text":"## Road Access per Block — Complete Table\n\n| # | Block | 8m Roads | 6m Roads | Total Roads | Access Point Positions | Notes |\n|---|---|---|---|---|---|---|\n| 1 | Gate House | 1 | 0 | 1 | 1 on perimeter side (the gate itself) | Gate IS the access point |\n| 2 | GIS | 1 | 1 | 2 | Corner near boundary (8m) + corner near PB (6m) | Heavy haul route for transformers |\n| 3 | RAW Water | 1 | 1 | 2 | Corner near boundary (8m) + corner near WT/WWT (6m) | Chemical/maintenance delivery |\n| 4 | Power Block | 1 (ring) | 3 | 4 | 4 corners of ring road | One per cardinal side; multi-building access |\n| 5 | Cooling Tower | 1 | 1 | 2 | Corner near perimeter (8m) + corner near PB (6m) | 6m faces CW pump room |\n| 6 | WT/WWT | 1 | 1 | 2 | Corner near perimeter (8m) + corner near RAW Water (6m) | Truck-heavy chemical delivery on 8m side |\n| 7 | Warehouse | 1 | 1 | 2 | Corner near perimeter (8m) + corner near PB (6m) | Wide delivery access on 8m side |\n| 8 | Flare | 0 | 1 | 1 | Corner on plant-facing side only | NEVER on boundary/leeward side (radiation) |\n| 9 | Admin | 1 | 1 | 2 | Corner near Gate (8m) + corner opposite (6m) | Emergency exit must be on different side |\n| 10 | Demi Water | 0 | 1 | 1 | Corner near pump skid (PB-facing) | Low-traffic, single access sufficient |\n| | **TOTAL** | **8** | **11** | **19** | **19 access points** | |\n\n## Access point placement rules\n\n| Rule | Value |\n|---|---|\n| Offset from block corner | 2–5m (random within range for natural variation) |\n| Minimum distance between 2 access points on same block | ≥ half the block's perimeter (forces opposite/adjacent sides) |\n| Access point width | 6m (truck width + clearance) |\n| Hydrant placement | Within 15–30m of each access point |\n\n## Summary\n\n- 8m fire road touches: 8 blocks (perimeter loop serves Gate, GIS, RAW Water, PB ring, CT, WT/WWT, Warehouse, Admin)\n- 6m stub serves: 11 access points (every block except Gate House gets at least one stub; PB gets 3)\n- Total access points: 19 across all 10 blocks\n- Single-access blocks (no 2-path redundancy): Gate House, Flare, Demi Water — intentional exceptions due to role/hazard"},
+		{"id":"2c9cac12fe7e0d6b","type":"text","text":"# Phase_05","x":10640,"y":1628,"width":750,"height":50,"color":"4"}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},
@@ -83,6 +84,7 @@
 		{"id":"aa99ceeaf917e4f8","fromNode":"b66900d9e49c36ef","fromSide":"top","toNode":"608e1f9986ffc011","toSide":"right"},
 		{"id":"e46602bbbc6f3b74","fromNode":"a9e9c8d03eb544d9","fromSide":"right","toNode":"a60d746c3fbc1236","toSide":"left"},
 		{"id":"6be897fdfab92063","fromNode":"2c9cac12fe7e0d6b","fromSide":"top","toNode":"a60d746c3fbc1236","toSide":"bottom"},
-		{"id":"41bff9fa025a4cdf","fromNode":"2c9cac12fe7e0d6b","fromSide":"top","toNode":"9d4b42815ae1a626","toSide":"left"}
+		{"id":"41bff9fa025a4cdf","fromNode":"2c9cac12fe7e0d6b","fromSide":"top","toNode":"9d4b42815ae1a626","toSide":"left"},
+		{"id":"f2edaa7fa701b972","fromNode":"cae23e5286c4f364","fromSide":"right","toNode":"93aa64b236d33f3a","toSide":"left"}
 	]
 }

@@ -87,6 +87,7 @@ I want to design the floated-block placement so blocks snap onto each other's ro
 - rack blocks ↔ rack blocks: snab by using the 14m road buffer (so their block edges sit 28m apart on that side)
 - no-rack blocks ↔ no-rack blocks : share the 8m road buffer (16m apart)
 - mixed rack/no-rack blocks: connect via b2b buffer (no shared road; sit block edges sit 28m apart)
+- **Gate Death Zone Avoidance:** ALL floated blocks must strictly avoid overlapping the Gate Death Zone.
 
 ### 1.2-RACK Pipe Rack Algorithm
 
@@ -132,13 +133,13 @@ Cell size: 2 m throughout. The active rack-buffer rectangle per rack block is ch
   - The other endpoint is on RAW or Demi:
     - If on **RAW** → keep it as RAW point; find closest of the 2 Demi candidates to that RAW point → that's the Demi point.
     - If on **Demi** → keep it as Demi point; find closest of the 2 RAW candidates to that Demi point → that's the RAW point.
-- *If no projection succeeds:* among the 4 candidates, take the one closest to PB's selected rack-buffer-line center. Find the closest point on WWT's rack buffer to that point (nearest point, not perpendicular). Apply the same RAW/Demi selection rule above.
+- *If no projection succeeds:* take WWT rack buffer 4 edge points (corners) and find the one closest to RAW Water Tank center. This is the kept WWT point. Among the 4 candidate points, take the one closest to this WWT point. Apply the same RAW/Demi selection rule above.
 
 Result: **3 points** — one each on RAW, Demi, and WWT rack buffer lines, forming the tightest triangle.
 
 **B-5 (Water cluster spine):** Connect the 3 points using **orthogonal paths only** (no diagonals). Paths can travel along any block's active rack-buffer line or through empty grid cells. Cannot intersect any block footprint.
 
-#### Step C — Connect spines into one network
+#### Step C-1 — Connect spines into one network
 
 The **PB↔CT spine** (from Step B-1) actually consists of two separate, parallel line segments (one for the PB block, one for the CT block). We connect these lines and the **water cluster spine** into a single unified network using a two-stage orthogonal routing sequence:
 
@@ -150,6 +151,17 @@ For both routing passes, the connection path must:
 - Route along another "need rack" block's active rack-buffer line (Case 1 or Case 2),
 - Never cross any block footprint.
 
+#### Step C-2 — Flare Pipe Rack Connection
+
+After unifying the main rack network, we must connect the **Flare** block to this network.
+
+1. **Check for existing intersection:** If any segment of the unified network already touches or intersects the Flare's active rack buffer rectangle, the connection is satisfied. No additional spines are added.
+2. **Find shortest real-path connection:** If not connected, take the 4 edge points (corners) of the Flare's active rack buffer.
+   - For each corner, find an orthogonal path to the unified network.
+   - This routing **must avoid all block footprints** (obstacles in the line of sight).
+   - Compare the paths and select the corner that yields the shortest "real" routed path length (accounting for obstacles, not just direct straight-line distance).
+3. Add this shortest orthogonal path to the unified network.
+
 #### Output
 
 A single connected rack polyline network (centerlines, 6 m wide). The network becomes an obstacle for later perimeter/spur/stub placement.
@@ -160,17 +172,27 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
 - Visual rule: `block ←4m gap— road edge ——4m—→ centerline`
 - Drawn as **line segments** (graph edges) — not rasterized to cells
 - Must not intersect any placed block
-- Connected directly to the Gate (path along ring to Gate entry point)
+- **Routing to Gate (Boom Barrier Integration):**
+  1. Identifies the "exit line" between the Boom Barrier midpoint and the physical Gate.
+  2. Projects the two road buffer corners of the selected Gate House side onto this exit line.
+  3. Routes: PB Ring Road → *unprojectable* corner → Boom Barrier midpoint (perfect 90-degree crossing) → *projectable* corner → Gate.
+  4. **Gate Death Zone:**
+     - Extend the road buffer line from step 2 in both directions to the plot boundaries, dividing the site into two surfaces.
+     - Select the surface that contains the physical Gate.
+     - The Boom Barrier line splits this surface into two halves.
+     - Select the half that contains the *projectable* corner from step 2.
+     - This resulting rectangular area is the "Gate Death Zone" (to be used later when placing the Perimeter Fire Road).
 
 **B. Perimeter Fire Road**
-- **Polygon** loop — follows site boundary shape
-  *(supports 4–6+ sides for non-rectangular real site boundary in future)*
-- Outer edge setback from plot boundary: **`PERIMETER_SETBACK = 5m`** *(configurable constant)*
-- Road centerline at: `PERIMETER_SETBACK + 4m = 9m` from boundary
-- Drawn as **line segments** (graph edges)
-- Routes **around** all placed blocks (obstacle-aware polygon routing)
-- Connected to the Gate (entry point on boundary)
-- Where PB Ring Road and Perimeter Fire Road **overlap or are adjacent** → merged into one segment (no duplicate edges in graph)
+
+There will be 2 parts for B:
+
+**B-1 Segment Generation Algorithm**
+- **Pass 1 — Direct intersections:** For every pair of fire-road blocks, check if their exact road buffer lines intersect. If a block has more than 1 intersection, take the longest line intersection only.
+- **Pass 2 — Tolerance pass:** (only for blocks not yet connected): Expand the road buffer by +6m and re-check.
+  - 2a) Line intersection → use it.
+  - 2b) Surface (rectangle overlap) intersection → take the longest centerline through the overlap region *(this will naturally lay in the empty space between their original road buffers)*.
+- **Pass 3 — Orphans:** For any block still unconnected, take its EXACT road buffer line (edge) farthest from PB and use that as its fire road segment.
 ### 1.4 Connect Blocks to Fire Road Network
 
 For each block (except Gate House which sits on the perimeter road):

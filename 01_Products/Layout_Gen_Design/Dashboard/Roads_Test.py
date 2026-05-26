@@ -57,6 +57,7 @@ st.sidebar.subheader("Gate House")
 gh_edge   = st.sidebar.selectbox("Edge (GH)",     ["N", "S", "E", "W"], index=0)
 gh_ratio  = st.sidebar.slider("Position (GH)",    0.0, 1.0, 0.5, step=0.05)
 gh_offset = st.sidebar.slider("Offset (GH)",      0, 50, 0, step=1)
+bb_edge   = st.sidebar.selectbox("Boom Barrier Side (GH)", ["N", "S", "E", "W"], index=1)
 
 st.sidebar.subheader("GIS")
 gis_edge   = st.sidebar.selectbox("Edge (GIS)",   ["N", "S", "E", "W"], index=1)
@@ -86,6 +87,7 @@ if phase == "Phase 06 (Sketch roads)":
     show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
     show_kept     = st.sidebar.checkbox("Kept graph (fire + secondary)", value=True)
     show_traces   = st.sidebar.checkbox("2-path traces (per block)", value=False)
+    show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
 
@@ -97,6 +99,7 @@ if phase == "Phase 06 (Sketch roads)":
                 site_width, site_length, wind_dir,
                 gate_side=gate_side, gate_ratio=gate_ratio,
                 gh_edge=gh_edge,    gh_ratio=gh_ratio,    gh_offset=gh_offset,
+                bb_edge=bb_edge,
                 gis_edge=gis_edge,  gis_ratio=gis_ratio,  gis_offset=gis_offset,
                 water_edge=water_edge, water_ratio=water_ratio, water_offset=water_offset,
             )
@@ -114,7 +117,7 @@ if phase == "Phase 06 (Sketch roads)":
     sw, sl = st.session_state.get("params06", (site_width, site_length))
     blocks        = sketch["blocks"]
     ring_road     = sketch["ring_road"]
-    perimeter     = sketch["perimeter_road"]
+    perimeter     = sketch.get("perimeter_segments", [])
     gate_pt       = sketch["gate_point"]
     pb_center     = sketch["pb_center"]
 
@@ -132,10 +135,9 @@ if phase == "Phase 06 (Sketch roads)":
         for j in range(int(sl // cs) + 1):
             ax.axhline(j * cs, color='#dddddd', lw=0.2, zorder=0.1)
 
-    # Underlay: full ring + perimeter polyline (always shown, faintly)
-    px, py = zip(*perimeter)
-    ax.plot(px, py, color='#888888', lw=0.5, alpha=0.5, zorder=1.4,
-            linestyle='--', solid_capstyle='round', label='Perimeter CL (raw)')
+    for k, ((x1, y1), (x2, y2)) in enumerate(perimeter):
+        ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
+                solid_capstyle='round', label='Perimeter CL (raw)' if k == 0 else "")
     rx, ry = zip(*ring_road)
     ax.plot(rx, ry, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
             linestyle='--', solid_capstyle='round', label='Ring CL (raw)')
@@ -274,6 +276,21 @@ if phase == "Phase 06 (Sketch roads)":
         wx, wy = zip(*(water_triangle + [water_triangle[0]]))
         ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
 
+    # Boom Barrier
+    boom_barrier = sketch.get("boom_barrier", [])
+    if boom_barrier and len(boom_barrier) == 2:
+        xs, ys = zip(*boom_barrier)
+        ax.plot(xs, ys, color='#e74c3c', linewidth=4, linestyle='-', zorder=4.0, label='Boom Barrier')
+
+    # Gate Death Zone
+    gate_death_zone = sketch.get("gate_death_zone")
+    if gate_death_zone:
+        gx, gy, gw, gh = gate_death_zone
+        import matplotlib.patches as patches
+        rect = patches.Rectangle((gx, gy), gw, gh, linewidth=1.5, edgecolor='#c0392b',
+                                 facecolor='#e74c3c', alpha=0.2, hatch='///', zorder=1.1, label='Gate Death Zone')
+        ax.add_patch(rect)
+
 
     # Blocks (circles for Tanks + Flare per Groups.SHAPES, rectangles otherwise)
     for b in blocks:
@@ -302,7 +319,8 @@ if phase == "Phase 06 (Sketch roads)":
     ax.set_aspect('equal', adjustable='box')
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values(): sp.set_visible(False)
-    ax.legend(loc='upper left', fontsize=8, framealpha=0.9)
+    if show_legend:
+        ax.legend(loc='upper left', fontsize=8, framealpha=0.9)
 
     plt.tight_layout(pad=0.4)
     st.pyplot(fig, use_container_width=True)

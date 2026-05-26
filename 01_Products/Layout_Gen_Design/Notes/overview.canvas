@@ -42,7 +42,8 @@
 		{"id":"6bd66210e28f6bdf","x":11592,"y":1032,"width":1528,"height":948,"type":"file","file":"Road Access by Blocks.md"},
 		{"id":"d7674efd8c7b8d49","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md","x":9004,"y":1916,"width":1200,"height":650},
 		{"id":"0a90cd5969e2d4fc","type":"file","file":"Pasted image 20260522112630.png","x":11100,"y":-460,"width":400,"height":228},
-		{"id":"b9ea44b60e5c9720","x":12120,"y":358,"width":400,"height":227,"type":"file","file":"Pasted image 20260526170037.png"}
+		{"id":"b9ea44b60e5c9720","x":12120,"y":358,"width":400,"height":227,"type":"file","file":"Pasted image 20260526170037.png"},
+		{"id":"47b1dbbd0fc10a17","x":12560,"y":358,"width":400,"height":236,"type":"file","file":"Pasted image 20260526175639.png"}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

@@ -531,6 +531,39 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
     if symax <= ry or symin >= ry + rh:
         return False
     return True
+def get_snapped_buffer(name, bounds, placed, tolerance=6):
+    """Returns the (x, y, w, h) road buffer for a block, snapping it to the Power Block's buffer if within tolerance."""
+    offset = 14 if name in RACK_BLOCKS else 8
+    x, y, w, h = bounds
+    l, t, r, b = x - offset, y - offset, x + w + offset, y + h + offset
+    
+    if "Power Block" in placed and name != "Power Block":
+        pb_bounds = placed["Power Block"]
+        pb_offset = 14 if "Power Block" in RACK_BLOCKS else 8
+        px, py, pw, ph = pb_bounds
+        pl = px - pb_offset
+        pr = px + pw + pb_offset
+        pt = py - pb_offset
+        pb_bottom = py + ph + pb_offset
+        
+        # Check right edge
+        if 0 < pl - r <= tolerance:
+            if b > pt and t < pb_bottom:
+                r = pl
+        # Check left edge
+        if 0 < l - pr <= tolerance:
+            if b > pt and t < pb_bottom:
+                l = pr
+        # Check bottom edge
+        if 0 < pt - b <= tolerance:
+            if r > pl and l < pr:
+                b = pt
+        # Check top edge
+        if 0 < t - pb_bottom <= tolerance:
+            if r > pl and l < pr:
+                t = pb_bottom
+                
+    return (l, t, r - l, b - t)
 
 def generate_perimeter_segments(placed, pb_cx, pb_cy):
     """B-1 Algorithm for generating perimeter road segments from block buffers."""
@@ -561,33 +594,6 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             mid_x = ox + ow / 2
             return ((mid_x, oy), (mid_x, oy + oh))
 
-    def get_snapped_line(overlap, bounds1, bounds2, b1_orig, b2_orig, name1, name2):
-        ox, oy, ow, oh = overlap
-        pb_bounds, pb_dist = None, None
-        if name1 == "Power Block":
-            pb_bounds, pb_dist = bounds1, b1_orig
-        elif name2 == "Power Block":
-            pb_bounds, pb_dist = bounds2, b2_orig
-            
-        if pb_bounds:
-            px, py, pw, ph = pb_bounds
-            pb_l = px - pb_dist
-            pb_r = px + pw + pb_dist
-            pb_t = py - pb_dist
-            pb_b = py + ph + pb_dist
-            if ow > oh:
-                mid_y = oy + oh / 2
-                y = pb_t if abs(pb_t - mid_y) < abs(pb_b - mid_y) else pb_b
-                return ((ox, y), (ox + ow, y))
-            else:
-                mid_x = ox + ow / 2
-                x = pb_l if abs(pb_l - mid_x) < abs(pb_r - mid_x) else pb_r
-                return ((x, oy), (x, oy + oh))
-        return get_centerline(overlap)
-
-    def get_block_buffer_dist(name):
-        return 14 if name in RACK_BLOCKS else 8
-
     segments = []
     connected = set()
     
@@ -597,20 +603,19 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
             if name1 not in blocks_to_process: continue
             for name2, bounds2 in blocks.items():
                 if name1 == name2: continue
-                b1_orig = get_block_buffer_dist(name1)
-                b2_orig = get_block_buffer_dist(name2)
-                b1 = b1_orig + buffer_expansion
-                b2 = b2_orig + buffer_expansion
-                r1 = get_buffer(bounds1, b1)
-                r2 = get_buffer(bounds2, b2)
+                # Get the snapped buffers
+                r1_orig = get_snapped_buffer(name1, bounds1, placed)
+                r2_orig = get_snapped_buffer(name2, bounds2, placed)
+                
+                # Expand them uniformly for Pass 2
+                r1 = (r1_orig[0] - buffer_expansion, r1_orig[1] - buffer_expansion, r1_orig[2] + 2*buffer_expansion, r1_orig[3] + 2*buffer_expansion)
+                r2 = (r2_orig[0] - buffer_expansion, r2_orig[1] - buffer_expansion, r2_orig[2] + 2*buffer_expansion, r2_orig[3] + 2*buffer_expansion)
+                
                 overlap = get_overlap(r1, r2)
                 if overlap:
                     ox, oy, ow, oh = overlap
                     length = max(ow, oh)
-                    if buffer_expansion > 0:
-                        seg = get_snapped_line(overlap, bounds1, bounds2, b1_orig, b2_orig, name1, name2)
-                    else:
-                        seg = get_centerline(overlap)
+                    seg = get_centerline(overlap)
                     block_intersections[name1].append((length, seg, name2))
                     
         for name, inters in block_intersections.items():
@@ -631,8 +636,7 @@ def generate_perimeter_segments(placed, pb_cx, pb_cy):
     # Pass 3: Orphans
     for name1, bounds1 in blocks.items():
         if name1 in connected: continue
-        b1 = get_block_buffer_dist(name1)
-        r1 = get_buffer(bounds1, b1)
+        r1 = get_snapped_buffer(name1, bounds1, placed)
         x, y, w, h = r1
         edges = [
             ((x, y), (x+w, y)),         # bottom
@@ -679,9 +683,7 @@ def generate_group_a_access(placed, site_w, site_l, gate_cx, gate_cy):
         if name not in GROUP_A_BLOCKS:
             continue
             
-        offset = 14 if name in RACK_BLOCKS else 8
-        bx, by, bw, bh = bounds
-        buffer_bounds = (bx - offset, by - offset, bw + 2*offset, bh + 2*offset)
+        buffer_bounds = get_snapped_buffer(name, bounds, placed)
         
         corners = get_corners_and_lines(buffer_bounds)
         

@@ -198,6 +198,8 @@ For blocks that require 2 corners (like GIS, Cooling Tower, Warehouse):
 1. First, find the closest corner to the perimeter (select randomly if there's a tie).
 2. Then, choose the **opposite diagonal corner** for the second point (no need to independently search for the closest point to the PB).
 
+**Exception (RAW Water Tank):**
+- Must pick the corner near the boundary that is **furthest from the Demi Water Tank**. If there are multiple corners equally close to the boundary, select the one that maximizes the distance to the Demi Water Tank.
 **B. Perimeter Fire Road**
 
 There will be 2 parts for B:

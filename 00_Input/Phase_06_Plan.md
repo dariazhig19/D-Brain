@@ -167,9 +167,9 @@ After unifying the main rack network, we must connect the **Flare** block to thi
 A single connected rack polyline network (centerlines, 6 m wide). The network becomes an obstacle for later perimeter/spur/stub placement.
 
 **A-1. PB Ring Road & Gate House (Special Cases)**
-- Centerline offset: **8m** from each PB block face
-  `= 4m setback (block edge → road edge) + 4m (half of 8m road width)`
-- Visual rule: `block ←4m gap— road edge ——4m—→ centerline`
+- Centerline offset: **14m** from each PB block face (as PB is a rack block)
+  `= 10m setback (block edge → road edge) + 4m (half of 8m road width)`
+- Visual rule: `block ←10m gap— road edge ——4m—→ centerline`
 - Drawn as **line segments** (graph edges) — not rasterized to cells
 - Must not intersect any placed block
 - **Routing to Gate (Boom Barrier Integration):**

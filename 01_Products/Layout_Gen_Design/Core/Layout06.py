@@ -18,7 +18,7 @@ ROAD_BUFFER       = 8    # min distance from block edge to ANY road centerline (
 BLOCK_BUFFER      = 16   # min gap between two block edges (default, no rack between)
 BOUNDARY_MARGIN   = 17   # min distance from floated block to site boundary (perimeter CL at 9m + 8m road buffer)
 BOUNDARY_TOLERANCE = 10  # magnet placer allows floated blocks to spill up to 10m outside the plot
-PB_RING_OFFSET    = 9    # ring CL from PB face — 8m road buffer + 1 cell past the buffer line on the 2m grid
+PB_RING_OFFSET    = 14   # ring CL from PB face — 14m for rack block road buffer
 PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← configurable
 PERIMETER_ROAD_W  = 8    # perimeter road width
 PERIMETER_CL_DIST = PERIMETER_SETBACK + PERIMETER_ROAD_W / 2   # 9m from boundary
@@ -1046,7 +1046,7 @@ def generate_sketch(
         ring_road = build_pb_ring_road(pb_x, pb_y, pb_w, pb_h)
 
         # Virtual exclusion zone to keep floated blocks exactly 8m away from the ring road centerline:
-        # PB_RING_OFFSET = 8m (centerline from face) + Road Buffer = 8m (keep block 8m from centerline) = 16m total from PB face
+        # PB_RING_OFFSET = 14m (centerline from face) + Road Buffer = 8m (keep block 8m from centerline) = 22m total from PB face
         ring_outer = PB_RING_OFFSET + ROAD_BUFFER   # PB ring CL + road buffer
         placed["_pb_ring_zone"] = (
             pb_x - ring_outer,

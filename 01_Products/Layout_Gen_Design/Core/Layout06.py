@@ -661,7 +661,18 @@ def generate_group_a_access(placed, site_w, site_l, gate_cx, gate_cy):
         if name == "Admin Building":
             best_corner = min(corners, key=lambda c: dist_sq(c[1][0], c[1][1], gate_cx, gate_cy))
             segments.extend(best_corner[2])
-        elif name in ("RAW Water Tank", "WT/WWT"):
+        elif name == "RAW Water Tank":
+            min_dist = min(dist_to_boundary(c[1][0], c[1][1]) for c in corners)
+            boundary_corners = [c for c in corners if dist_to_boundary(c[1][0], c[1][1]) <= min_dist + 0.1]
+            demi = placed.get("Demi Water Tank")
+            if demi:
+                demi_cx = demi[0] + demi[2]/2
+                demi_cy = demi[1] + demi[3]/2
+                best_corner = max(boundary_corners, key=lambda c: dist_sq(c[1][0], c[1][1], demi_cx, demi_cy))
+            else:
+                best_corner = boundary_corners[0]
+            segments.extend(best_corner[2])
+        elif name == "WT/WWT":
             best_corner = min(corners, key=lambda c: dist_to_boundary(c[1][0], c[1][1]))
             segments.extend(best_corner[2])
         elif name in ("GIS", "Cooling Tower", "Warehouse"):

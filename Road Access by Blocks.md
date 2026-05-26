@@ -6,13 +6,13 @@
 | 2   | GIS           | 2        | 0        | 2           | Corner near boundary (8m) + corner near PB (8m)         |                                            |
 | 3   | RAW Water     | 1        | 1        | 2           | Corner near boundary (8m) + corner near WT/WWT (6m)     | Chemical/maintenance delivery              |
 | 4   | Power Block   | 1 (ring) |          |             | 4 corners of ring road                                  |                                            |
-| 5   | Cooling Tower | 1        | 1        | 2           | Corner near perimeter (8m) + corner near PB (8m)        | 6m faces CW pump room                      |
+| 5   | Cooling Tower | 2        | 0        | 2           | Corner near perimeter (8m) + corner near PB (8m)        |                                            |
 | 6   | WT/WWT        | 1        | 1        | 2           | Corner near perimeter (8m) + corner near RAW Water (6m) | Truck-heavy chemical delivery on 8m side   |
-| 7   | Warehouse     | 1        | 1        | 2           | Corner near perimeter (8m) + corner near PB (6m)        | Wide delivery access on 8m side            |
+| 7   | Warehouse     | 2        | 0        | 2           | Corner near perimeter (8m) + corner near PB (8m)        | Wide delivery access on 8m side            |
 | 8   | Flare         | 0        | 1        | 1           | Corner on plant-facing side only                        | NEVER on boundary/leeward side (radiation) |
-| 9   | Admin         | 1        | 1        | 2           | Corner near Gate (8m) + corner opposite (6m)            | Emergency exit must be on different side   |
+| 9   | Admin         | 1        | 1        | 2           | Corner near Gate (8m) + corner opposite (6m)            |                                            |
 | 10  | Demi Water    | 0        | 1        | 1           | Corner near pump skid (PB-facing)                       | Low-traffic, single access sufficient      |
-|     | **TOTAL**     | **8**    | **11**   | **19**      | **19 access points**                                    |                                            |
+|     |               |          |          |             |                                                         |                                            |
 
 ## Access point placement rules
 

@@ -86,10 +86,6 @@ if phase == "Phase 06 (Sketch roads)":
     show_rack_w_rack  = st.sidebar.checkbox("Rack-block w-rack buffers (Case 1 6m / road 14m / Case 2 22m / b2b 28m)", value=True)
     show_b1_perimeter = st.sidebar.checkbox("Show B-1 Perimeter Segments", value=False)
     show_a2_access    = st.sidebar.checkbox("Show A-2 Group A Access", value=True)
-    show_raw      = st.sidebar.checkbox("Raw stubs (pre-prune)", value=False)
-    show_pruned   = st.sidebar.checkbox("Pruned segments (red)", value=True)
-    show_kept     = st.sidebar.checkbox("Kept graph (fire + secondary)", value=True)
-    show_traces   = st.sidebar.checkbox("2-path traces (per block)", value=False)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -143,14 +139,14 @@ if phase == "Phase 06 (Sketch roads)":
             ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
                     solid_capstyle='round', label='Perimeter CL (raw)' if k == 0 else "")
     rx, ry = zip(*ring_road)
-    ax.plot(rx, ry, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
-            linestyle='--', solid_capstyle='round', label='Ring CL (raw)')
+    ax.plot(rx, ry, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
+            solid_capstyle='round', label='A-1 PB Ring Road')
     # Gate spur (perimeter → gate point) — short primary segment
     gs = sketch.get("gate_spur") or []
     if len(gs) >= 2:
         gsx, gsy = zip(*gs)
-        ax.plot(gsx, gsy, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
-                linestyle='--', solid_capstyle='round', label='Gate spur (raw)')
+        ax.plot(gsx, gsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
+                solid_capstyle='round', label='Gate spur')
 
     # A-2 Group A Access lines
     if show_a2_access:
@@ -163,57 +159,8 @@ if phase == "Phase 06 (Sketch roads)":
     rs = sketch.get("ring_spur") or []
     if len(rs) >= 2:
         rsx, rsy = zip(*rs)
-        ax.plot(rsx, rsy, color='#888888', lw=0.5, alpha=0.5, zorder=1.5,
-                linestyle='--', solid_capstyle='round', label='Ring spur (raw)')
-
-    # Raw stubs (pre-prune) — show all stub paths regardless of pruning decision
-    stubs = sketch.get("stubs", {})
-    if show_raw:
-        first_stub = True
-        for bname, block_st in stubs.items():
-            for key, color, label_suffix in [("ring_stub", "#1abc9c", "to Ring"), ("perimeter_stub", "#2980b9", "to Perimeter")]:
-                path = block_st.get(key, [])
-                if len(path) >= 2:
-                    sx, sy = zip(*path)
-                    ax.plot(sx, sy, color=color, lw=1.0, ls=':', alpha=0.6, zorder=1.7,
-                            label=f'Raw stub ({label_suffix})' if first_stub else "")
-            first_stub = False
-
-    # Pruned segments (Step 1.5) — what got removed because no path used it
-    if show_pruned:
-        pruned_segs = sketch.get("pruned_segments", [])
-        for k, ((x1, y1), (x2, y2)) in enumerate(pruned_segs):
-            ax.plot([x1, x2], [y1, y2], color='#c0392b', lw=0.8, alpha=0.55, zorder=1.6,
-                    label='Pruned segment' if k == 0 else "")
-
-    # Kept graph (Step 1.5/1.6) — fire (primary, pink) + secondary (blue)
-    if show_kept:
-        fire_segs = sketch.get("fire_segments", [])
-        for k, ((x1, y1), (x2, y2)) in enumerate(fire_segs):
-            ax.plot([x1, x2], [y1, y2], color='#e91e8c', lw=2.0, alpha=0.95, zorder=2.5,
-                    solid_capstyle='round',
-                    label='Primary Fire Road (kept)' if k == 0 else "")
-        sec_segs = sketch.get("secondary_segs", [])
-        for k, ((x1, y1), (x2, y2)) in enumerate(sec_segs):
-            ax.plot([x1, x2], [y1, y2], color='#2980b9', lw=1.6, alpha=0.9, zorder=2.4,
-                    solid_capstyle='round',
-                    label='Secondary Stub (kept)' if k == 0 else "")
-
-    # 2-path traces (Step 1.5 verification) — overlay each block's two routes to gate
-    if show_traces:
-        traces = sketch.get("path_traces", [])
-        trace_colors = {"ring": "#16a085", "perimeter": "#f39c12"}
-        legended = {"ring": False, "perimeter": False}
-        for tr in traces:
-            via = tr["via"]
-            pts = tr["world"]
-            if len(pts) < 2:
-                continue
-            tx, ty = zip(*pts)
-            lbl = f"Path via {via}" if not legended[via] else ""
-            legended[via] = True
-            ax.plot(tx, ty, color=trace_colors[via], lw=0.7, alpha=0.6, zorder=2.6,
-                    label=lbl)
+        ax.plot(rsx, rsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
+                solid_capstyle='round', label='Ring spur')
 
     # Default buffer halos per block (visualize the magnetic snap boundaries):
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)

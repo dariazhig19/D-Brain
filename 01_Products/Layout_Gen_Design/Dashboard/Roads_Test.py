@@ -86,7 +86,8 @@ if phase == "Phase 06 (Sketch roads)":
     show_rack_w_rack  = st.sidebar.checkbox("Rack-block w-rack buffers (Case 1 6m / road 14m / Case 2 22m / b2b 28m)", value=True)
     show_b1_perimeter = st.sidebar.checkbox("Show B-1 Perimeter Segments", value=False)
     show_a1_ring      = st.sidebar.checkbox("Show A-1 PB Ring Road", value=True)
-    show_a2_access    = st.sidebar.checkbox("Show A-2 Group A Access", value=True)
+    show_a2_access    = st.sidebar.checkbox("Show A-2 Group A Access (Cleaned)", value=True)
+    show_a2_raw       = st.sidebar.checkbox("Show A-2 Group A Access (Raw)", value=False)
     show_rack_b1      = st.sidebar.checkbox("Show B-1 Racks + Final Points", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
@@ -143,20 +144,13 @@ if phase == "Phase 06 (Sketch roads)":
     if show_a1_ring:
         rx, ry = zip(*ring_road)
         ax.plot(rx, ry, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
-                solid_capstyle='round', label='A-1 PB Ring Road')
+                solid_capstyle='round', label='Ring Road (A-1)')
         # Gate spur (perimeter → gate point) — short primary segment
         gs = sketch.get("gate_spur") or []
         if len(gs) >= 2:
             gsx, gsy = zip(*gs)
             ax.plot(gsx, gsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
-                    solid_capstyle='round', label='Gate spur')
-
-    # A-2 Group A Access lines
-    if show_a2_access:
-        group_a = sketch.get("group_a_segments", [])
-        for k, ((x1, y1), (x2, y2)) in enumerate(group_a):
-            ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
-                    solid_capstyle='round', label='Group A Access' if k == 0 else "")
+                    solid_capstyle='round', label="")
 
     # Ring spur (ring → perimeter) — primary connector around blocks
     if show_a1_ring:
@@ -164,7 +158,20 @@ if phase == "Phase 06 (Sketch roads)":
         if len(rs) >= 2:
             rsx, rsy = zip(*rs)
             ax.plot(rsx, rsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
-                    solid_capstyle='round', label='Ring spur')
+                    solid_capstyle='round', label="")
+
+    # A-2 Group A Access lines
+    if show_a2_raw:
+        group_a_raw = sketch.get("group_a_segments_raw", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(group_a_raw):
+            ax.plot([x1, x2], [y1, y2], color='#e67e22', lw=2.5, linestyle=':', alpha=0.8, zorder=2.8,
+                    solid_capstyle='round', label='A-2 Access (Raw)' if k == 0 else "")
+
+    if show_a2_access:
+        group_a = sketch.get("group_a_segments", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(group_a):
+            ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
+                    solid_capstyle='round', label='A-2 Access (Cleaned)' if k == 0 else "")
 
     # Default buffer halos per block (visualize the magnetic snap boundaries):
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)

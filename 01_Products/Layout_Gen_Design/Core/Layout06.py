@@ -787,8 +787,8 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
         
         return h_merged + v_merged
 
-    segments = cleanup_parallel_segments(segments)
-    return segments
+    segments_cleaned = cleanup_parallel_segments(segments, tol=17.0)
+    return segments, segments_cleaned
 
 def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
@@ -1331,7 +1331,7 @@ def generate_sketch(
         computed_buffers = compute_snapped_buffers(placed)
         perimeter_segments = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
 
-        group_a_segments = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
+        group_a_segments_raw, group_a_segments = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []
@@ -1353,6 +1353,7 @@ def generate_sketch(
             "ring_road":       ring_road,
             "perimeter_segments": perimeter_segments,
             "group_a_segments": group_a_segments,
+            "group_a_segments_raw": group_a_segments_raw,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,

@@ -584,7 +584,7 @@ def compute_snapped_buffers(placed, tolerance=6):
 
 def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):
     """B-1 Algorithm for generating perimeter road segments from snapped block buffers."""
-    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Gate House", "Power Block"}
+    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
     blocks = {name: bounds for name, bounds in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
         
     def get_overlap(r1, r2, tol=0.1):
@@ -757,8 +757,11 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
         peri_y = pymax if side == "N" else pymin
         x_min = max(rxmin, pxmin)
         x_max = min(rxmax, pxmax)
-        target = max(x_min, min(x_max, gx))
-        for dx in SHIFTS:
+        # Snap spur start to corner or center of ring road side closest to gate
+        x_center = (rxmin + rxmax) / 2
+        snap_candidates = sorted([rxmin, x_center, rxmax], key=lambda x: abs(x - gx))
+        target = max(x_min, min(x_max, snap_candidates[0]))
+        for dx in [0] + SHIFTS:
             x = target + dx
             if x < x_min or x > x_max:
                 continue
@@ -772,8 +775,11 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     peri_x = pxmax if side == "E" else pxmin
     y_min = max(rymin, pymin)
     y_max = min(rymax, pymax)
-    target = max(y_min, min(y_max, gy))
-    for dy in SHIFTS:
+    # Snap spur start to corner or center of ring road side closest to gate
+    y_center = (rymin + rymax) / 2
+    snap_candidates = sorted([rymin, y_center, rymax], key=lambda y: abs(y - gy))
+    target = max(y_min, min(y_max, snap_candidates[0]))
+    for dy in [0] + SHIFTS:
         y = target + dy
         if y < y_min or y > y_max:
             continue

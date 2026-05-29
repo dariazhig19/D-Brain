@@ -981,6 +981,9 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
                     v_merged[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
                     merged = True
                     break
+        if not merged:
+            v_merged.append(l)
+            
     # Add back the lines that snapped to the PB network
     h_merged.extend(horiz_snapped)
     v_merged.extend(vert_snapped)

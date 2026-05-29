@@ -793,7 +793,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
+def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
     if ref_segs is None:
         ref_segs = []
         
@@ -838,65 +838,105 @@ def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
     horiz = snap_to_ref(horiz, ref_horiz, True)
     vert = snap_to_ref(vert, ref_vert, False)
             
-    # Priority 3: Self-merge
-    def process(lines, is_horiz):
-        changed = True
-        while changed:
-            changed = False
-            for i in range(len(lines)):
-                for j in range(i+1, len(lines)):
-                    l1, l2 = lines[i], lines[j]
-                    if is_horiz:
-                        if 0.1 < abs(l1[0][1] - l2[0][1]) <= tol:
-                            overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
-                            if overlap > -0.1:
-                                avg_y = (l1[0][1] + l2[0][1]) / 2
-                                lines[i] = [(l1[0][0], avg_y), (l1[1][0], avg_y)]
-                                lines[j] = [(l2[0][0], avg_y), (l2[1][0], avg_y)]
-                                changed = True
-                                break
-                    else:
-                        if 0.1 < abs(l1[0][0] - l2[0][0]) <= tol:
-                            overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
-                            if overlap > -0.1:
-                                avg_x = (l1[0][0] + l2[0][0]) / 2
-                                lines[i] = [(avg_x, l1[0][1]), (avg_x, l1[1][1])]
-                                lines[j] = [(avg_x, l2[0][1]), (avg_x, l2[1][1])]
-                                changed = True
-                                break
-                if changed: break
+    # Priority 3: Outward Snapping Sweep
+    def process_outward(lines, is_horiz):
+        if not lines: return []
+        mid_y = sl / 2
+        mid_x = sw / 2
         
-        # Merge collinear overlapping
-        res = []
-        for l in lines:
-            if not res:
-                res.append(l)
-                continue
-            merged = False
-            for i, r in enumerate(res):
-                if is_horiz:
-                    if abs(l[0][1] - r[0][1]) < 0.1:
-                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
+        if is_horiz:
+            # North lines (Y >= mid_y)
+            north = [l for l in lines if l[0][1] >= mid_y]
+            # South lines (Y < mid_y)
+            south = [l for l in lines if l[0][1] < mid_y]
+            
+            # For North: Sweep Down (highest Y first)
+            north.sort(key=lambda l: l[0][1], reverse=True)
+            for i in range(len(north)):
+                for j in range(i+1, len(north)):
+                    l1, l2 = north[i], north[j]
+                    if 0 <= l1[0][1] - l2[0][1] <= tol:
+                        overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
                         if overlap > -0.1:
-                            res[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
-                            merged = True
-                            break
-                else:
-                    if abs(l[0][0] - r[0][0]) < 0.1:
-                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
+                            north[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+                            
+            # For South: Sweep Up (lowest Y first)
+            south.sort(key=lambda l: l[0][1])
+            for i in range(len(south)):
+                for j in range(i+1, len(south)):
+                    l1, l2 = south[i], south[j]
+                    if 0 <= l2[0][1] - l1[0][1] <= tol:
+                        overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
                         if overlap > -0.1:
-                            res[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
-                            merged = True
-                            break
-            if not merged:
-                res.append(l)
-        return res
-
-    h_merged = process(horiz, True)
-    h_merged = process(h_merged, True) # double pass for chain merges
-    v_merged = process(vert, False)
-    v_merged = process(v_merged, False)
-    
+                            south[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+                            
+            return north + south
+            
+        else:
+            # East lines (X >= mid_x)
+            east = [l for l in lines if l[0][0] >= mid_x]
+            # West lines (X < mid_x)
+            west = [l for l in lines if l[0][0] < mid_x]
+            
+            # For East: Sweep Left (highest X first)
+            east.sort(key=lambda l: l[0][0], reverse=True)
+            for i in range(len(east)):
+                for j in range(i+1, len(east)):
+                    l1, l2 = east[i], east[j]
+                    if 0 <= l1[0][0] - l2[0][0] <= tol:
+                        overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
+                        if overlap > -0.1:
+                            east[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+                            
+            # For West: Sweep Right (lowest X first)
+            west.sort(key=lambda l: l[0][0])
+            for i in range(len(west)):
+                for j in range(i+1, len(west)):
+                    l1, l2 = west[i], west[j]
+                    if 0 <= l2[0][0] - l1[0][0] <= tol:
+                        overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
+                        if overlap > -0.1:
+                            west[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+                            
+            return east + west
+            
+    # Apply snapping sweeps
+    horiz = process_outward(horiz, True)
+    vert = process_outward(vert, False)
+        
+    # Merge collinear overlapping again after sweeps
+    h_merged = []
+    for l in horiz:
+        if not h_merged:
+            h_merged.append(l)
+            continue
+        merged = False
+        for i, r in enumerate(h_merged):
+            if abs(l[0][1] - r[0][1]) < 0.1:
+                overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
+                if overlap > -0.1:
+                    h_merged[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
+                    merged = True
+                    break
+        if not merged:
+            h_merged.append(l)
+            
+    v_merged = []
+    for l in vert:
+        if not v_merged:
+            v_merged.append(l)
+            continue
+        merged = False
+        for i, r in enumerate(v_merged):
+            if abs(l[0][0] - r[0][0]) < 0.1:
+                overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
+                if overlap > -0.1:
+                    v_merged[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
+                    merged = True
+                    break
+        if not merged:
+            v_merged.append(l)
+            
     return h_merged + v_merged
 
 def generate_sketch(
@@ -1384,7 +1424,7 @@ def generate_sketch(
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, ref_segs=pb_network, tol=17.0)
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, ref_segs=pb_network, tol=17.0)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

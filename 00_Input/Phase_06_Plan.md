@@ -216,6 +216,7 @@ There will be 2 parts for B:
 - Evaluates horizontal and vertical road segments.
 - If two parallel segments overlap and their distance is ≤ 10 meters, they are merged.
 - **Snapping:** The algorithm snaps both segments together to form one smooth, continuous centerline at their exact average position.
+- **Exception (PB Ring Road):** The Power Block Ring Road is structurally fixed and is strictly **excluded** from this merging algorithm; its position will never be shifted.
 - *Implementation detail: This `cleanup_parallel_segments` algorithm ensures clean routing (e.g., smoothly aligning the GIS and Warehouse access lines).*
 
 ### 1.6 Road Classification

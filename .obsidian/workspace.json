@@ -246,8 +246,10 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "d1bff7cf6a0db9fc",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06_debug.cpython-314.pyc",
+    "01_Products/Layout_Gen_Design/Core/Layout06_debug.py",
     "Pasted image 20260526175639.png",
     "Pasted image 20260526170037.png",
     "Road Access by Blocks.md",
@@ -274,9 +276,7 @@
     "01_Products/Layout_Gen_Design/read_requirements.py",
     "find_excel.py",
     "01_Products/Layout_Gen_Design/test_exception.py",
-    "01_Products/Layout_Gen_Design/test_placement.py",
     "00_Input/2026-05-14 - Session Report.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Output Example.png",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
     "04_Reports/Daily/Daily_Report_20260513.md",

@@ -177,10 +177,7 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
   2. Projects the two road buffer corners of the selected Gate House side onto this exit line.
   3. Routes: PB Ring Road → *unprojectable* corner → Boom Barrier midpoint (perfect 90-degree crossing) → *projectable* corner → Gate.
   4. **Gate Death Zone:**
-     - Extend the road buffer line from step 2 in both directions to the plot boundaries, dividing the site into two surfaces.
-     - Select the surface that contains the physical Gate.
-     - The Boom Barrier line splits this surface into two halves.
-     - Select the half that contains the *projectable* corner from step 2.
+     - Take the "exit line" and use it to form a rectangle.
      - This resulting rectangular area is the "Gate Death Zone" (to be used later when placing the Perimeter Fire Road).
 
 **A-2. Block Access Logic (8m Roads)**

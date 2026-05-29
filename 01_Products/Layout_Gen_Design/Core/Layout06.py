@@ -731,6 +731,20 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
             opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
             opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
             segments.extend(opp_corner[2])
+            
+            # For Warehouse: also add all 4 individual buffer lines explicitly
+            # so the PB-facing line has a chance to snap in Priority 1 cleanup
+            if name == "Warehouse":
+                x, y, w, h = buffer_bounds
+                all_lines = [
+                    ((x, y), (x + w, y)),       # bottom
+                    ((x, y + h), (x + w, y + h)), # top
+                    ((x, y), (x, y + h)),         # left
+                    ((x + w, y), (x + w, y + h)), # right
+                ]
+                for seg in all_lines:
+                    if seg not in segments:
+                        segments.append(seg)
 
     return segments
 
@@ -771,8 +785,14 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
         peri_y = pymax if side == "N" else pymin
         x_min = max(rxmin, pxmin)
         x_max = min(rxmax, pxmax)
-        target = max(x_min, min(x_max, gx))
-        for dx in SHIFTS:
+        # Snap spur start to: left corner, center, or right corner of the ring road side
+        x_center = (rxmin + rxmax) / 2
+        snap_candidates = sorted(
+            [rxmin, x_center, rxmax],
+            key=lambda x: abs(x - gx)
+        )
+        target = max(x_min, min(x_max, snap_candidates[0]))
+        for dx in [0] + SHIFTS:
             x = target + dx
             if x < x_min or x > x_max:
                 continue
@@ -786,8 +806,14 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     peri_x = pxmax if side == "E" else pxmin
     y_min = max(rymin, pymin)
     y_max = min(rymax, pymax)
-    target = max(y_min, min(y_max, gy))
-    for dy in SHIFTS:
+    # Snap spur start to: bottom corner, center, or top corner of the ring road side
+    y_center = (rymin + rymax) / 2
+    snap_candidates = sorted(
+        [rymin, y_center, rymax],
+        key=lambda y: abs(y - gy)
+    )
+    target = max(y_min, min(y_max, snap_candidates[0]))
+    for dy in [0] + SHIFTS:
         y = target + dy
         if y < y_min or y > y_max:
             continue

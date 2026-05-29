@@ -172,6 +172,7 @@ A single connected rack polyline network (centerlines, 6 m wide). The network be
 - Visual rule: `block ←10m gap— road edge ——4m—→ centerline`
 - Drawn as **line segments** (graph edges) — not rasterized to cells
 - Must not intersect any placed block
+- **Ring Road Spur Anchor:** The spur that connects the PB Ring Road to the Perimeter Fire Road starts from the **corner or center of the PB Ring Road side closest to the Gate House** (three snap candidates: left corner, center, right corner — pick the one with the smallest distance to the Gate). If all three are blocked by fixed anchors, slide laterally.
 - **Routing to Gate (Boom Barrier Integration):**
   1. Identifies the "exit line" between the Boom Barrier midpoint and the physical Gate.
   2. Projects the two road buffer corners of the selected Gate House side onto this exit line.
@@ -271,8 +272,4 @@ Step 2 knows Step 1's road network, so buildings work around committed roads.
 
 ---
 
-## Open Questions
 
-- [ ] Which blocks should have **fixed** vs **compressible** buffers?
-- [ ] Stub routing: simple detour around block bounding box, or full A* on 2m grid?
-- [ ] When ring and perimeter merge: snap to one centerline or average?

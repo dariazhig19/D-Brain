@@ -813,26 +813,35 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
         elif abs(x1 - x2) < 0.1:
             vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
             
-    # Priority 1 & 2: Snap to PB network and filter out
+    # Priority 1 & 2: Snap to PB network and filter out from Priority 3
     def snap_to_ref(lines, refs, is_horiz):
-        kept = []
+        kept_for_p3 = []
+        snapped_final = []
         for l in lines:
             snapped = False
             for r in refs:
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
-                        snapped = True
-                        break
+                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
+                        if overlap > -0.1:
+                            l = [(l[0][0], r[0][1]), (l[1][0], r[0][1])]
+                            snapped = True
+                            break
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
-                        snapped = True
-                        break
-            if not snapped:
-                kept.append(l)
-        return kept
+                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
+                        if overlap > -0.1:
+                            l = [(r[0][0], l[0][1]), (r[0][0], l[1][1])]
+                            snapped = True
+                            break
+            if snapped:
+                snapped_final.append(l)
+            else:
+                kept_for_p3.append(l)
+        return kept_for_p3, snapped_final
         
-    horiz = snap_to_ref(horiz, ref_horiz, True)
-    vert = snap_to_ref(vert, ref_vert, False)
+    horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
+    vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
             
     # Priority 3: Outward Snapping Sweep
     def process_outward(lines, is_horiz):
@@ -922,8 +931,9 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                     v_merged[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
                     merged = True
                     break
-        if not merged:
-            v_merged.append(l)
+    # Add back the lines that snapped to the PB network
+    h_merged.extend(horiz_snapped)
+    v_merged.extend(vert_snapped)
             
     return h_merged + v_merged
 

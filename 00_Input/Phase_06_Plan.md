@@ -213,8 +213,7 @@ There will be 2 parts for B:
 
 
 **B-2. 10m Road Cleanup (Parallel Segment Merging)**
-- Evaluates horizontal and vertical road segments (both A-2 and B-1).
-- **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line (no physical overlap in length required).
+- **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel, overlap in length, and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line.
 - **Priority 2 (Filter):** Any segment that successfully merges with the PB network is filtered out from further merging.
 - **Priority 3 (Outward Snapping Sweep):** Take the remaining, unmerged A-2/B-1 segments and process them from the outside in to ensure roads only move *away* from block footprints (outside the road buffer) and never inside:
   1. **Top Sweep:** Sort horizontal lines by highest Y. Process downwards. If a line is within 17m below (even if not overlapping), snap it UP to the higher line.

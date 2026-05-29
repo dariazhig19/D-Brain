@@ -718,77 +718,7 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
             opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
             segments.extend(opp_corner[2])
 
-    def cleanup_parallel_segments(segs, tol=10.0):
-        horiz = []
-        vert = []
-        for (x1, y1), (x2, y2) in segs:
-            if abs(y1 - y2) < 0.1:
-                horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
-            elif abs(x1 - x2) < 0.1:
-                vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
-                
-        def process(lines, is_horiz):
-            changed = True
-            while changed:
-                changed = False
-                for i in range(len(lines)):
-                    for j in range(i+1, len(lines)):
-                        l1, l2 = lines[i], lines[j]
-                        if is_horiz:
-                            if 0.1 < abs(l1[0][1] - l2[0][1]) <= tol:
-                                overlap = max(0, min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0]))
-                                if overlap > -0.1:
-                                    avg_y = (l1[0][1] + l2[0][1]) / 2
-                                    lines[i] = [(l1[0][0], avg_y), (l1[1][0], avg_y)]
-                                    lines[j] = [(l2[0][0], avg_y), (l2[1][0], avg_y)]
-                                    changed = True
-                                    break
-                        else:
-                            if 0.1 < abs(l1[0][0] - l2[0][0]) <= tol:
-                                overlap = max(0, min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1]))
-                                if overlap > -0.1:
-                                    avg_x = (l1[0][0] + l2[0][0]) / 2
-                                    lines[i] = [(avg_x, l1[0][1]), (avg_x, l1[1][1])]
-                                    lines[j] = [(avg_x, l2[0][1]), (avg_x, l2[1][1])]
-                                    changed = True
-                                    break
-                    if changed: break
-            
-            # Merge collinear overlapping
-            res = []
-            for l in lines:
-                if not res:
-                    res.append(l)
-                    continue
-                merged = False
-                for i, r in enumerate(res):
-                    if is_horiz:
-                        if abs(l[0][1] - r[0][1]) < 0.1:
-                            overlap = max(0, min(l[1][0], r[1][0]) - max(l[0][0], r[0][0]))
-                            if overlap > -0.1:
-                                res[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
-                                merged = True
-                                break
-                    else:
-                        if abs(l[0][0] - r[0][0]) < 0.1:
-                            overlap = max(0, min(l1[1][1], r[1][1]) - max(l[0][1], r[0][1]))
-                            if overlap > -0.1:
-                                res[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
-                                merged = True
-                                break
-                if not merged:
-                    res.append(l)
-            return res
-
-        h_merged = process(horiz, True)
-        h_merged = process(h_merged, True) # double pass for chain merges
-        v_merged = process(vert, False)
-        v_merged = process(v_merged, False)
-        
-        return h_merged + v_merged
-
-    segments_cleaned = cleanup_parallel_segments(segments, tol=17.0)
-    return segments, segments_cleaned
+    return segments
 
 def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
@@ -863,6 +793,75 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
+def cleanup_parallel_segments(segs, tol=17.0):
+    horiz = []
+    vert = []
+    for (x1, y1), (x2, y2) in segs:
+        if abs(y1 - y2) < 0.1:
+            horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
+        elif abs(x1 - x2) < 0.1:
+            vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
+            
+    def process(lines, is_horiz):
+        changed = True
+        while changed:
+            changed = False
+            for i in range(len(lines)):
+                for j in range(i+1, len(lines)):
+                    l1, l2 = lines[i], lines[j]
+                    if is_horiz:
+                        if 0.1 < abs(l1[0][1] - l2[0][1]) <= tol:
+                            overlap = max(0, min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0]))
+                            if overlap > -0.1:
+                                avg_y = (l1[0][1] + l2[0][1]) / 2
+                                lines[i] = [(l1[0][0], avg_y), (l1[1][0], avg_y)]
+                                lines[j] = [(l2[0][0], avg_y), (l2[1][0], avg_y)]
+                                changed = True
+                                break
+                    else:
+                        if 0.1 < abs(l1[0][0] - l2[0][0]) <= tol:
+                            overlap = max(0, min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1]))
+                            if overlap > -0.1:
+                                avg_x = (l1[0][0] + l2[0][0]) / 2
+                                lines[i] = [(avg_x, l1[0][1]), (avg_x, l1[1][1])]
+                                lines[j] = [(avg_x, l2[0][1]), (avg_x, l2[1][1])]
+                                changed = True
+                                break
+                if changed: break
+        
+        # Merge collinear overlapping
+        res = []
+        for l in lines:
+            if not res:
+                res.append(l)
+                continue
+            merged = False
+            for i, r in enumerate(res):
+                if is_horiz:
+                    if abs(l[0][1] - r[0][1]) < 0.1:
+                        overlap = max(0, min(l[1][0], r[1][0]) - max(l[0][0], r[0][0]))
+                        if overlap > -0.1:
+                            res[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
+                            merged = True
+                            break
+                else:
+                    if abs(l[0][0] - r[0][0]) < 0.1:
+                        overlap = max(0, min(l1[1][1], r[1][1]) - max(l[0][1], r[0][1]))
+                        if overlap > -0.1:
+                            res[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
+                            merged = True
+                            break
+            if not merged:
+                res.append(l)
+        return res
+
+    h_merged = process(horiz, True)
+    h_merged = process(h_merged, True) # double pass for chain merges
+    v_merged = process(vert, False)
+    v_merged = process(v_merged, False)
+    
+    return h_merged + v_merged
+
 def generate_sketch(
     site_w, site_l, wind_dir,
     gate_side="N", gate_ratio=0.5,
@@ -1329,9 +1328,13 @@ def generate_sketch(
                 rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
 
         computed_buffers = compute_snapped_buffers(placed)
-        perimeter_segments = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
+        perimeter_segments_raw = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
 
-        group_a_segments_raw, group_a_segments = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
+        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
+
+        # B-2 Clean up parallel segments on both A-2 and B-1
+        all_segments_raw = perimeter_segments_raw + group_a_segments_raw
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, tol=17.0)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []
@@ -1351,9 +1354,9 @@ def generate_sketch(
             "blocks":          blocks,
             "boom_barrier":    boom_barrier,
             "ring_road":       ring_road,
-            "perimeter_segments": perimeter_segments,
-            "group_a_segments": group_a_segments,
+            "perimeter_segments_raw": perimeter_segments_raw,
             "group_a_segments_raw": group_a_segments_raw,
+            "all_segments_cleaned": all_segments_cleaned,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,

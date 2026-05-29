@@ -221,13 +221,6 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
             if not _within_relaxed_bounds(x, y, w, h, sw, sl):
                 continue
             if _overlaps_any(name, placed, x, y, w, h):
-                if name == "Cooling Tower":
-                    for bname, (bx, by, bw, bh) in placed.items():
-                        if bname == "_gate_death_zone" and name not in ("Cooling Tower", "WT/WWT", "Warehouse", "Flare", "Admin Building", "Demi Water Tank"):
-                            continue
-                        current_gap = 0 if bname.startswith("_") else pair_min_gap(name, bname)
-                        if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
-                            print(f"Cooling Tower at {x},{y} overlaps {bname}")
                 continue
             cands.append((x, y))
     return cands

@@ -793,7 +793,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
+def cleanup_parallel_segments(segs, sw, sl, blocks, ref_segs=None, tol=17.0, gdz=None):
     if ref_segs is None:
         ref_segs = []
         
@@ -813,15 +813,27 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
         elif abs(x1 - x2) < 0.1:
             vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
             
+    def get_outward_dir(l, is_horiz):
+        val = l[0][1] if is_horiz else l[0][0]
+        for b in blocks:
+            buf = 14 if b["name"] in ["Power Block", "Cooling Tower", "Flare"] else 8
+            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+            if is_horiz:
+                if abs(val - min(sl, by + bh + buf)) < 0.1: return 1
+                if abs(val - max(0, by - buf)) < 0.1: return -1
+            else:
+                if abs(val - min(sw, bx + bw + buf)) < 0.1: return 1
+                if abs(val - max(0, bx - buf)) < 0.1: return -1
+        return 1 if val >= (sl/2 if is_horiz else sw/2) else -1
+
     # Priority 1 & 2: Snap to PB network and filter out from Priority 3
     def snap_to_ref(lines, refs, is_horiz):
         kept_for_p3 = []
         snapped_final = []
-        mid_y = sl / 2
-        mid_x = sw / 2
         
         for l in lines:
             snapped = False
+            outward = get_outward_dir(l, is_horiz)
             for r in refs:
                 # Exception: If reference line is in the Gate Death Zone, do not snap to it
                 if gdz is not None:
@@ -834,8 +846,8 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
                         # Ensure we only snap outward
-                        if l[0][1] >= mid_y and r[0][1] < l[0][1]: continue
-                        if l[0][1] < mid_y and r[0][1] > l[0][1]: continue
+                        if outward == 1 and r[0][1] < l[0][1]: continue
+                        if outward == -1 and r[0][1] > l[0][1]: continue
                         
                         overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
@@ -845,8 +857,8 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
                         # Ensure we only snap outward
-                        if l[0][0] >= mid_x and r[0][0] < l[0][0]: continue
-                        if l[0][0] < mid_x and r[0][0] > l[0][0]: continue
+                        if outward == 1 and r[0][0] < l[0][0]: continue
+                        if outward == -1 and r[0][0] > l[0][0]: continue
                         
                         overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
@@ -896,8 +908,8 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
                                 p[1] = (new_val, y)
         
         if is_horiz:
-            north = [l for l in lines if l[0][1] >= mid_y]
-            south = [l for l in lines if l[0][1] < mid_y]
+            north = [l for l in lines if get_outward_dir(l, True) == 1]
+            south = [l for l in lines if get_outward_dir(l, True) == -1]
             
             north.sort(key=lambda l: l[0][1], reverse=True)
             for i in range(len(north)):
@@ -922,8 +934,8 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
             return north + south
             
         else:
-            east = [l for l in lines if l[0][0] >= mid_x]
-            west = [l for l in lines if l[0][0] < mid_x]
+            east = [l for l in lines if get_outward_dir(l, False) == 1]
+            west = [l for l in lines if get_outward_dir(l, False) == -1]
             
             east.sort(key=lambda l: l[0][0], reverse=True)
             for i in range(len(east)):
@@ -1475,7 +1487,7 @@ def generate_sketch(
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, blocks, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

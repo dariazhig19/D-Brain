@@ -706,6 +706,10 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
         if name == "Admin Building":
             best_corner = min(corners, key=lambda c: dist_sq(c[1][0], c[1][1], gate_cx, gate_cy))
             segments.extend(best_corner[2])
+            # Also add the diagonal opposite corner so all 4 buffer lines are drawn
+            opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
+            opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
+            segments.extend(opp_corner[2])
         elif name == "RAW Water Tank":
             min_dist = min(dist_to_boundary(c[1][0], c[1][1]) for c in corners)
             boundary_corners = [c for c in corners if dist_to_boundary(c[1][0], c[1][1]) <= min_dist + 0.1]

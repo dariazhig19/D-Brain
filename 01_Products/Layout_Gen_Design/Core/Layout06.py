@@ -872,94 +872,23 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
     horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
     vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
             
-    # Priority 3: Outward Snapping Sweep
-    def process_outward(lines, perp_lines, is_horiz):
-        if not lines: return lines
-        mid_y = sl / 2
-        mid_x = sw / 2
-        
-        # Helper to extend perpendicular lines when a line moves
-        def extend_perp(old_val, new_val, fixed_range):
-            for p in perp_lines:
-                if is_horiz:
-                    # p is vertical: [(x, y1), (x, y2)]
-                    # Check if p touches old_val (Y) and falls within fixed_range (X)
-                    if abs(p[0][0] - p[1][0]) < 0.1: # sanity check
-                        x = p[0][0]
-                        min_x, max_x = min(fixed_range[0], fixed_range[1]), max(fixed_range[0], fixed_range[1])
-                        # If p's X is within the moved horizontal line's X bounds
-                        if min_x - 0.1 <= x <= max_x + 0.1:
-                            if abs(p[0][1] - old_val) < 0.1:
-                                p[0] = (x, new_val)
-                            elif abs(p[1][1] - old_val) < 0.1:
-                                p[1] = (x, new_val)
-                else:
-                    # p is horizontal: [(x1, y), (x2, y)]
-                    # Check if p touches old_val (X) and falls within fixed_range (Y)
-                    if abs(p[0][1] - p[1][1]) < 0.1: # sanity check
-                        y = p[0][1]
-                        min_y, max_y = min(fixed_range[0], fixed_range[1]), max(fixed_range[0], fixed_range[1])
-                        if min_y - 0.1 <= y <= max_y + 0.1:
-                            if abs(p[0][0] - old_val) < 0.1:
-                                p[0] = (new_val, y)
-                            elif abs(p[1][0] - old_val) < 0.1:
-                                p[1] = (new_val, y)
-        
-        if is_horiz:
-            north = [l for l in lines if get_outward_dir(l, True) == 1]
-            south = [l for l in lines if get_outward_dir(l, True) == -1]
-            
-            north.sort(key=lambda l: l[0][1], reverse=True)
-            for i in range(len(north)):
-                for j in range(i+1, len(north)):
-                    l1, l2 = north[i], north[j]
-                    if 0 <= l1[0][1] - l2[0][1] <= tol:
-                        old_y = l2[0][1]
-                        new_y = l1[0][1]
-                        north[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
-                        extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
-                            
-            south.sort(key=lambda l: l[0][1])
-            for i in range(len(south)):
-                for j in range(i+1, len(south)):
-                    l1, l2 = south[i], south[j]
-                    if 0 <= l2[0][1] - l1[0][1] <= tol:
-                        old_y = l2[0][1]
-                        new_y = l1[0][1]
-                        south[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
-                        extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
-                            
-            return north + south
-            
-        else:
-            east = [l for l in lines if get_outward_dir(l, False) == 1]
-            west = [l for l in lines if get_outward_dir(l, False) == -1]
-            
-            east.sort(key=lambda l: l[0][0], reverse=True)
-            for i in range(len(east)):
-                for j in range(i+1, len(east)):
-                    l1, l2 = east[i], east[j]
-                    if 0 <= l1[0][0] - l2[0][0] <= tol:
-                        old_x = l2[0][0]
-                        new_x = l1[0][0]
-                        east[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
-                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
-                            
-            west.sort(key=lambda l: l[0][0])
-            for i in range(len(west)):
-                for j in range(i+1, len(west)):
-                    l1, l2 = west[i], west[j]
-                    if 0 <= l2[0][0] - l1[0][0] <= tol:
-                        old_x = l2[0][0]
-                        new_x = l1[0][0]
-                        west[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
-                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
-                            
-            return east + west
-            
-    # Apply snapping sweeps (pass the OTHER list to extend_perp)
-    horiz = process_outward(horiz, vert, True)
-    vert = process_outward(vert, horiz, False)
+    # Priority 3: Simplified sweep.
+    # - Horizontal: Top sweep only. Sort by highest Y. Snap lower lines UP within 17m.
+    # - Vertical:   Left sweep only. Sort by lowest X. Snap rightward lines LEFT within 17m.
+    # Each line moves independently. No corner extension.
+    horiz.sort(key=lambda l: l[0][1], reverse=True)
+    for i in range(len(horiz)):
+        for j in range(i + 1, len(horiz)):
+            l1, l2 = horiz[i], horiz[j]
+            if 0 <= l1[0][1] - l2[0][1] <= tol:
+                horiz[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+
+    vert.sort(key=lambda l: l[0][0])
+    for i in range(len(vert)):
+        for j in range(i + 1, len(vert)):
+            l1, l2 = vert[i], vert[j]
+            if 0 <= l2[0][0] - l1[0][0] <= tol:
+                vert[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
         
     # Merge collinear overlapping again after sweeps
     h_merged = []

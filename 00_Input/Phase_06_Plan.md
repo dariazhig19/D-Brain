@@ -213,11 +213,10 @@ There will be 2 parts for B:
 **B-2. 10m Road Cleanup (Parallel Segment Merging)**
 - **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel, overlap in length, and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line. *(Exception: If the reference PB spur line lays inside the Gate Death Zone, do not snap to it).*
 - **Priority 2 (Filter):** Any segment that successfully merges with the PB network is filtered out from further merging.
-- **Priority 3 (Outward Snapping Sweep):** Take the remaining, unmerged A-2/B-1 segments and process them from the outside in to ensure roads only move *away* from block footprints (outside the road buffer) and never inside:
-  1. **Top Sweep:** Sort horizontal lines by highest Y. Process downwards. If a line is within 17m below (even if not overlapping), snap it UP to the higher line.
-  2. **Bottom Sweep:** Sort horizontal lines by lowest Y. Process upwards. If a line is within 17m above (even if not overlapping), snap it DOWN to the lower line.
-  3. **Left Sweep:** Sort vertical lines by lowest X. Process rightwards. If a line is within 17m right (even if not overlapping), snap it LEFT to the outer line.
-  4. **Right Sweep:** Sort vertical lines by highest X. Process leftwards. If a line is within 17m left (even if not overlapping), snap it RIGHT to the outer line.
+- **Priority 3 (Simplified Sweep):** Each line snaps independently — no corner extension (if one line of a block moves, the partner lines stay put).
+  1. **Top Sweep (Horizontal):** Sort all horizontal lines by highest Y. For each anchor line, snap any line within 17m below it UP to the anchor Y. 
+  2. **Left Sweep (Vertical):** Sort all vertical lines by lowest X. For each anchor line, snap any line within 17m to its right LEFT to the anchor X.
+  *(No Bottom or Right sweeps — unnecessary.)*
 
 
 

@@ -504,21 +504,18 @@ def build_gate_spur(site_w, site_l, gate_pt):
 _FIXED_BLOCKS = ("Gate House", "GIS", "RAW Water Tank")
 
 
-
 def _spur_exclusion_rect(line, buffer=ROAD_BUFFER):
+    """List of axis-aligned bounding boxes for each segment of a spur line, inflated by `buffer`.
+    Used as virtual exclusion zones during floated-block placement."""
     if not line or len(line) < 2:
         return []
     rects = []
     for i in range(len(line)-1):
-        p1 = line[i]
-        p2 = line[i+1]
-        x0 = min(p1[0], p2[0]) - buffer
-        x1 = max(p1[0], p2[0]) + buffer
-        y0 = min(p1[1], p2[1]) - buffer
-        y1 = max(p1[1], p2[1]) + buffer
-        rects.append((x0, y0, x1-x0, y1-y0))
+        p1, p2 = line[i], line[i+1]
+        x0, x1 = min(p1[0], p2[0]) - buffer, max(p1[0], p2[0]) + buffer
+        y0, y1 = min(p1[1], p2[1]) - buffer, max(p1[1], p2[1]) + buffer
+        rects.append((x0, y0, x1 - x0, y1 - y0))
     return rects
-
 
 
 def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
@@ -950,9 +947,9 @@ def generate_sketch(
             ring_spur = build_ring_spur(sw, sl, ring_road, fixed_blocks_so_far, gate_pt)
         for zone_name, line in (("_gate_spur_zone", gate_spur),
                                 ("_ring_spur_zone", ring_spur)):
-            rect = _spur_exclusion_rect(line, buffer=ROAD_BUFFER)
-            if rect:
-                placed[zone_name] = rect
+            rects = _spur_exclusion_rect(line, buffer=ROAD_BUFFER)
+            for i, rect in enumerate(rects):
+                placed[f"{zone_name}_{i}"] = rect
 
         # 4. Floated blocks — magnet placement with zone rules.
         gh_x, gh_y = placed["Gate House"][:2]

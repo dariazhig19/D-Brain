@@ -109,7 +109,7 @@ def _overlaps_any(name, placed, x, y, w, h):
     8m road buffer; a block touching the zone edge is already 8m from the
     road centerline."""
     for bname, (bx, by, bw, bh) in placed.items():
-        if bname == "_gate_death_zone" and name not in ("Cooling Tower", "WT/WWT", "Warehouse", "Flare", "Admin Building", "Demi Water Tank"):
+        if bname == "_gate_death_zone" and name in ("Cooling Tower", "WT/WWT", "Warehouse", "Flare", "Admin Building", "Demi Water Tank"):
             continue
         current_gap = 0 if bname.startswith("_") else pair_min_gap(name, bname)
         if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
@@ -221,6 +221,13 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
             if not _within_relaxed_bounds(x, y, w, h, sw, sl):
                 continue
             if _overlaps_any(name, placed, x, y, w, h):
+                if name == "Cooling Tower":
+                    for bname, (bx, by, bw, bh) in placed.items():
+                        if bname == "_gate_death_zone" and name not in ("Cooling Tower", "WT/WWT", "Warehouse", "Flare", "Admin Building", "Demi Water Tank"):
+                            continue
+                        current_gap = 0 if bname.startswith("_") else pair_min_gap(name, bname)
+                        if _overlaps(x, y, w, h, bx, by, bw, bh, current_gap):
+                            print(f"Cooling Tower at {x},{y} overlaps {bname}")
                 continue
             cands.append((x, y))
     return cands
@@ -915,19 +922,22 @@ def generate_sketch(
                         exit_helper, other_corner = p2, p1
 
         if bb_mid and exit_helper and other_corner:
-            # Calculate Gate Death Zone
-            if bb_edge in ("N", "S"):
-                gdz_x_min = bb_mid[0] if other_corner[0] >= bb_mid[0] else 0
-                gdz_x_max = sw if other_corner[0] >= bb_mid[0] else bb_mid[0]
-                gdz_y_min = bb_mid[1] if gate_pt[1] >= bb_mid[1] else 0
-                gdz_y_max = sl if gate_pt[1] >= bb_mid[1] else bb_mid[1]
+            # Calculate Gate Death Zone (only if gate and gate house are on the same edge)
+            if gate_side == gh_edge:
+                if bb_edge in ("N", "S"):
+                    gdz_x_min = min(bb_mid[0], gate_pt[0], other_corner[0]) - 8
+                    gdz_x_max = max(bb_mid[0], gate_pt[0], other_corner[0]) + 8
+                    gdz_y_min = min(bb_mid[1], gate_pt[1], other_corner[1]) - 8
+                    gdz_y_max = max(bb_mid[1], gate_pt[1], other_corner[1]) + 8
+                else:
+                    gdz_x_min = min(bb_mid[0], gate_pt[0], other_corner[0]) - 8
+                    gdz_x_max = max(bb_mid[0], gate_pt[0], other_corner[0]) + 8
+                    gdz_y_min = min(bb_mid[1], gate_pt[1], other_corner[1]) - 8
+                    gdz_y_max = max(bb_mid[1], gate_pt[1], other_corner[1]) + 8
+                gate_death_zone = (gdz_x_min, gdz_y_min, gdz_x_max - gdz_x_min, gdz_y_max - gdz_y_min)
+                placed["_gate_death_zone"] = gate_death_zone
             else:
-                gdz_x_min = bb_mid[0] if gate_pt[0] >= bb_mid[0] else 0
-                gdz_x_max = sw if gate_pt[0] >= bb_mid[0] else bb_mid[0]
-                gdz_y_min = bb_mid[1] if other_corner[1] >= bb_mid[1] else 0
-                gdz_y_max = sl if other_corner[1] >= bb_mid[1] else bb_mid[1]
-            gate_death_zone = (gdz_x_min, gdz_y_min, gdz_x_max - gdz_x_min, gdz_y_max - gdz_y_min)
-            placed["_gate_death_zone"] = gate_death_zone
+                gate_death_zone = None
 
             dummy_ring_spur = build_ring_spur(sw, sl, ring_road, fixed_blocks_so_far, exit_helper)
             pt_on_ring = dummy_ring_spur[0]
@@ -985,7 +995,7 @@ def generate_sketch(
         for name, prefer, f_fn, m_target in floated_order:
             pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn, magnet_target=m_target)
             if pos is None:
-                print('FAILED TO PLACE:', name)
+                print('Failed placement for', name)
                 ok = False
                 break
             placed[name] = pos

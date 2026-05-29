@@ -793,7 +793,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
+def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0, gdz=None):
     if ref_segs is None:
         ref_segs = []
         
@@ -823,6 +823,14 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
         for l in lines:
             snapped = False
             for r in refs:
+                # Exception: If reference line is in the Gate Death Zone, do not snap to it
+                if gdz is not None:
+                    gx, gy, gw, gh = gdz
+                    rmid_x = (r[0][0] + r[1][0]) / 2
+                    rmid_y = (r[0][1] + r[1][1]) / 2
+                    if gx <= rmid_x <= gx + gw and gy <= rmid_y <= gy + gh:
+                        continue
+                        
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
                         # Ensure we only snap outward
@@ -1464,7 +1472,7 @@ def generate_sketch(
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, ref_segs=pb_network, tol=17.0)
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

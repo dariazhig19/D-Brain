@@ -226,40 +226,30 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
     return cands
 
 
-def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None, magnet_fallback_chain=None):
+def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None):
     """Place a floated block by magnetizing to a previously placed block.
 
     Tries both orientations. Returns (x, y, w, h) or None when no candidate
     survives bounds + collision checks. `prefer_near` keeps the existing
     top-10%-closest selection so blocks still cluster near PB. `filter_fn`
-    can be used to restrict placement to specific zones (e.g. Leeward).
-    `magnet_fallback_chain`: ordered list of target block names to try in
-    sequence if the primary magnet_target fails (e.g. Demi Water priority)."""
+    can be used to restrict placement to specific zones (e.g. Leeward)."""
     base_w, base_h = BLOCK_FOOTPRINTS[name]
     orientations = [(base_w, base_h)]
     if base_w != base_h:
         orientations.append((base_h, base_w))
 
-    def _collect_valid(target):
-        result = []
+    valid = []
+    for w, h in orientations:
+        for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=magnet_target):
+            if filter_fn is None or filter_fn(x, y, w, h):
+                valid.append((x, y, w, h))
+
+    # Fallback to any valid magnet target if the specified target fails
+    if magnet_target is not None and not valid:
         for w, h in orientations:
-            for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=target):
+            for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=None):
                 if filter_fn is None or filter_fn(x, y, w, h):
-                    result.append((x, y, w, h))
-        return result
-
-    valid = _collect_valid(magnet_target)
-
-    # Try fallback chain in order if primary target fails
-    if not valid and magnet_fallback_chain:
-        for fallback_target in magnet_fallback_chain:
-            valid = _collect_valid(fallback_target)
-            if valid:
-                break
-
-    # Last resort: any magnet target
-    if not valid and (magnet_target is not None or magnet_fallback_chain):
-        valid = _collect_valid(None)
+                    valid.append((x, y, w, h))
 
     if not valid:
         return None
@@ -706,10 +696,6 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
         if name == "Admin Building":
             best_corner = min(corners, key=lambda c: dist_sq(c[1][0], c[1][1], gate_cx, gate_cy))
             segments.extend(best_corner[2])
-            # Also add the diagonal opposite corner so all 4 buffer lines are drawn
-            opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
-            opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
-            segments.extend(opp_corner[2])
         elif name == "RAW Water Tank":
             min_dist = min(dist_to_boundary(c[1][0], c[1][1]) for c in corners)
             boundary_corners = [c for c in corners if dist_to_boundary(c[1][0], c[1][1]) <= min_dist + 0.1]
@@ -731,20 +717,6 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
             opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
             opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
             segments.extend(opp_corner[2])
-            
-            # For Warehouse: also add all 4 individual buffer lines explicitly
-            # so the PB-facing line has a chance to snap in Priority 1 cleanup
-            if name == "Warehouse":
-                x, y, w, h = buffer_bounds
-                all_lines = [
-                    ((x, y), (x + w, y)),       # bottom
-                    ((x, y + h), (x + w, y + h)), # top
-                    ((x, y), (x, y + h)),         # left
-                    ((x + w, y), (x + w, y + h)), # right
-                ]
-                for seg in all_lines:
-                    if seg not in segments:
-                        segments.append(seg)
 
     return segments
 
@@ -785,14 +757,8 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
         peri_y = pymax if side == "N" else pymin
         x_min = max(rxmin, pxmin)
         x_max = min(rxmax, pxmax)
-        # Snap spur start to: left corner, center, or right corner of the ring road side
-        x_center = (rxmin + rxmax) / 2
-        snap_candidates = sorted(
-            [rxmin, x_center, rxmax],
-            key=lambda x: abs(x - gx)
-        )
-        target = max(x_min, min(x_max, snap_candidates[0]))
-        for dx in [0] + SHIFTS:
+        target = max(x_min, min(x_max, gx))
+        for dx in SHIFTS:
             x = target + dx
             if x < x_min or x > x_max:
                 continue
@@ -806,14 +772,8 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     peri_x = pxmax if side == "E" else pxmin
     y_min = max(rymin, pymin)
     y_max = min(rymax, pymax)
-    # Snap spur start to: bottom corner, center, or top corner of the ring road side
-    y_center = (rymin + rymax) / 2
-    snap_candidates = sorted(
-        [rymin, y_center, rymax],
-        key=lambda y: abs(y - gy)
-    )
-    target = max(y_min, min(y_max, snap_candidates[0]))
-    for dy in [0] + SHIFTS:
+    target = max(y_min, min(y_max, gy))
+    for dy in SHIFTS:
         y = target + dy
         if y < y_min or y > y_max:
             continue
@@ -822,20 +782,49 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
             return [p1, p2]
     return [(ring_x, target), (peri_x, target)]
 
-# ── Gate point ──────────────────────────────────
+# ── Gate point ─────────────────────────────────────────────────────────────
+def compute_gate(sw, sl, side, ratio):
+    if side == "N": return (sw * ratio, sl)
+    if side == "S": return (sw * ratio, 0)
+    if side == "E": return (sw, sl * ratio)
+    return (0, sl * ratio)
 
+
+
+
+# ── Main generator ────────────────────────────────────────────────────────
+def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None):
+    if ref_segs is None:
+        ref_segs = []
+        
+    ref_horiz = []
+    ref_vert = []
+    for (x1, y1), (x2, y2) in ref_segs:
+        if abs(y1 - y2) < 0.1:
+            ref_horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
+        elif abs(x1 - x2) < 0.1:
+            ref_vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
+
+    horiz = []
+    vert = []
+    for (x1, y1), (x2, y2) in segs:
+        if abs(y1 - y2) < 0.1:
+            horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
+        elif abs(x1 - x2) < 0.1:
+            vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
+            
     def get_outward_dir(l, is_horiz):
         val = l[0][1] if is_horiz else l[0][0]
         for name, b in computed_buffers.items():
             if is_horiz:
-                if abs(val - min(sl, b[1] + b[3])) < 0.1: return 1  # Top
+                if abs(val - min(sl, b[3])) < 0.1: return 1  # Top
                 if abs(val - max(0, b[1])) < 0.1: return -1  # Bottom
             else:
-                if abs(val - min(sw, b[0] + b[2])) < 0.1: return 1  # Right
+                if abs(val - min(sw, b[2])) < 0.1: return 1  # Right
                 if abs(val - max(0, b[0])) < 0.1: return -1  # Left
         return 1 if val >= (sl/2 if is_horiz else sw/2) else -1
 
-    # Priority 1 & 2: Snap to PB network — each line independently, no corner extension
+    # Priority 1 & 2: Snap to PB network and filter out from Priority 3
     def snap_to_ref(lines, refs, is_horiz):
         kept_for_p3 = []
         snapped_final = []
@@ -844,7 +833,7 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
             snapped = False
             outward = get_outward_dir(l, is_horiz)
             for r in refs:
-                # Exception: skip ref lines inside the Gate Death Zone
+                # Exception: If reference line is in the Gate Death Zone, do not snap to it
                 if gdz is not None:
                     gx, gy, gw, gh = gdz
                     rmid_x = (r[0][0] + r[1][0]) / 2
@@ -854,8 +843,10 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
                         
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
+                        # Ensure we only snap outward
                         if outward == 1 and r[0][1] < l[0][1]: continue
                         if outward == -1 and r[0][1] > l[0][1]: continue
+                        
                         overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
                             l = [(l[0][0], r[0][1]), (l[1][0], r[0][1])]
@@ -863,8 +854,10 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
                             break
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
+                        # Ensure we only snap outward
                         if outward == 1 and r[0][0] < l[0][0]: continue
                         if outward == -1 and r[0][0] > l[0][0]: continue
+                        
                         overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
                             l = [(r[0][0], l[0][1]), (r[0][0], l[1][1])]
@@ -879,24 +872,95 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
     horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
     vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
             
-    # Priority 3: Simplified sweep — Top only for horizontal, Left only for vertical.
-    # Each line snaps independently. No corner extension, no crossing checks.
-    # Top sweep: sort horizontal by highest Y, snap lower lines UP to the anchor
-    horiz.sort(key=lambda l: l[0][1], reverse=True)
-    for i in range(len(horiz)):
-        for j in range(i+1, len(horiz)):
-            l1, l2 = horiz[i], horiz[j]
-            if 0 <= l1[0][1] - l2[0][1] <= tol:
-                horiz[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
-                
-    # Left sweep: sort vertical by lowest X, snap lines RIGHT to the leftmost anchor
-    vert.sort(key=lambda l: l[0][0])
-    for i in range(len(vert)):
-        for j in range(i+1, len(vert)):
-            l1, l2 = vert[i], vert[j]
-            if 0 <= l2[0][0] - l1[0][0] <= tol:
-                                vert[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
-
+    # Priority 3: Outward Snapping Sweep
+    def process_outward(lines, perp_lines, is_horiz):
+        if not lines: return lines
+        mid_y = sl / 2
+        mid_x = sw / 2
+        
+        # Helper to extend perpendicular lines when a line moves
+        def extend_perp(old_val, new_val, fixed_range):
+            for p in perp_lines:
+                if is_horiz:
+                    # p is vertical: [(x, y1), (x, y2)]
+                    # Check if p touches old_val (Y) and falls within fixed_range (X)
+                    if abs(p[0][0] - p[1][0]) < 0.1: # sanity check
+                        x = p[0][0]
+                        min_x, max_x = min(fixed_range[0], fixed_range[1]), max(fixed_range[0], fixed_range[1])
+                        # If p's X is within the moved horizontal line's X bounds
+                        if min_x - 0.1 <= x <= max_x + 0.1:
+                            if abs(p[0][1] - old_val) < 0.1:
+                                p[0] = (x, new_val)
+                            elif abs(p[1][1] - old_val) < 0.1:
+                                p[1] = (x, new_val)
+                else:
+                    # p is horizontal: [(x1, y), (x2, y)]
+                    # Check if p touches old_val (X) and falls within fixed_range (Y)
+                    if abs(p[0][1] - p[1][1]) < 0.1: # sanity check
+                        y = p[0][1]
+                        min_y, max_y = min(fixed_range[0], fixed_range[1]), max(fixed_range[0], fixed_range[1])
+                        if min_y - 0.1 <= y <= max_y + 0.1:
+                            if abs(p[0][0] - old_val) < 0.1:
+                                p[0] = (new_val, y)
+                            elif abs(p[1][0] - old_val) < 0.1:
+                                p[1] = (new_val, y)
+        
+        if is_horiz:
+            north = [l for l in lines if get_outward_dir(l, True) == 1]
+            south = [l for l in lines if get_outward_dir(l, True) == -1]
+            
+            north.sort(key=lambda l: l[0][1], reverse=True)
+            for i in range(len(north)):
+                for j in range(i+1, len(north)):
+                    l1, l2 = north[i], north[j]
+                    if 0 <= l1[0][1] - l2[0][1] <= tol:
+                        old_y = l2[0][1]
+                        new_y = l1[0][1]
+                        north[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
+                        extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
+                            
+            south.sort(key=lambda l: l[0][1])
+            for i in range(len(south)):
+                for j in range(i+1, len(south)):
+                    l1, l2 = south[i], south[j]
+                    if 0 <= l2[0][1] - l1[0][1] <= tol:
+                        old_y = l2[0][1]
+                        new_y = l1[0][1]
+                        south[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
+                        extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
+                            
+            return north + south
+            
+        else:
+            east = [l for l in lines if get_outward_dir(l, False) == 1]
+            west = [l for l in lines if get_outward_dir(l, False) == -1]
+            
+            east.sort(key=lambda l: l[0][0], reverse=True)
+            for i in range(len(east)):
+                for j in range(i+1, len(east)):
+                    l1, l2 = east[i], east[j]
+                    if 0 <= l1[0][0] - l2[0][0] <= tol:
+                        old_x = l2[0][0]
+                        new_x = l1[0][0]
+                        east[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
+                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
+                            
+            west.sort(key=lambda l: l[0][0])
+            for i in range(len(west)):
+                for j in range(i+1, len(west)):
+                    l1, l2 = west[i], west[j]
+                    if 0 <= l2[0][0] - l1[0][0] <= tol:
+                        old_x = l2[0][0]
+                        new_x = l1[0][0]
+                        west[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
+                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
+                            
+            return east + west
+            
+    # Apply snapping sweeps (pass the OTHER list to extend_perp)
+    horiz = process_outward(horiz, vert, True)
+    vert = process_outward(vert, horiz, False)
+        
     # Merge collinear overlapping again after sweeps
     h_merged = []
     for l in horiz:
@@ -1123,21 +1187,12 @@ def generate_sketch(
             ("Warehouse",       None,             None,            "Power Block"),
             ("Flare",           flare_corner,     leeward_filter,  None),
             ("Admin Building",  admin_anchor,     None,            "Power Block"),
-            # Demi Water Tank: snap to RAW Water road buffer first,
-            # fallback to WT/WWT, then Power Block. Always ranked closest to RAW Water.
-            ("Demi Water Tank", (raw_cx, raw_cy), near_raw_filter,
-             "RAW Water Tank", ["WT/WWT", "Power Block"]),
+            ("Demi Water Tank", (raw_cx, raw_cy), near_raw_filter, "RAW Water Tank"),
         ]
 
         ok = True
-        for entry in floated_order:
-            name = entry[0]
-            prefer = entry[1]
-            f_fn = entry[2]
-            m_target = entry[3]
-            m_chain = entry[4] if len(entry) > 4 else None
-            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn,
-                                    magnet_target=m_target, magnet_fallback_chain=m_chain)
+        for name, prefer, f_fn, m_target in floated_order:
+            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn, magnet_target=m_target)
             if pos is None:
                 ok = False
                 break

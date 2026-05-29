@@ -822,7 +822,9 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
             return [p1, p2]
     return [(ring_x, target), (peri_x, target)]
 
-# ── Gate point ──────────────────────────────────�    def get_outward_dir(l, is_horiz):
+# ── Gate point ──────────────────────────────────
+
+    def get_outward_dir(l, is_horiz):
         val = l[0][1] if is_horiz else l[0][0]
         for name, b in computed_buffers.items():
             if is_horiz:
@@ -893,32 +895,8 @@ def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
         for j in range(i+1, len(vert)):
             l1, l2 = vert[i], vert[j]
             if 0 <= l2[0][0] - l1[0][0] <= tol:
-                vert[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]       if 0 <= l1[0][0] - l2[0][0] <= tol:
-                        new_x = l1[0][0]
-                        if not can_snap_vert(l2, new_x):
-                            continue
-                        old_x = l2[0][0]
-                        east[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
-                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
-                            
-            west.sort(key=lambda l: l[0][0])
-            for i in range(len(west)):
-                for j in range(i+1, len(west)):
-                    l1, l2 = west[i], west[j]
-                    if 0 <= l2[0][0] - l1[0][0] <= tol:
-                        new_x = l1[0][0]
-                        if not can_snap_vert(l2, new_x):
-                            continue
-                        old_x = l2[0][0]
-                        west[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
-                        extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
-                            
-            return east + west
-            
-    # Apply snapping sweeps (pass the OTHER list to extend_perp)
-    horiz = process_outward(horiz, vert, True)
-    vert = process_outward(vert, horiz, False)
-        
+                                vert[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+
     # Merge collinear overlapping again after sweeps
     h_merged = []
     for l in horiz:

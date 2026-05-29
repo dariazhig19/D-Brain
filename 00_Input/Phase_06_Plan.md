@@ -212,7 +212,11 @@ There will be 2 parts for B:
 - **Pass 3 — Orphans:** For any block still unconnected, take its EXACT road buffer line (edge) farthest from PB and use that as its fire road segment.
 
 
-
+**B-2. 10m Road Cleanup (Parallel Segment Merging)**
+- Evaluates horizontal and vertical road segments.
+- If two parallel segments overlap and their distance is ≤ 10 meters, they are merged.
+- **Snapping:** The algorithm snaps both segments together to form one smooth, continuous centerline at their exact average position.
+- *Implementation detail: This `cleanup_parallel_segments` algorithm ensures clean routing (e.g., smoothly aligning the GIS and Warehouse access lines).*
 
 ### 1.6 Road Classification
 

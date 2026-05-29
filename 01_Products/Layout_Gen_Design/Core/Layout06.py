@@ -817,15 +817,15 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
         val = l[0][1] if is_horiz else l[0][0]
         for name, b in computed_buffers.items():
             if is_horiz:
-                if abs(val - min(sl, b[3])) < 0.1: return 1  # Top
+                if abs(val - min(sl, b[1] + b[3])) < 0.1: return 1  # Top
                 if abs(val - max(0, b[1])) < 0.1: return -1  # Bottom
             else:
-                if abs(val - min(sw, b[2])) < 0.1: return 1  # Right
+                if abs(val - min(sw, b[0] + b[2])) < 0.1: return 1  # Right
                 if abs(val - max(0, b[0])) < 0.1: return -1  # Left
         return 1 if val >= (sl/2 if is_horiz else sw/2) else -1
 
     # Priority 1 & 2: Snap to PB network and filter out from Priority 3
-    def snap_to_ref(lines, refs, is_horiz):
+    def snap_to_ref(lines, refs, perp_lines, is_horiz):
         kept_for_p3 = []
         snapped_final = []
         
@@ -849,7 +849,16 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
                         
                         overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
-                            l = [(l[0][0], r[0][1]), (l[1][0], r[0][1])]
+                            old_y = l[0][1]
+                            new_y = r[0][1]
+                            l = [(l[0][0], new_y), (l[1][0], new_y)]
+                            # Extend vertical perpendicular lines
+                            for p in perp_lines:
+                                if abs(p[0][0] - p[1][0]) < 0.1:
+                                    x = p[0][0]
+                                    if min(l[0][0], l[1][0]) - 0.1 <= x <= max(l[0][0], l[1][0]) + 0.1:
+                                        if abs(p[0][1] - old_y) < 0.1: p[0] = (x, new_y)
+                                        elif abs(p[1][1] - old_y) < 0.1: p[1] = (x, new_y)
                             snapped = True
                             break
                 else:
@@ -860,7 +869,16 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
                         
                         overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
-                            l = [(r[0][0], l[0][1]), (r[0][0], l[1][1])]
+                            old_x = l[0][0]
+                            new_x = r[0][0]
+                            l = [(new_x, l[0][1]), (new_x, l[1][1])]
+                            # Extend horizontal perpendicular lines
+                            for p in perp_lines:
+                                if abs(p[0][1] - p[1][1]) < 0.1:
+                                    y = p[0][1]
+                                    if min(l[0][1], l[1][1]) - 0.1 <= y <= max(l[0][1], l[1][1]) + 0.1:
+                                        if abs(p[0][0] - old_x) < 0.1: p[0] = (new_x, y)
+                                        elif abs(p[1][0] - old_x) < 0.1: p[1] = (new_x, y)
                             snapped = True
                             break
             if snapped:
@@ -869,8 +887,8 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
                 kept_for_p3.append(l)
         return kept_for_p3, snapped_final
         
-    horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
-    vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
+    horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, vert, True)
+    vert, vert_snapped = snap_to_ref(vert, ref_vert, horiz, False)
             
     # Priority 3: Outward Snapping Sweep
     def process_outward(lines, perp_lines, is_horiz):

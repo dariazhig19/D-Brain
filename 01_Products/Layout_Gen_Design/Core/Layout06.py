@@ -226,30 +226,40 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
     return cands
 
 
-def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None):
+def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None, magnet_fallback_chain=None):
     """Place a floated block by magnetizing to a previously placed block.
 
     Tries both orientations. Returns (x, y, w, h) or None when no candidate
     survives bounds + collision checks. `prefer_near` keeps the existing
     top-10%-closest selection so blocks still cluster near PB. `filter_fn`
-    can be used to restrict placement to specific zones (e.g. Leeward)."""
+    can be used to restrict placement to specific zones (e.g. Leeward).
+    `magnet_fallback_chain`: ordered list of target block names to try in
+    sequence if the primary magnet_target fails (e.g. Demi Water priority)."""
     base_w, base_h = BLOCK_FOOTPRINTS[name]
     orientations = [(base_w, base_h)]
     if base_w != base_h:
         orientations.append((base_h, base_w))
 
-    valid = []
-    for w, h in orientations:
-        for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=magnet_target):
-            if filter_fn is None or filter_fn(x, y, w, h):
-                valid.append((x, y, w, h))
-
-    # Fallback to any valid magnet target if the specified target fails
-    if magnet_target is not None and not valid:
+    def _collect_valid(target):
+        result = []
         for w, h in orientations:
-            for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=None):
+            for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=target):
                 if filter_fn is None or filter_fn(x, y, w, h):
-                    valid.append((x, y, w, h))
+                    result.append((x, y, w, h))
+        return result
+
+    valid = _collect_valid(magnet_target)
+
+    # Try fallback chain in order if primary target fails
+    if not valid and magnet_fallback_chain:
+        for fallback_target in magnet_fallback_chain:
+            valid = _collect_valid(fallback_target)
+            if valid:
+                break
+
+    # Last resort: any magnet target
+    if not valid and (magnet_target is not None or magnet_fallback_chain):
+        valid = _collect_valid(None)
 
     if not valid:
         return None
@@ -1205,12 +1215,21 @@ def generate_sketch(
             ("Warehouse",       None,             None,            "Power Block"),
             ("Flare",           flare_corner,     leeward_filter,  None),
             ("Admin Building",  admin_anchor,     None,            "Power Block"),
-            ("Demi Water Tank", (raw_cx, raw_cy), near_raw_filter, "RAW Water Tank"),
+            # Demi Water Tank: snap to RAW Water road buffer first,
+            # fallback to WT/WWT, then Power Block. Always ranked closest to RAW Water.
+            ("Demi Water Tank", (raw_cx, raw_cy), near_raw_filter,
+             "RAW Water Tank", ["WT/WWT", "Power Block"]),
         ]
 
         ok = True
-        for name, prefer, f_fn, m_target in floated_order:
-            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn, magnet_target=m_target)
+        for entry in floated_order:
+            name = entry[0]
+            prefer = entry[1]
+            f_fn = entry[2]
+            m_target = entry[3]
+            m_chain = entry[4] if len(entry) > 4 else None
+            pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn,
+                                    magnet_target=m_target, magnet_fallback_chain=m_chain)
             if pos is None:
                 ok = False
                 break

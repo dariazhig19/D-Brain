@@ -83,7 +83,7 @@ Each "block" is a footprint zone that contains one or more buildings. Current co
 
 I want to design the floated-block placement so blocks snap onto each other's road-buffer lines like magnets, with these rules:
 - **Plot Boundary Leeway:** A `BOUNDARY_TOLERANCE` of 10m is allowed during layout generation to provide leeway for tight border fits.
-- **Ignore Fixed Anchors:** Floated blocks do NOT use Fixed Anchors (Gate House, GIS, RAW Water) as default magnets. This guarantees they form a cohesive central cluster instead of stranding near the borders. (Exception: Demi Water is hardcoded to target RAW Water).
+- **Ignore Fixed Anchors:** Floated blocks do NOT use Fixed Anchors (Gate House, GIS, RAW Water) as default magnets. This guarantees they form a cohesive central cluster instead of stranding near the borders. (Exception: Demi Water Tank uses a **priority fallback chain**: snap to **RAW Water Tank** road buffer first → if impossible, snap to **WT/WWT** → if also impossible, snap to **Power Block**. In all cases, the selected position must be the one closest to RAW Water Tank).
 - rack blocks ↔ rack blocks: snab by using the 14m road buffer (so their block edges sit 28m apart on that side)
 - no-rack blocks ↔ no-rack blocks : share the 8m road buffer (16m apart)
 - mixed rack/no-rack blocks: connect via b2b buffer (no shared road; sit block edges sit 28m apart)

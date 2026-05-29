@@ -80,15 +80,15 @@ if phase == "Phase 06 (Sketch roads)":
     st.caption("Steps 1.1–1.5: blocks · ring + perimeter fire roads · stubs · 2-path verification + pruning")
 
     st.sidebar.header("Phase 06 Settings")
-    show_grid     = st.sidebar.checkbox("2m Grid lines", value=False)
-    show_buffer       = st.sidebar.checkbox(f"Block {ROAD_BUFFER}m + 16m buffers (default)", value=True)
-    show_rack_no_rack = st.sidebar.checkbox("Rack-block baseline buffers (8m / 16m)", value=False)
-    show_rack_w_rack  = st.sidebar.checkbox("Rack-block w-rack buffers (Case 1 6m / road 14m / Case 2 22m / b2b 28m)", value=True)
-    show_b1_perimeter = st.sidebar.checkbox("Show B-1 Perimeter Segments", value=False)
-    show_a1_ring      = st.sidebar.checkbox("Show A-1 PB Ring Road", value=True)
-    show_a2_raw       = st.sidebar.checkbox("Show A-2 Group A Access (Raw)", value=False)
-    show_a2_access    = st.sidebar.checkbox("Show B-2 Cleaned (A-2 + B-1)", value=True)
-    show_rack_b1      = st.sidebar.checkbox("Show B-1 Racks + Final Points", value=True)
+    show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
+    show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=True)
+    show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
+    show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (6m / 14m / 22m / 28m)", value=True)
+    show_b1_perimeter = st.sidebar.checkbox("§3.7.B — Perimeter segs (raw)", value=False)
+    show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
+    show_a2_raw       = st.sidebar.checkbox("§3.7.C — Group A access (raw)", value=False)
+    show_a2_access    = st.sidebar.checkbox("§3.7.D — Cleaned segments", value=True)
+    show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines + triangle", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -141,11 +141,11 @@ if phase == "Phase 06 (Sketch roads)":
         perimeter_raw = sketch.get("perimeter_segments_raw", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(perimeter_raw):
             ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
-                    solid_capstyle='round', label='B-1 Perimeter (Raw)' if k == 0 else "")
+                    solid_capstyle='round', label='§3.7.B Perimeter (raw)' if k == 0 else "")
     if show_a1_ring:  # → §3.4.A (ring road) · §3.4.B (gate spur) · §3.4.D (ring spur)
         rx, ry = zip(*ring_road)
         ax.plot(rx, ry, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
-                solid_capstyle='round', label='Ring Road (A-1)')
+                solid_capstyle='round', label='§3.4.A Ring Road')
         # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
         gs = sketch.get("gate_spur") or []
         if len(gs) >= 2:
@@ -166,13 +166,13 @@ if phase == "Phase 06 (Sketch roads)":
         group_a_raw = sketch.get("group_a_segments_raw", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(group_a_raw):
             ax.plot([x1, x2], [y1, y2], color='#e67e22', lw=2.5, linestyle=':', alpha=0.8, zorder=2.8,
-                    solid_capstyle='round', label='A-2 Access (Raw)' if k == 0 else "")
+                    solid_capstyle='round', label='§3.7.C Group A (raw)' if k == 0 else "")
 
     if show_a2_access:  # → §3.7.D (cleaned + merged result)
         all_cleaned = sketch.get("all_segments_cleaned", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(all_cleaned):
             ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
-                    solid_capstyle='round', label='B-2 Cleaned (A-2 + B-1)' if k == 0 else "")
+                    solid_capstyle='round', label='§3.7.D Cleaned' if k == 0 else "")
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)
@@ -183,7 +183,7 @@ if phase == "Phase 06 (Sketch roads)":
             is_rack = b["name"] in Core.Layout06.RACK_BLOCKS
             snap_buf = 14 if is_rack else 8
             color = '#2980b9' if is_rack else '#34495e'
-            lbl = f'{snap_buf}m road snap buffer'
+            lbl = f'§3.5.B {snap_buf}m road snap buffer'
             
             xs = [b["x"] - snap_buf, b["x"] + b["width"] + snap_buf,
                   b["x"] + b["width"] + snap_buf, b["x"] - snap_buf, b["x"] - snap_buf]
@@ -203,12 +203,12 @@ if phase == "Phase 06 (Sketch roads)":
     if rack_buf:
         # (key, label, color, linestyle, linewidth, toggle_flag)
         rack_specs = [
-            ("road_no_rack", '8m road (no-rack side)',     '#34495e', '--', 0.8, show_rack_no_rack),
-            ("b2b_no_rack",  '16m b2b (no-rack side)',     '#c0392b', ':',  0.8, show_rack_no_rack),
-            ("case1_rack",   'Case 1 rack CL (6m)',        '#00b894', '-',  1.6, show_rack_w_rack),
-            ("road_w_rack",  '14m road (w-rack side)',     '#2980b9', '-',  1.2, show_rack_w_rack),
-            ("case2_rack",   'Case 2 rack CL (22m)',       '#8e44ad', ':',  1.4, show_rack_w_rack),
-            ("b2b_w_rack",   '28m b2b (w-rack side)',      '#e67e22', ':',  1.0, show_rack_w_rack),
+            ("road_no_rack", '§3.6.A 8m road (no-rack)',   '#34495e', '--', 0.8, show_rack_no_rack),
+            ("b2b_no_rack",  '§3.6.A 16m b2b (no-rack)',   '#c0392b', ':',  0.8, show_rack_no_rack),
+            ("case1_rack",   '§3.6.A Case 1 CL (6m)',      '#00b894', '-',  1.6, show_rack_w_rack),
+            ("road_w_rack",  '§3.6.A 14m road (w-rack)',   '#2980b9', '-',  1.2, show_rack_w_rack),
+            ("case2_rack",   '§3.6.A Case 2 CL (22m)',     '#8e44ad', ':',  1.4, show_rack_w_rack),
+            ("b2b_w_rack",   '§3.6.A 28m b2b (w-rack)',    '#e67e22', ':',  1.0, show_rack_w_rack),
         ]
         legended = {spec[0]: False for spec in rack_specs}
         for bname, offsets in rack_buf.items():
@@ -230,19 +230,19 @@ if phase == "Phase 06 (Sketch roads)":
             if seg and len(seg) == 2:
                 xs, ys = zip(*seg)
                 ax.plot(xs, ys, color='#d35400', linewidth=2, linestyle='-', zorder=3.5, 
-                        label='PB-CT Spine (B-1)' if i==0 else "")
+                        label='§3.6.B Rack Spines' if i==0 else "")
                 
         # Candidate points (B-2, B-3)  [→ §3.6.B]
         rack_candidates = sketch.get("rack_candidates", [])
         for i, pt in enumerate(rack_candidates):
             ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
-                    label='RAW/Demi Candidates' if i==0 else "")
+                    label='§3.6.B B-2/B-3 Candidates' if i==0 else "")
 
         # Water Triangle (B-4)  [→ §3.6.B]
         water_triangle = sketch.get("water_triangle", [])
         for i, pt in enumerate(water_triangle):
             ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
-                    label='WWT/RAW/Demi Final Points (B-4)' if i==0 else "")
+                    label='§3.6.B B-4 Triangle' if i==0 else "")
         if len(water_triangle) == 3:
             # Draw lines connecting them
             wx, wy = zip(*(water_triangle + [water_triangle[0]]))
@@ -252,7 +252,7 @@ if phase == "Phase 06 (Sketch roads)":
     boom_barrier = sketch.get("boom_barrier", [])
     if boom_barrier and len(boom_barrier) == 2:
         xs, ys = zip(*boom_barrier)
-        ax.plot(xs, ys, color='#e74c3c', linewidth=4, linestyle='-', zorder=4.0, label='Boom Barrier')
+        ax.plot(xs, ys, color='#e74c3c', linewidth=4, linestyle='-', zorder=4.0, label='§3.1·5 Boom Barrier')
 
     # Gate Death Zone  [→ §3.4.C]
     gate_death_zone = sketch.get("gate_death_zone")
@@ -260,7 +260,7 @@ if phase == "Phase 06 (Sketch roads)":
         gx, gy, gw, gh = gate_death_zone
         import matplotlib.patches as patches
         rect = patches.Rectangle((gx, gy), gw, gh, linewidth=1.5, edgecolor='#c0392b',
-                                 facecolor='#e74c3c', alpha=0.2, hatch='///', zorder=1.1, label='Gate Death Zone')
+                                 facecolor='#e74c3c', alpha=0.2, hatch='///', zorder=1.1, label='§3.4.C Gate Death Zone')
         ax.add_patch(rect)
 
 

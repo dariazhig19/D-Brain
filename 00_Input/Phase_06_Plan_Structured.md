@@ -77,13 +77,13 @@ All block positions snap to the 2m grid (`snap(v) = round(v / 2) * 2`).
 2.  Power Block          →  Site center ± jitter
 3.  PB Ring Road         →  Geometry drawn; corridor locked for floated-block placement
 4.  Gate Spur + Ring Spur→  Both spurs built from fixed anchors before floated blocks
-5.  Floated blocks       →  Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi Water
-6.  Pipe Rack            →  6m rack network (§3.6) — before perimeter/spurs/stubs
-7.  Block road buffers   →  Snapped buffer rectangles computed (§3.7.A)
-8.  Perimeter Fire Road  →  Segment generation from buffers (§3.7.B)
-9.  Group A access roads →  8m connection lines per block (§3.8.B)
-10. Segment cleanup      →  Parallel merge pass (§3.7.C)
-11. Boom Barrier         →  16m line from Gate House inner edge
+5.  Boom Barrier         →  16m line from Gate House inner edge
+6.  Floated blocks       →  Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi Water
+7.  Pipe Rack            →  6m rack network (§3.6) — before perimeter/spurs/stubs
+8.  Block road buffers   →  Snapped buffer rectangles computed (§3.7.A)
+9.  Perimeter Fire Road  →  Segment generation from buffers (§3.7.B)
+10. Group A access roads →  8m connection lines per block (§3.8.B)
+11. Segment cleanup      →  Parallel merge pass (§3.7.C)
 ```
 
 ---

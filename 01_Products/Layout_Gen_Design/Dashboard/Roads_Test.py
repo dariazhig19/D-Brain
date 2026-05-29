@@ -87,6 +87,7 @@ if phase == "Phase 06 (Sketch roads)":
     show_b1_perimeter = st.sidebar.checkbox("Show B-1 Perimeter Segments", value=False)
     show_a1_ring      = st.sidebar.checkbox("Show A-1 PB Ring Road", value=True)
     show_a2_access    = st.sidebar.checkbox("Show A-2 Group A Access", value=True)
+    show_rack_b1      = st.sidebar.checkbox("Show B-1 Racks + Final Points", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -215,28 +216,29 @@ if phase == "Phase 06 (Sketch roads)":
                 legended[key] = True
 
     # Rack spines (B-1)
-    rack_segments = sketch.get("rack_segments", [])
-    for i, seg in enumerate(rack_segments):
-        if seg and len(seg) == 2:
-            xs, ys = zip(*seg)
-            ax.plot(xs, ys, color='#d35400', linewidth=2, linestyle='-', zorder=3.5, 
-                    label='PB-CT Spine (B-1)' if i==0 else "")
-            
-    # Candidate points (B-2, B-3)
-    rack_candidates = sketch.get("rack_candidates", [])
-    for i, pt in enumerate(rack_candidates):
-        ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
-                label='RAW/Demi Candidates' if i==0 else "")
+    if show_rack_b1:
+        rack_segments = sketch.get("rack_segments", [])
+        for i, seg in enumerate(rack_segments):
+            if seg and len(seg) == 2:
+                xs, ys = zip(*seg)
+                ax.plot(xs, ys, color='#d35400', linewidth=2, linestyle='-', zorder=3.5, 
+                        label='PB-CT Spine (B-1)' if i==0 else "")
+                
+        # Candidate points (B-2, B-3)
+        rack_candidates = sketch.get("rack_candidates", [])
+        for i, pt in enumerate(rack_candidates):
+            ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
+                    label='RAW/Demi Candidates' if i==0 else "")
 
-    # Water Triangle (B-4)
-    water_triangle = sketch.get("water_triangle", [])
-    for i, pt in enumerate(water_triangle):
-        ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
-                label='WWT/RAW/Demi Final Points (B-4)' if i==0 else "")
-    if len(water_triangle) == 3:
-        # Draw lines connecting them
-        wx, wy = zip(*(water_triangle + [water_triangle[0]]))
-        ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
+        # Water Triangle (B-4)
+        water_triangle = sketch.get("water_triangle", [])
+        for i, pt in enumerate(water_triangle):
+            ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
+                    label='WWT/RAW/Demi Final Points (B-4)' if i==0 else "")
+        if len(water_triangle) == 3:
+            # Draw lines connecting them
+            wx, wy = zip(*(water_triangle + [water_triangle[0]]))
+            ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
 
     # Boom Barrier
     boom_barrier = sketch.get("boom_barrier", [])

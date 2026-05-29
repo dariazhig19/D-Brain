@@ -248,6 +248,8 @@
   },
   "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Dashboard/__pycache__/Roads_Test.cpython-314.pyc",
+    "01_Products/Layout_Gen_Design/Dashboard/__pycache__",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06_debug.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Layout06_debug.py",
     "Pasted image 20260526175639.png",
@@ -274,8 +276,6 @@
     "01_Products/Layout_Gen_Design/decode_requirements.py",
     "01_Products/Layout_Gen_Design/print_legend.py",
     "01_Products/Layout_Gen_Design/read_requirements.py",
-    "find_excel.py",
-    "01_Products/Layout_Gen_Design/test_exception.py",
     "00_Input/2026-05-14 - Session Report.md",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",

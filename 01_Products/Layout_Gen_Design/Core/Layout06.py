@@ -793,7 +793,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, blocks, ref_segs=None, tol=17.0, gdz=None):
+def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None):
     if ref_segs is None:
         ref_segs = []
         
@@ -815,15 +815,13 @@ def cleanup_parallel_segments(segs, sw, sl, blocks, ref_segs=None, tol=17.0, gdz
             
     def get_outward_dir(l, is_horiz):
         val = l[0][1] if is_horiz else l[0][0]
-        for b in blocks:
-            buf = 14 if b["name"] in ["Power Block", "Cooling Tower", "Flare"] else 8
-            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+        for name, b in computed_buffers.items():
             if is_horiz:
-                if abs(val - min(sl, by + bh + buf)) < 0.1: return 1
-                if abs(val - max(0, by - buf)) < 0.1: return -1
+                if abs(val - min(sl, b[3])) < 0.1: return 1  # Top
+                if abs(val - max(0, b[1])) < 0.1: return -1  # Bottom
             else:
-                if abs(val - min(sw, bx + bw + buf)) < 0.1: return 1
-                if abs(val - max(0, bx - buf)) < 0.1: return -1
+                if abs(val - min(sw, b[2])) < 0.1: return 1  # Right
+                if abs(val - max(0, b[0])) < 0.1: return -1  # Left
         return 1 if val >= (sl/2 if is_horiz else sw/2) else -1
 
     # Priority 1 & 2: Snap to PB network and filter out from Priority 3
@@ -1487,7 +1485,7 @@ def generate_sketch(
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, blocks, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

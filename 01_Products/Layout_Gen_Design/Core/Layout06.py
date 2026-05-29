@@ -941,13 +941,29 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
             north = [l for l in lines if get_outward_dir(l, True) == 1]
             south = [l for l in lines if get_outward_dir(l, True) == -1]
             
+            def can_snap_horiz(l, new_y):
+                """True if moving l to new_y doesn't cross into any block buffer interior."""
+                lx1, lx2 = l[0][0], l[1][0]
+                for name, b in computed_buffers.items():
+                    bx, by, bw, bh = b
+                    # Check if the line's X range overlaps with this block's buffer X range
+                    if max(lx1, bx) < min(lx2, bx + bw):
+                        # Check if moving from old_y to new_y crosses THROUGH the buffer
+                        old_y = l[0][1]
+                        buf_ymin, buf_ymax = by, by + bh
+                        if (old_y > buf_ymax and new_y < buf_ymax) or (old_y < buf_ymin and new_y > buf_ymin):
+                            return False
+                return True
+            
             north.sort(key=lambda l: l[0][1], reverse=True)
             for i in range(len(north)):
                 for j in range(i+1, len(north)):
                     l1, l2 = north[i], north[j]
                     if 0 <= l1[0][1] - l2[0][1] <= tol:
-                        old_y = l2[0][1]
                         new_y = l1[0][1]
+                        if not can_snap_horiz(l2, new_y):
+                            continue
+                        old_y = l2[0][1]
                         north[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
                         extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
                             
@@ -956,8 +972,10 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
                 for j in range(i+1, len(south)):
                     l1, l2 = south[i], south[j]
                     if 0 <= l2[0][1] - l1[0][1] <= tol:
-                        old_y = l2[0][1]
                         new_y = l1[0][1]
+                        if not can_snap_horiz(l2, new_y):
+                            continue
+                        old_y = l2[0][1]
                         south[j] = [(l2[0][0], new_y), (l2[1][0], new_y)]
                         extend_perp(old_y, new_y, (l2[0][0], l2[1][0]))
                             
@@ -967,13 +985,29 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
             east = [l for l in lines if get_outward_dir(l, False) == 1]
             west = [l for l in lines if get_outward_dir(l, False) == -1]
             
+            def can_snap_vert(l, new_x):
+                """True if moving l to new_x doesn't cross into any block buffer interior."""
+                ly1, ly2 = l[0][1], l[1][1]
+                for name, b in computed_buffers.items():
+                    bx, by, bw, bh = b
+                    # Check if the line's Y range overlaps with this block's buffer Y range
+                    if max(ly1, by) < min(ly2, by + bh):
+                        # Check if moving from old_x to new_x crosses THROUGH the buffer
+                        old_x = l[0][0]
+                        buf_xmin, buf_xmax = bx, bx + bw
+                        if (old_x > buf_xmax and new_x < buf_xmax) or (old_x < buf_xmin and new_x > buf_xmin):
+                            return False
+                return True
+            
             east.sort(key=lambda l: l[0][0], reverse=True)
             for i in range(len(east)):
                 for j in range(i+1, len(east)):
                     l1, l2 = east[i], east[j]
                     if 0 <= l1[0][0] - l2[0][0] <= tol:
-                        old_x = l2[0][0]
                         new_x = l1[0][0]
+                        if not can_snap_vert(l2, new_x):
+                            continue
+                        old_x = l2[0][0]
                         east[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
                         extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
                             
@@ -982,8 +1016,10 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
                 for j in range(i+1, len(west)):
                     l1, l2 = west[i], west[j]
                     if 0 <= l2[0][0] - l1[0][0] <= tol:
-                        old_x = l2[0][0]
                         new_x = l1[0][0]
+                        if not can_snap_vert(l2, new_x):
+                            continue
+                        old_x = l2[0][0]
                         west[j] = [(new_x, l2[0][1]), (new_x, l2[1][1])]
                         extend_perp(old_x, new_x, (l2[0][1], l2[1][1]))
                             

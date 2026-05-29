@@ -52,7 +52,7 @@ gate_side  = st.sidebar.selectbox("Gate edge", ["N", "S", "E", "W"], index=0)
 gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05)
 
 st.sidebar.divider()
-st.sidebar.header("Fixed Anchors")
+st.sidebar.header("Fixed Anchors")  # → §3.2
 st.sidebar.subheader("Gate House")
 gh_edge   = st.sidebar.selectbox("Edge (GH)",     ["N", "S", "E", "W"], index=0)
 gh_ratio  = st.sidebar.slider("Position (GH)",    0.0, 1.0, 0.5, step=0.05)
@@ -97,7 +97,7 @@ if phase == "Phase 06 (Sketch roads)":
         if fix_seed:
             random.seed(int(seed_val))
         with st.spinner("Generating Phase 06 sketch..."):
-            sketch = generate_sketch(
+            sketch = generate_sketch(  # → §3.1 Master Placement Sequence
                 site_width, site_length, wind_dir,
                 gate_side=gate_side, gate_ratio=gate_ratio,
                 gh_edge=gh_edge,    gh_ratio=gh_ratio,    gh_offset=gh_offset,
@@ -137,23 +137,23 @@ if phase == "Phase 06 (Sketch roads)":
         for j in range(int(sl // cs) + 1):
             ax.axhline(j * cs, color='#dddddd', lw=0.2, zorder=0.1)
 
-    if show_b1_perimeter:
+    if show_b1_perimeter:  # → §3.7.B (raw perimeter segments before cleanup)
         perimeter_raw = sketch.get("perimeter_segments_raw", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(perimeter_raw):
             ax.plot([x1, x2], [y1, y2], color='#ffff00', lw=2.5, alpha=1.0, zorder=3.0,
                     solid_capstyle='round', label='B-1 Perimeter (Raw)' if k == 0 else "")
-    if show_a1_ring:
+    if show_a1_ring:  # → §3.4.A (ring road) · §3.4.B (gate spur) · §3.4.D (ring spur)
         rx, ry = zip(*ring_road)
         ax.plot(rx, ry, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
                 solid_capstyle='round', label='Ring Road (A-1)')
-        # Gate spur (perimeter → gate point) — short primary segment
+        # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
         gs = sketch.get("gate_spur") or []
         if len(gs) >= 2:
             gsx, gsy = zip(*gs)
             ax.plot(gsx, gsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
                     solid_capstyle='round')
 
-    # Ring spur (ring → perimeter) — primary connector around blocks
+    # Ring spur (ring → perimeter) — primary connector around blocks  [→ §3.4.D]
     if show_a1_ring:
         rs = sketch.get("ring_spur") or []
         if len(rs) >= 2:
@@ -161,20 +161,20 @@ if phase == "Phase 06 (Sketch roads)":
             ax.plot(rsx, rsy, color='#e91e8c', lw=2.5, alpha=0.95, zorder=2.5,
                     solid_capstyle='round')
 
-    # A-2 Group A Access lines
+    # A-2 Group A Access lines  [→ §3.7.C · §3.8.B]
     if show_a2_raw:
         group_a_raw = sketch.get("group_a_segments_raw", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(group_a_raw):
             ax.plot([x1, x2], [y1, y2], color='#e67e22', lw=2.5, linestyle=':', alpha=0.8, zorder=2.8,
                     solid_capstyle='round', label='A-2 Access (Raw)' if k == 0 else "")
 
-    if show_a2_access:
+    if show_a2_access:  # → §3.7.D (cleaned + merged result)
         all_cleaned = sketch.get("all_segments_cleaned", [])
         for k, ((x1, y1), (x2, y2)) in enumerate(all_cleaned):
             ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
                     solid_capstyle='round', label='B-2 Cleaned (A-2 + B-1)' if k == 0 else "")
 
-    # Default buffer halos per block (visualize the magnetic snap boundaries):
+    # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)
     #  - No-rack blocks: 8m road buffer (so two no-rack touching sit 16m apart)
     if show_buffer:
@@ -195,7 +195,7 @@ if phase == "Phase 06 (Sketch roads)":
                     label=lbl if lbl not in legended_buffers else "")
             legended_buffers.add(lbl)
 
-    # Rack-block per-side buffer rectangles (Step A) for the 5 "need rack" blocks.
+    # Rack-block per-side buffer rectangles (Step A) for the 5 "need rack" blocks.  [→ §3.6.A]
     # 6 offsets total, split into two toggle groups:
     #   - "no rack" baseline (overlaps the default 8m+16m halos)
     #   - "with rack" (Case 1 / road 14m / Case 2 / b2b 28m)
@@ -223,7 +223,7 @@ if phase == "Phase 06 (Sketch roads)":
                         label=lbl if not legended[key] else "")
                 legended[key] = True
 
-    # Rack spines (B-1)
+    # Rack spines B-1..B-5  [→ §3.6.B]
     if show_rack_b1:
         rack_segments = sketch.get("rack_segments", [])
         for i, seg in enumerate(rack_segments):
@@ -232,13 +232,13 @@ if phase == "Phase 06 (Sketch roads)":
                 ax.plot(xs, ys, color='#d35400', linewidth=2, linestyle='-', zorder=3.5, 
                         label='PB-CT Spine (B-1)' if i==0 else "")
                 
-        # Candidate points (B-2, B-3)
+        # Candidate points (B-2, B-3)  [→ §3.6.B]
         rack_candidates = sketch.get("rack_candidates", [])
         for i, pt in enumerate(rack_candidates):
             ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
                     label='RAW/Demi Candidates' if i==0 else "")
 
-        # Water Triangle (B-4)
+        # Water Triangle (B-4)  [→ §3.6.B]
         water_triangle = sketch.get("water_triangle", [])
         for i, pt in enumerate(water_triangle):
             ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
@@ -248,13 +248,13 @@ if phase == "Phase 06 (Sketch roads)":
             wx, wy = zip(*(water_triangle + [water_triangle[0]]))
             ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
 
-    # Boom Barrier
+    # Boom Barrier  [→ §3.1 step 5]
     boom_barrier = sketch.get("boom_barrier", [])
     if boom_barrier and len(boom_barrier) == 2:
         xs, ys = zip(*boom_barrier)
         ax.plot(xs, ys, color='#e74c3c', linewidth=4, linestyle='-', zorder=4.0, label='Boom Barrier')
 
-    # Gate Death Zone
+    # Gate Death Zone  [→ §3.4.C]
     gate_death_zone = sketch.get("gate_death_zone")
     if gate_death_zone:
         gx, gy, gw, gh = gate_death_zone

@@ -71,19 +71,19 @@ BLOCK_COLORS = {
 }
 
 # ── Grid helpers ───────────────────────────────────────────────────────────
-def snap(v):
+def snap(v):  # → §2
     return round(v / CELL_SIZE) * CELL_SIZE
 
-def snap_xy(x, y):
+def snap_xy(x, y):  # → §2
     return snap(x), snap(y)
 
 # ── Overlap check ──────────────────────────────────────────────────────────
-def _overlaps(ax, ay, aw, ah, bx, by, bw, bh, gap=BLOCK_BUFFER):
+def _overlaps(ax, ay, aw, ah, bx, by, bw, bh, gap=BLOCK_BUFFER):  # → §3.5.B
     return not (ax + aw + gap <= bx or bx + bw + gap <= ax or
                 ay + ah + gap <= by or by + bh + gap <= ay)
 
 
-def pair_min_gap(name_a, name_b):
+def pair_min_gap(name_a, name_b):  # → §3.5.B
     """Minimum allowed edge-to-edge distance between two real blocks.
 
     Keyed on rack membership (`RACK_BLOCKS`):
@@ -101,7 +101,7 @@ def pair_min_gap(name_a, name_b):
     return B2B_W_RACK_OFFSET            # 28m (mixed)
 
 
-def _overlaps_any(name, placed, x, y, w, h):
+def _overlaps_any(name, placed, x, y, w, h):  # → §3.5.B
     """Per-pair edge-to-edge gap, keyed on rack membership via `pair_min_gap`.
 
     Virtual zones (names with `_` prefix — `_pb_ring_zone`, `_gate_spur_zone`,
@@ -117,13 +117,13 @@ def _overlaps_any(name, placed, x, y, w, h):
     return False
 
 
-def _within_relaxed_bounds(x, y, w, h, sw, sl, tol=BOUNDARY_TOLERANCE):
+def _within_relaxed_bounds(x, y, w, h, sw, sl, tol=BOUNDARY_TOLERANCE):  # → §3.5.A
     """Allow placement up to `tol` metres outside the plot on any side."""
     return (x >= -tol and y >= -tol
             and x + w <= sw + tol and y + h <= sl + tol)
 
 # ── Placement helpers ──────────────────────────────────────────────────────
-def place_anchor(sw, sl, name, edge, ratio, offset):
+def place_anchor(sw, sl, name, edge, ratio, offset):  # → §3.2
     """Fixed anchor — grid-snapped. Returns (x, y, w, h)."""
     w, h = BLOCK_FOOTPRINTS[name]
     if   edge == "N": x, y = (sw - w) * ratio, sl - h - offset
@@ -135,7 +135,7 @@ def place_anchor(sw, sl, name, edge, ratio, offset):
     return max(0, min(x, sw - w)), max(0, min(y, sl - h)), w, h
 
 
-def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=None):
+def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=None):  # → §3.3
     """
     Try to place block using sample_fn() → (x, y).
     Tries BOTH orientations (w×h and h×w) at each sampled point.
@@ -173,7 +173,7 @@ def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=No
 
 
 # ── Magnet placer (Phase 06, Step 1.1+) ────────────────────────────────────
-def _slide(t_start, t_extent, b_extent, inset, i, n):
+def _slide(t_start, t_extent, b_extent, inset, i, n):  # → §3.5
     """i-th of n evenly spaced lateral positions for a block of extent
     `b_extent` sliding along a target's side of extent `t_extent`. `inset`
     forces a minimum corner overlap so candidates are not perfectly flush
@@ -185,7 +185,7 @@ def _slide(t_start, t_extent, b_extent, inset, i, n):
     return lo + (hi - lo) * i / (n - 1)
 
 
-def _magnet_candidates(name, w, h, placed, sw, sl,
+def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
                        samples_per_side=7, lateral_inset=4, target=None):
     """Generate (x, y) candidates by snapping a block (w×h, named `name`) at
     the pair-appropriate magnet distance against each side of every real
@@ -226,7 +226,7 @@ def _magnet_candidates(name, w, h, placed, sw, sl,
     return cands
 
 
-def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None):
+def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None):  # → §3.5
     """Place a floated block by magnetizing to a previously placed block.
 
     Tries both orientations. Returns (x, y, w, h) or None when no candidate
@@ -262,7 +262,7 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
 
 
 # ── Fire road geometry ─────────────────────────────────────────────────────
-def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):
+def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):  # → §3.4.A
     """Closed polyline of PB ring road centerline."""
     x1, y1 = pb_x - offset, pb_y - offset
     x2, y2 = pb_x + pb_w + offset, pb_y + pb_h + offset
@@ -275,7 +275,7 @@ def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
 
 
 # ── Rack — Step A: buffer rectangles per "need rack" block ───────────────
-def rack_buffer_rect(block, offset):
+def rack_buffer_rect(block, offset):  # → §3.6.A
     """Axis-aligned rectangle around a block's footprint, inflated by `offset`.
 
     The rectangle's OUTLINE is a candidate buffer line at distance `offset`
@@ -301,7 +301,7 @@ RACK_BLOCK_OFFSETS = {
 }
 
 
-def compute_rack_buffers(blocks):
+def compute_rack_buffers(blocks):  # → §3.6.A
     """Step A — per-block buffer rectangles for the 6 offsets a rack block uses.
 
     Returns {block_name: {offset_key: rect}} for every block in `RACK_BLOCKS`.
@@ -317,7 +317,7 @@ def compute_rack_buffers(blocks):
     }
 
 
-def build_rack_spines(rack_buffers, blocks, sw, sl):
+def build_rack_spines(rack_buffers, blocks, sw, sl):  # → §3.6.B (B-1..B-4)
     """Phase 06 Steps B-1 to B-4 — build PB-CT spine and candidates.
 
     Returns:
@@ -485,7 +485,7 @@ def build_rack_spines(rack_buffers, blocks, sw, sl):
     return spine_centerlines, candidate_points, active_cases, water_triangle
 
 
-def build_gate_spur(site_w, site_l, gate_pt):
+def build_gate_spur(site_w, site_l, gate_pt):  # → §3.4.B (simple fallback; main logic is inline in generate_sketch)
     """Primary-road polyline from the gate (on the boundary) to the perimeter
     road centerline. Always axis-aligned.
     """
@@ -504,7 +504,7 @@ def build_gate_spur(site_w, site_l, gate_pt):
 _FIXED_BLOCKS = ("Gate House", "GIS", "RAW Water Tank")
 
 
-def _spur_exclusion_rect(line, buffer=ROAD_BUFFER):
+def _spur_exclusion_rect(line, buffer=ROAD_BUFFER):  # → §3.4.B · §3.4.D (keeps floated blocks ≥8m from spur CLs)
     """List of axis-aligned bounding boxes for each segment of a spur line, inflated by `buffer`.
     Used as virtual exclusion zones during floated-block placement."""
     if not line or len(line) < 2:
@@ -518,7 +518,7 @@ def _spur_exclusion_rect(line, buffer=ROAD_BUFFER):
     return rects
 
 
-def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
+def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):  # → §3.4.D (used by build_ring_spur to avoid fixed blocks)
     """Axis-aligned segment vs axis-aligned rectangle overlap test.
 
     A segment that merely touches the rect's edge (tangent) is NOT counted as
@@ -529,7 +529,7 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):
     symin, symax = min(y1, y2), max(y1, y2)
     if sxmax <= rx or sxmin >= rx + rw:
         return False
-def compute_snapped_buffers(placed, tolerance=6):
+def compute_snapped_buffers(placed, tolerance=6):  # → §3.7.A
     """Computes road buffers for all blocks, snapping them together if within 2*tolerance (12m).
     PB is an immovable magnet (snaps if within tolerance=6m)."""
     buffers = {}
@@ -582,7 +582,7 @@ def compute_snapped_buffers(placed, tolerance=6):
         
     return buffers
 
-def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):
+def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):  # → §3.7.B (Pass 1..3)
     """B-1 Algorithm for generating perimeter road segments from snapped block buffers."""
     FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
     blocks = {name: bounds for name, bounds in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
@@ -666,7 +666,7 @@ def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):
             
     return segments
 
-def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):
+def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):  # → §3.7.C · §3.8.B
     """A-2 Algorithm for finding 8m road access lines for Group A blocks."""
     GROUP_A_BLOCKS = {"GIS", "RAW Water Tank", "Cooling Tower", "WT/WWT", "Warehouse", "Admin Building"}
     
@@ -720,7 +720,7 @@ def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, g
 
     return segments
 
-def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):
+def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):  # → §3.4.D
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
 
     Picks a perpendicular drop on the side facing the gate; slides the anchor
@@ -799,7 +799,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None):
+def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None):  # → §3.7.D (Priority 1..3)
     if ref_segs is None:
         ref_segs = []
         
@@ -935,7 +935,7 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
             
     return h_merged + v_merged
 
-def generate_sketch(
+def generate_sketch(  # → §3.1 Master Placement Sequence
     site_w, site_l, wind_dir,
     gate_side="N", gate_ratio=0.5,
     gh_edge="N",    gh_ratio=0.5,  gh_offset=0,
@@ -962,7 +962,7 @@ def generate_sketch(
     for _ in range(max_pool):
         placed = {}   # name → (x, y, w, h)
 
-        # 1. Fixed anchors
+        # 1. Fixed anchors  [→ §3.2]
         for name, edge, ratio, off in [
             ("Gate House",     gh_edge,    gh_ratio,    gh_offset),
             ("GIS",            gis_edge,   gis_ratio,   gis_offset),
@@ -971,7 +971,7 @@ def generate_sketch(
             x, y, w, h = place_anchor(sw, sl, name, edge, ratio, off)
             placed[name] = (x, y, w, h)
 
-        # 2. Power Block (square — rotation irrelevant)
+        # 2. Power Block  [→ §3.3]
         # Tight-site logic from Main.py: if vertical clearance on each side < 60m,
         # shift PB by exactly ±30m instead of ±5% jitter.
         pw, ph = BLOCK_FOOTPRINTS["Power Block"]
@@ -992,7 +992,7 @@ def generate_sketch(
         placed["Power Block"] = pb_result
         pb_cx, pb_cy = pb_x + pb_w/2, pb_y + pb_h/2
 
-        # 3. PB Ring Road geometry + lock the road corridor for floated block placement
+        # 3. PB Ring Road geometry + lock the road corridor for floated block placement  [→ §3.4.A]
         ring_road = build_pb_ring_road(pb_x, pb_y, pb_w, pb_h)
 
         # Virtual exclusion zone to keep floated blocks exactly 8m away from the ring road centerline:
@@ -1005,7 +1005,7 @@ def generate_sketch(
             pb_h + 2 * ring_outer,
         )
 
-        # 3b. Perimeter Fire Road + both spurs — built before floated blocks so
+        # 3b. Gate Spur + Ring Spur — built before floated blocks so  [→ §3.4.B · §3.4.D]
         # their 8m road buffer can act as a placement exclusion zone (otherwise
         # a floated block may land right next to a spur centerline).
         # Perimeter road is now generated later from block buffers.
@@ -1057,7 +1057,7 @@ def generate_sketch(
                         exit_helper, other_corner = p2, p1
 
         if bb_mid and exit_helper and other_corner:
-            # Calculate Gate Death Zone (only if gate and gate house are on the same edge)
+            # Calculate Gate Death Zone (only if gate and gate house are on the same edge)  [→ §3.4.C]
             if gate_side == gh_edge:
                 gdz_x_min = min(bb_mid[0], gate_pt[0])
                 gdz_x_max = max(bb_mid[0], gate_pt[0])
@@ -1095,7 +1095,7 @@ def generate_sketch(
             for i, rect in enumerate(rects):
                 placed[f"{zone_name}_{i}"] = rect
 
-        # 4. Floated blocks — magnet placement with zone rules.
+        # 4. Floated blocks — magnet placement with zone rules.  [→ §3.5]
         gh_x, gh_y = placed["Gate House"][:2]
         admin_anchor = ((gh_x + pb_cx) / 2, (gh_y + pb_cy) / 2)
         raw_x, raw_y, raw_w, raw_h = placed["RAW Water Tank"]
@@ -1144,7 +1144,7 @@ def generate_sketch(
             if not n.startswith("_")
         ]
 
-        # 4. RACK placement (Step 1.2-RACK) — comes AFTER floated blocks but
+        # 4. RACK placement — comes AFTER floated blocks  [→ §3.6]
         # BEFORE perimeter/spurs/stubs (racks are more important than roads).
         # Step A: per-block buffer rectangles for Case 1 & Case 2 layouts.
         # Steps B-1..B-5 and C (spine + connector) — not implemented yet.
@@ -1187,7 +1187,7 @@ def generate_sketch(
                     best_y = vy
             return (best_x, best_y)
 
-        # B-5: Water cluster spine
+        # B-5: Water cluster spine  [→ §3.6.B-5]
         if len(water_triangle) == 3:
             grid_b5 = Grid(sw, sl, cell_size=CELL_SIZE)
             for b in blocks:
@@ -1231,7 +1231,7 @@ def generate_sketch(
                         rack_segments.append(seg)
                         water_cluster_segments.append(seg)
 
-        # Step C: Connect spines into one network
+        # Step C: Connect spines into one network  [→ §3.6.C-1]
         if len(spine_centerlines) >= 2 and water_cluster_segments:
             pb_line = [spine_centerlines[0]]
             ct_line = [spine_centerlines[1]]
@@ -1374,7 +1374,7 @@ def generate_sketch(
                 else:
                     route_between(water_cluster_segments + ct_line, pb_line)
 
-            # Step C-2: Flare Pipe Rack
+            # Step C-2: Flare Pipe Rack  [→ §3.6.C-2]
             flare_block = next((b for b in blocks if b["name"] == "Flare"), None)
             if flare_block:
                 fx, fy, fw, fh = flare_block["x"], flare_block["y"], flare_block["width"], flare_block["height"]
@@ -1399,10 +1399,10 @@ def generate_sketch(
                 # Add to rack_buffers for dashboard visualization
                 rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
 
-        computed_buffers = compute_snapped_buffers(placed)
-        perimeter_segments_raw = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)
+        computed_buffers = compute_snapped_buffers(placed)                                          # → §3.7.A
+        perimeter_segments_raw = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)       # → §3.7.B
 
-        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
+        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])  # → §3.7.C · §3.8.B
 
         # B-2 Clean up parallel segments on both A-2 and B-1
         all_segments_raw = perimeter_segments_raw + group_a_segments_raw
@@ -1420,9 +1420,9 @@ def generate_sketch(
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)  # → §3.7.D
 
-        # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
+        # Boom Barrier: 16m line from the Gate House inner edge pointing inwards  [→ §3.1 step 5]
         boom_barrier = []
         gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:

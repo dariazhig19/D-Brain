@@ -214,28 +214,19 @@ There will be 2 parts for B:
 
 **B-2. 10m Road Cleanup (Parallel Segment Merging)**
 - Evaluates horizontal and vertical road segments (both A-2 and B-1).
-- **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel, overlap, and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line.
+- **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line (no physical overlap in length required).
 - **Priority 2 (Filter):** Any segment that successfully merges with the PB network is filtered out from further merging.
 - **Priority 3 (Outward Snapping Sweep):** Take the remaining, unmerged A-2/B-1 segments and process them from the outside in to ensure roads only move *away* from block footprints (outside the road buffer) and never inside:
-  1. **Top Sweep:** Sort horizontal lines by highest Y. Process downwards. If a line is within 17m below, snap it UP to the higher line.
-  2. **Bottom Sweep:** Sort horizontal lines by lowest Y. Process upwards. If a line is within 17m above, snap it DOWN to the lower line.
-  3. **Left Sweep:** Sort vertical lines by lowest X. Process rightwards. If a line is within 17m right, snap it LEFT to the outer line.
-  4. **Right Sweep:** Sort vertical lines by highest X. Process leftwards. If a line is within 17m left, snap it RIGHT to the outer line.
+  1. **Top Sweep:** Sort horizontal lines by highest Y. Process downwards. If a line is within 17m below (even if not overlapping), snap it UP to the higher line.
+  2. **Bottom Sweep:** Sort horizontal lines by lowest Y. Process upwards. If a line is within 17m above (even if not overlapping), snap it DOWN to the lower line.
+  3. **Left Sweep:** Sort vertical lines by lowest X. Process rightwards. If a line is within 17m right (even if not overlapping), snap it LEFT to the outer line.
+  4. **Right Sweep:** Sort vertical lines by highest X. Process leftwards. If a line is within 17m left (even if not overlapping), snap it RIGHT to the outer line.
 
-### 1.6 Road Classification
 
-After pruning, classify each remaining segment:
 
-| Condition | Road Type | Width |
-|---|---|---|
-| Part of PB Ring Road | **Primary (Fire)** | 8m |
-| Part of Perimeter Fire Road | **Primary (Fire)** | 8m |
-| Stub connection (any block, any usage count) | **Secondary** | 6m |
 
-**Compaction rule:** Blocks adjacent only to Secondary roads may shift **3m closer** to that road centerline  
-(secondary buffer = 3m each side vs primary buffer = 4m each side).
 
-### 1.7 Step 1 Output
+### 1.6 Step 1 Output
 
 ```python
 {

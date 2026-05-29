@@ -821,16 +821,12 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
             for r in refs:
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
-                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
-                        if overlap > -0.1:
-                            snapped = True
-                            break
+                        snapped = True
+                        break
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
-                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
-                        if overlap > -0.1:
-                            snapped = True
-                            break
+                        snapped = True
+                        break
             if not snapped:
                 kept.append(l)
         return kept
@@ -856,9 +852,7 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                 for j in range(i+1, len(north)):
                     l1, l2 = north[i], north[j]
                     if 0 <= l1[0][1] - l2[0][1] <= tol:
-                        overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
-                        if overlap > -0.1:
-                            north[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+                        north[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
                             
             # For South: Sweep Up (lowest Y first)
             south.sort(key=lambda l: l[0][1])
@@ -866,9 +860,7 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                 for j in range(i+1, len(south)):
                     l1, l2 = south[i], south[j]
                     if 0 <= l2[0][1] - l1[0][1] <= tol:
-                        overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
-                        if overlap > -0.1:
-                            south[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+                        south[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
                             
             return north + south
             
@@ -884,9 +876,7 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                 for j in range(i+1, len(east)):
                     l1, l2 = east[i], east[j]
                     if 0 <= l1[0][0] - l2[0][0] <= tol:
-                        overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
-                        if overlap > -0.1:
-                            east[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+                        east[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
                             
             # For West: Sweep Right (lowest X first)
             west.sort(key=lambda l: l[0][0])
@@ -894,9 +884,7 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                 for j in range(i+1, len(west)):
                     l1, l2 = west[i], west[j]
                     if 0 <= l2[0][0] - l1[0][0] <= tol:
-                        overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
-                        if overlap > -0.1:
-                            west[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+                        west[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
                             
             return east + west
             

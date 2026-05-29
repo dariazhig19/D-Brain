@@ -821,13 +821,13 @@ def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
             for r in refs:
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
-                        overlap = max(0, min(l[1][0], r[1][0]) - max(l[0][0], r[0][0]))
+                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
                             snapped = True
                             break
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
-                        overlap = max(0, min(l[1][1], r[1][1]) - max(l[0][1], r[0][1]))
+                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
                             snapped = True
                             break
@@ -848,7 +848,7 @@ def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
                     l1, l2 = lines[i], lines[j]
                     if is_horiz:
                         if 0.1 < abs(l1[0][1] - l2[0][1]) <= tol:
-                            overlap = max(0, min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0]))
+                            overlap = min(l1[1][0], l2[1][0]) - max(l1[0][0], l2[0][0])
                             if overlap > -0.1:
                                 avg_y = (l1[0][1] + l2[0][1]) / 2
                                 lines[i] = [(l1[0][0], avg_y), (l1[1][0], avg_y)]
@@ -857,7 +857,7 @@ def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
                                 break
                     else:
                         if 0.1 < abs(l1[0][0] - l2[0][0]) <= tol:
-                            overlap = max(0, min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1]))
+                            overlap = min(l1[1][1], l2[1][1]) - max(l1[0][1], l2[0][1])
                             if overlap > -0.1:
                                 avg_x = (l1[0][0] + l2[0][0]) / 2
                                 lines[i] = [(avg_x, l1[0][1]), (avg_x, l1[1][1])]
@@ -876,14 +876,14 @@ def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
             for i, r in enumerate(res):
                 if is_horiz:
                     if abs(l[0][1] - r[0][1]) < 0.1:
-                        overlap = max(0, min(l[1][0], r[1][0]) - max(l[0][0], r[0][0]))
+                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
                             res[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
                             merged = True
                             break
                 else:
                     if abs(l[0][0] - r[0][0]) < 0.1:
-                        overlap = max(0, min(l1[1][1], r[1][1]) - max(l[0][1], r[0][1]))
+                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
                             res[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
                             merged = True

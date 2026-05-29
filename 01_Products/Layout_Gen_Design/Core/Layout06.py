@@ -793,7 +793,18 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, tol=17.0):
+def cleanup_parallel_segments(segs, ref_segs=None, tol=17.0):
+    if ref_segs is None:
+        ref_segs = []
+        
+    ref_horiz = []
+    ref_vert = []
+    for (x1, y1), (x2, y2) in ref_segs:
+        if abs(y1 - y2) < 0.1:
+            ref_horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
+        elif abs(x1 - x2) < 0.1:
+            ref_vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
+
     horiz = []
     vert = []
     for (x1, y1), (x2, y2) in segs:
@@ -802,6 +813,32 @@ def cleanup_parallel_segments(segs, tol=17.0):
         elif abs(x1 - x2) < 0.1:
             vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
             
+    # Priority 1 & 2: Snap to PB network and filter out
+    def snap_to_ref(lines, refs, is_horiz):
+        kept = []
+        for l in lines:
+            snapped = False
+            for r in refs:
+                if is_horiz:
+                    if 0 <= abs(l[0][1] - r[0][1]) <= tol:
+                        overlap = max(0, min(l[1][0], r[1][0]) - max(l[0][0], r[0][0]))
+                        if overlap > -0.1:
+                            snapped = True
+                            break
+                else:
+                    if 0 <= abs(l[0][0] - r[0][0]) <= tol:
+                        overlap = max(0, min(l[1][1], r[1][1]) - max(l[0][1], r[0][1]))
+                        if overlap > -0.1:
+                            snapped = True
+                            break
+            if not snapped:
+                kept.append(l)
+        return kept
+        
+    horiz = snap_to_ref(horiz, ref_horiz, True)
+    vert = snap_to_ref(vert, ref_vert, False)
+            
+    # Priority 3: Self-merge
     def process(lines, is_horiz):
         changed = True
         while changed:
@@ -986,16 +1023,15 @@ def generate_sketch(
         if bb_mid and exit_helper and other_corner:
             # Calculate Gate Death Zone (only if gate and gate house are on the same edge)
             if gate_side == gh_edge:
-                if bb_edge in ("N", "S"):
-                    gdz_x_min = min(bb_mid[0], gate_pt[0], other_corner[0]) - 8
-                    gdz_x_max = max(bb_mid[0], gate_pt[0], other_corner[0]) + 8
-                    gdz_y_min = min(bb_mid[1], gate_pt[1], other_corner[1]) - 8
-                    gdz_y_max = max(bb_mid[1], gate_pt[1], other_corner[1]) + 8
-                else:
-                    gdz_x_min = min(bb_mid[0], gate_pt[0], other_corner[0]) - 8
-                    gdz_x_max = max(bb_mid[0], gate_pt[0], other_corner[0]) + 8
-                    gdz_y_min = min(bb_mid[1], gate_pt[1], other_corner[1]) - 8
-                    gdz_y_max = max(bb_mid[1], gate_pt[1], other_corner[1]) + 8
+                gdz_x_min = min(bb_mid[0], gate_pt[0])
+                gdz_x_max = max(bb_mid[0], gate_pt[0])
+                gdz_y_min = min(bb_mid[1], gate_pt[1])
+                gdz_y_max = max(bb_mid[1], gate_pt[1])
+                # Ensure it's a valid rectangle even if aligned
+                if gdz_x_max - gdz_x_min < 1:
+                    gdz_x_min -= 1; gdz_x_max += 1
+                if gdz_y_max - gdz_y_min < 1:
+                    gdz_y_min -= 1; gdz_y_max += 1
                 gate_death_zone = (gdz_x_min, gdz_y_min, gdz_x_max - gdz_x_min, gdz_y_max - gdz_y_min)
                 placed["_gate_death_zone"] = gate_death_zone
             else:
@@ -1334,7 +1370,21 @@ def generate_sketch(
 
         # B-2 Clean up parallel segments on both A-2 and B-1
         all_segments_raw = perimeter_segments_raw + group_a_segments_raw
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, tol=17.0)
+        
+        # Extract PB Ring Road network (Ring road + Gate spur + Ring spur) for Priority 1 matching
+        pb_network = []
+        if ring_road:
+            for i in range(len(ring_road) - 1):
+                pb_network.append((ring_road[i], ring_road[i+1]))
+            pb_network.append((ring_road[-1], ring_road[0]))
+        if gate_spur:
+            for i in range(len(gate_spur) - 1):
+                pb_network.append((gate_spur[i], gate_spur[i+1]))
+        if ring_spur:
+            for i in range(len(ring_spur) - 1):
+                pb_network.append((ring_spur[i], ring_spur[i+1]))
+                
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, ref_segs=pb_network, tol=17.0)
 
         # Boom Barrier: 16m line from the Gate House inner edge pointing inwards
         boom_barrier = []

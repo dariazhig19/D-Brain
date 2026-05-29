@@ -213,11 +213,11 @@ There will be 2 parts for B:
 
 
 **B-2. 10m Road Cleanup (Parallel Segment Merging)**
-- Evaluates horizontal and vertical road segments.
-- If two parallel segments overlap and their distance is ≤ 10 meters, they are merged.
-- **Snapping:** The algorithm snaps both segments together to form one smooth, continuous centerline at their exact average position.
-- **Exception (PB Ring Road):** The Power Block Ring Road is structurally fixed and is strictly **excluded** from this merging algorithm; its position will never be shifted.
-- *Implementation detail: This `cleanup_parallel_segments` algorithm ensures clean routing (e.g., smoothly aligning the GIS and Warehouse access lines).*
+- Evaluates horizontal and vertical road segments (both A-2 and B-1).
+- **Priority 1 (Snap to PB Network):** First, check distance between the A-2/B-1 lines and the PB Ring Road network (including its spurs). If they are parallel, overlap, and are ≤ 17 meters apart, the A-2/B-1 segment completely snaps to the PB Ring Road line.
+- **Priority 2 (Filter):** Any segment that successfully merges with the PB network is filtered out from further merging.
+- **Priority 3 (Self-Merge):** Take the remaining, unmerged A-2/B-1 segments and check them against each other. If two parallel segments overlap and are ≤ 17 meters apart, they are merged.
+- **Snapping:** For self-merges, the algorithm snaps both segments together to form one smooth, continuous centerline at their exact average position.
 
 ### 1.6 Road Classification
 

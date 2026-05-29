@@ -817,11 +817,18 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
     def snap_to_ref(lines, refs, is_horiz):
         kept_for_p3 = []
         snapped_final = []
+        mid_y = sl / 2
+        mid_x = sw / 2
+        
         for l in lines:
             snapped = False
             for r in refs:
                 if is_horiz:
                     if 0 <= abs(l[0][1] - r[0][1]) <= tol:
+                        # Ensure we only snap outward
+                        if l[0][1] >= mid_y and r[0][1] < l[0][1]: continue
+                        if l[0][1] < mid_y and r[0][1] > l[0][1]: continue
+                        
                         overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
                         if overlap > -0.1:
                             l = [(l[0][0], r[0][1]), (l[1][0], r[0][1])]
@@ -829,6 +836,10 @@ def cleanup_parallel_segments(segs, sw, sl, ref_segs=None, tol=17.0):
                             break
                 else:
                     if 0 <= abs(l[0][0] - r[0][0]) <= tol:
+                        # Ensure we only snap outward
+                        if l[0][0] >= mid_x and r[0][0] < l[0][0]: continue
+                        if l[0][0] < mid_x and r[0][0] > l[0][0]: continue
+                        
                         overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
                         if overlap > -0.1:
                             l = [(r[0][0], l[0][1]), (r[0][0], l[1][1])]

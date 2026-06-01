@@ -306,13 +306,17 @@ if True:  # Phase 06 — Sketch roads
         cleaned_dbg    = sketch.get("all_segments_cleaned", [])
         st.write(f"**Outer face segs:** {len(outer_segs_dbg)}  |  **Loop connectors:** {len(loop_segs_dbg)}  |  **Cleaned total:** {len(cleaned_dbg)}")
 
-        st.markdown("**all_segments_cleaned — V (vertical) segments:**")
-        v_rows = [{"#": i, "x": round(a[0],1), "y0": round(min(a[1],b[1]),1), "y1": round(max(a[1],b[1]),1), "len": round(abs(b[1]-a[1]),1)}
-                  for i, (a, b) in enumerate(cleaned_dbg) if abs(a[0]-b[0]) < 0.1]
-        if v_rows:
+        col_h, col_v = st.columns(2)
+        with col_h:
+            st.markdown("**H segments:**")
+            h_rows = [{"#": i, "x0": round(min(a[0],b[0]),1), "x1": round(max(a[0],b[0]),1), "y": round(a[1],1), "len": round(abs(b[0]-a[0]),1)}
+                      for i, (a, b) in enumerate(cleaned_dbg) if abs(a[1]-b[1]) < 0.1]
+            st.dataframe(h_rows, use_container_width=True, hide_index=True)
+        with col_v:
+            st.markdown("**V segments:**")
+            v_rows = [{"#": i, "x": round(a[0],1), "y0": round(min(a[1],b[1]),1), "y1": round(max(a[1],b[1]),1), "len": round(abs(b[1]-a[1]),1)}
+                      for i, (a, b) in enumerate(cleaned_dbg) if abs(a[0]-b[0]) < 0.1]
             st.dataframe(v_rows, use_container_width=True, hide_index=True)
-        else:
-            st.warning("No vertical segments in cleaned output")
 
         st.markdown("**Outer face segs:**")
         if outer_segs_dbg:

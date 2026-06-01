@@ -15,26 +15,9 @@
               "state": {
                 "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "viewState": {
-                  "x": 1281.0694683987717,
-                  "y": 1486.1089683280877,
-                  "zoom": -1.086630573828355
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
-            }
-          },
-          {
-            "id": "d1bff7cf6a0db9fc",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 67.52389760286354,
-                  "y": 770.3564002376461,
-                  "zoom": -0.3333333333333332
+                  "x": 13929.05598309651,
+                  "y": 425.8592749666211,
+                  "zoom": 1.1102230246251565e-16
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -83,8 +66,7 @@
               "title": "!Scoring_Logic_한국어"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -157,7 +139,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "file": "04_Reports/Monthly/Monthly_Report_2026_05.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -167,7 +149,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Overview"
+              "title": "Backlinks for Monthly_Report_2026_05"
             }
           },
           {
@@ -246,8 +228,20 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "d1bff7cf6a0db9fc",
+  "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V7.png",
+    "Road Access by Blocks.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V11.png",
+    "04_Reports/Monthly/Monthly_Report_2026_05.md",
+    "04_Reports/Monthly",
+    "Pasted image 20260519180256.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06",
+    "Untitled.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
+    "04_Reports/Weekly/Weekly_Report_2026_W23.md",
     "00_Input/Phase_06_Plan_Structured.md",
     "01_Products/Layout_Gen_Design/_fix_layout06.py",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-314.pyc",
@@ -255,26 +249,17 @@
     "01_Products/Layout_Gen_Design/Dashboard/__pycache__",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06_debug.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Layout06_debug.py",
-    "Pasted image 20260526175639.png",
-    "Pasted image 20260526170037.png",
-    "Road Access by Blocks.md",
-    "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-    "Pasted image 20260522153343.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V10.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V9.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V8.png",
     "04_Reports/Weekly/Weekly_Report_2026_W21.md",
     "Pasted image 20260522112630.png",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
-    "Pasted image 20260519180256.png",
     "Pasted image 20260519180250.png",
-    "Pasted image 20260519172928.png",
-    "Pasted image 20260519172846.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase_05_Plan.md",
     "04_Reports/Daily/Daily_Report_20260518.md",
     "01_Products/Layout_Gen_Design/debug_placement.py",
     "01_Products/Layout_Gen_Design/test_sizes_debug.py",
-    "01_Products/Layout_Gen_Design/test_sizes.py",
-    "01_Products/Layout_Gen_Design/test_anchors.py",
     "01_Products/Layout_Gen_Design/Layout_Requirements.md",
     "00_Input/2026-05-14 - Session Report.md",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
@@ -290,10 +275,6 @@
     "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Task.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Phase_04_Plan.md",
-    "04_Reports/Daily/Daily_Report_20260507.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Implementation_Plan.md"
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md"
   ]
 }

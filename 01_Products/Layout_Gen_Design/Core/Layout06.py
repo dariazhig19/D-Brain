@@ -268,6 +268,314 @@ def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):  # → §
     x2, y2 = pb_x + pb_w + offset, pb_y + pb_h + offset
     return [(x1,y1),(x2,y1),(x2,y2),(x1,y2),(x1,y1)]
 
+def create_perimeter_loop(segs, sw, sl, raw_segs=None, computed_buffers=None, pb_network=None):  # → §3.7.E
+    """Close the fire perimeter road into a continuous loop."""
+    import math
+    TOL = 0.1
+
+    h_segs = []
+    v_segs = []
+    for p1, p2 in segs:
+        if abs(p1[1] - p2[1]) < TOL:
+            h_segs.append((min(p1[0], p2[0]), max(p1[0], p2[0]), p1[1]))
+        elif abs(p1[0] - p2[0]) < TOL:
+            v_segs.append((p1[0], min(p1[1], p2[1]), max(p1[1], p2[1])))
+
+    # Record the initial (input) segments so connectors added later by _add()
+    # are not misclassified as outer-face segments during traversal.
+    _orig_h = set(h_segs)
+    _orig_v = set(v_segs)
+
+    def _is_original_h(x0, x1, y):
+        if (x0, x1, y) in _orig_h:
+            return True
+        # Also accept if an initial segment at the same Y fully contains this range
+        # (handles merged/extended segments whose endpoints shifted slightly)
+        for (ax0, ax1, ay) in _orig_h:
+            if abs(ay - y) < TOL and ax0 <= x0 + TOL and ax1 >= x1 - TOL:
+                return True
+        return False
+
+    def _is_original_v(x, y0, y1):
+        if (x, y0, y1) in _orig_v:
+            return True
+        for (ax, ay0, ay1) in _orig_v:
+            if abs(ax - x) < TOL and ay0 <= y0 + TOL and ay1 >= y1 - TOL:
+                return True
+        return False
+
+    # Derive PB centre for N/S and E/W tie-breaking (segments on shared snapped
+    # edges between two blocks are classified relative to PB).
+    pb_cx, pb_cy = sw / 2, sl / 2
+    if computed_buffers and "Power Block" in computed_buffers:
+        _pb = computed_buffers["Power Block"]
+        pb_cx = _pb[0] + _pb[2] / 2
+        pb_cy = _pb[1] + _pb[3] / 2
+
+    def _x_ranges_overlap(ax0, ax1, bx0, bx1):
+        return min(ax1, bx1) > max(ax0, bx0)
+    def _y_ranges_overlap(ay0, ay1, by0, by1):
+        return min(ay1, by1) > max(ay0, by0)
+
+    # Outer-face filter uses the known perimeter block set directly.
+    # Using buffer values (not segment positions) is reliable: segment positions
+    # can shift due to Priority-1 snapping, but buffer geometry never changes.
+    # Non-perimeter blocks (Flare, Gate House, Demi Water) are intentionally
+    # excluded — their buffers must not shadow fire-road block outer edges.
+    _PERIMETER_BLOCKS = frozenset({
+        "Power Block", "Cooling Tower", "WT/WWT", "RAW Water Tank",
+        "GIS", "Warehouse", "Admin Building",
+    })
+    _peri_buf = [
+        (n, b) for n, b in (computed_buffers or {}).items()
+        if n in _PERIMETER_BLOCKS
+    ]
+
+    def _fb_for_h(hy, hx0, hx1, check_above):
+        """Check whether any perimeter block extends above (check_above=True) or
+        below (False) hy in the x-range [hx0, hx1]."""
+        for _, (bx2, by2, bw2, bh2) in _peri_buf:
+            if check_above:
+                if (by2 + bh2) > hy + TOL and _x_ranges_overlap(hx0, hx1, bx2, bx2 + bw2):
+                    return True
+            else:
+                if by2 < hy - TOL and _x_ranges_overlap(hx0, hx1, bx2, bx2 + bw2):
+                    return True
+        return False
+
+    def _fb_for_v(vx, vy0, vy1, check_right):
+        """Check whether any perimeter block extends right (check_right=True) or
+        left (False) of vx in the y-range [vy0, vy1]."""
+        for _, (bx2, by2, bw2, bh2) in _peri_buf:
+            if check_right:
+                if (bx2 + bw2) > vx + TOL and _y_ranges_overlap(vy0, vy1, by2, by2 + bh2):
+                    return True
+            else:
+                if bx2 < vx - TOL and _y_ranges_overlap(vy0, vy1, by2, by2 + bh2):
+                    return True
+        return False
+
+    # Gather extra targets for Rule B
+    extra_h = []
+    extra_v = []
+
+    # Plot boundaries
+    extra_h.extend([(0, sw, 0), (0, sw, sl)])
+    extra_v.extend([(0, 0, sl), (sw, 0, sl)])
+
+    # Block buffer lines
+    if computed_buffers:
+        for b_name, (bx, by, bw, bh) in computed_buffers.items():
+            extra_h.append((bx, bx+bw, by))
+            extra_h.append((bx, bx+bw, by+bh))
+            extra_v.append((bx, by, by+bh))
+            extra_v.append((bx+bw, by, by+bh))
+
+    # PB Network
+    if pb_network:
+        for (p1, p2) in pb_network:
+            if abs(p1[1] - p2[1]) < TOL:
+                extra_h.append((min(p1[0], p2[0]), max(p1[0], p2[0]), p1[1]))
+            else:
+                extra_v.append((p1[0], min(p1[1], p2[1]), max(p1[1], p2[1])))
+
+    # Classify outer face segments using only the perimeter buffer geometry.
+    # No edge-matching (abs(hy - buffer_edge) < TOL) — that breaks when Priority-1
+    # snapping moves a segment away from its original buffer edge position.
+    # A segment is outer-north iff no perimeter block extends ABOVE it in its
+    # x-range; outer-south iff nothing below; etc. The _fb_for_h/v helpers
+    # query actual buffer coordinates which are never moved by cleanup.
+    outer_n, outer_s, outer_e, outer_w = [], [], [], []
+    for h in h_segs:
+        hx0, hx1, hy = h
+        if not _is_original_h(hx0, hx1, hy): continue
+        is_n = not _fb_for_h(hy, hx0, hx1, check_above=True)
+        is_s = not _fb_for_h(hy, hx0, hx1, check_above=False)
+        if is_n and is_s:
+            if hy >= pb_cy: is_s = False
+            else: is_n = False
+        if is_n: outer_n.append(('N', h))
+        elif is_s: outer_s.append(('S', h))
+
+    for v in v_segs:
+        vx, vy0, vy1 = v
+        if not _is_original_v(vx, vy0, vy1): continue
+        is_e = not _fb_for_v(vx, vy0, vy1, check_right=True)
+        is_w = not _fb_for_v(vx, vy0, vy1, check_right=False)
+        if is_e and is_w:
+            if vx >= pb_cx: is_w = False
+            else: is_e = False
+        if is_e: outer_e.append(('E', v))
+        elif is_w: outer_w.append(('W', v))
+
+    # Convert outer face segments to ((x1,y1),(x2,y2)) — must be built before
+    # any early return so every code path returns the same tuple shape.
+    def _h_to_seg(h): x0, x1, y = h; return ((x0, y), (x1, y))
+    def _v_to_seg(v): x, y0, y1 = v; return ((x, y0), (x, y1))
+    outer_segments = (
+        [_h_to_seg(s) for _, s in outer_n] +
+        [_h_to_seg(s) for _, s in outer_s] +
+        [_v_to_seg(s) for _, s in outer_e] +
+        [_v_to_seg(s) for _, s in outer_w]
+    )
+
+    unused = outer_n + outer_s + outer_e + outer_w
+    if not unused:
+        return [], outer_segments
+
+    def ray_hit(ray_pt, ray_dir, targets_h, targets_v):
+        px, py = ray_pt
+        dx, dy = ray_dir
+        best_dist = float('inf')
+        best_pt = None
+        best_seg = None
+        for h in targets_h:
+            x0, x1, y = h
+            if dx == 0 and dy != 0:
+                if (dy > 0 and y >= py - TOL) or (dy < 0 and y <= py + TOL):
+                    if x0 - TOL <= px <= x1 + TOL:
+                        d = abs(y - py)
+                        if d < best_dist:
+                            best_dist = d; best_pt = (px, y); best_seg = h
+            elif dx != 0 and dy == 0:
+                if abs(y - py) < TOL:
+                    if dx > 0 and x0 >= px - TOL:
+                        d = x0 - px
+                        if d < best_dist:
+                            best_dist = d; best_pt = (x0, y); best_seg = h
+                    elif dx < 0 and x1 <= px + TOL:
+                        d = px - x1
+                        if d < best_dist:
+                            best_dist = d; best_pt = (x1, y); best_seg = h
+        for v in targets_v:
+            x, y0, y1 = v
+            if dy == 0 and dx != 0:
+                if (dx > 0 and x >= px - TOL) or (dx < 0 and x <= px + TOL):
+                    if y0 - TOL <= py <= y1 + TOL:
+                        d = abs(x - px)
+                        if d < best_dist:
+                            best_dist = d; best_pt = (x, py); best_seg = v
+            elif dx == 0 and dy != 0:
+                if abs(x - px) < TOL:
+                    if dy > 0 and y0 >= py - TOL:
+                        d = y0 - py
+                        if d < best_dist:
+                            best_dist = d; best_pt = (x, y0); best_seg = v
+                    elif dy < 0 and y1 <= py + TOL:
+                        d = py - y1
+                        if d < best_dist:
+                            best_dist = d; best_pt = (x, y1); best_seg = v
+        return best_pt, best_seg
+
+    def get_closest_unused(pt):
+        px, py = pt
+        best_dist = float('inf')
+        best_seg = None
+        best_target = None
+        for u in unused:
+            ukind, useg = u
+            if ukind == 'N': upt = (useg[0], useg[2])
+            elif ukind == 'E': upt = (useg[0], useg[2])
+            elif ukind == 'S': upt = (useg[1], useg[2])
+            elif ukind == 'W': upt = (useg[0], useg[1])
+            dist = math.hypot(px - upt[0], py - upt[1])
+            if dist < best_dist:
+                best_dist = dist
+                best_seg = u
+                best_target = upt
+        return best_seg, best_target
+
+    def route_axis_aligned(p1, p2, ray_dir):
+        if abs(p1[0] - p2[0]) < TOL or abs(p1[1] - p2[1]) < TOL:
+            return [(p1, p2)]
+        if ray_dir[0] != 0:
+            corner = (p2[0], p1[1])
+        else:
+            corner = (p1[0], p2[1])
+        return [(p1, corner), (corner, p2)]
+
+    connectors = []
+    def _add(p1, p2):
+        if abs(p1[0] - p2[0]) < TOL and abs(p1[1] - p2[1]) < TOL:
+            return
+        ax, ay, bx, by = p1[0], p1[1], p2[0], p2[1]
+        if abs(ay - by) < TOL:
+            x0, x1 = min(ax, bx), max(ax, bx)
+            for hx0, hx1, hy in h_segs:
+                if abs(hy - ay) < TOL and min(x1, hx1) >= max(x0, hx0) - TOL:
+                    if hx0 - TOL <= x0 and x1 <= hx1 + TOL:
+                        return
+            h_segs.append((x0, x1, ay))
+        else:
+            y0, y1 = min(ay, by), max(ay, by)
+            for vx, vy0, vy1 in v_segs:
+                if abs(vx - ax) < TOL and min(y1, vy1) >= max(y0, vy0) - TOL:
+                    if vy0 - TOL <= y0 and y1 <= vy1 + TOL:
+                        return
+            v_segs.append((ax, y0, y1))
+        connectors.append((p1, p2))
+
+    outer_n.sort(key=lambda item: item[1][2], reverse=True)
+    if not outer_n: return [], outer_segments
+    start_seg = outer_n[0]
+    current = start_seg
+
+    for _ in range(200):
+        if current in unused:
+            unused.remove(current)
+        kind, seg = current
+        
+        if kind == 'N':
+            ray_pt = (seg[1], seg[2]) # RIGHT end
+            ray_dir = (1, 0)
+        elif kind == 'E':
+            ray_pt = (seg[0], seg[1]) # BOTTOM end
+            ray_dir = (0, -1)
+        elif kind == 'S':
+            ray_pt = (seg[0], seg[2]) # LEFT end
+            ray_dir = (-1, 0)
+        elif kind == 'W':
+            ray_pt = (seg[0], seg[2]) # TOP end
+            ray_dir = (0, 1)
+
+        if not unused:
+            # Loop closure
+            start_base = (start_seg[1][0], start_seg[1][2])
+            for pA, pB in route_axis_aligned(ray_pt, start_base, ray_dir):
+                _add(pA, pB)
+            break
+
+        unused_h = [s[1] for s in unused if s[0] in ('N', 'S')]
+        unused_v = [s[1] for s in unused if s[0] in ('E', 'W')]
+        
+        hit_pt1, hit_seg1 = ray_hit(ray_pt, ray_dir, unused_h, unused_v)
+        hit_pt2, hit_seg2 = ray_hit(ray_pt, ray_dir, h_segs + extra_h, v_segs + extra_v)
+        
+        d1 = math.hypot(ray_pt[0]-hit_pt1[0], ray_pt[1]-hit_pt1[1]) if hit_pt1 else float('inf')
+        d2 = math.hypot(ray_pt[0]-hit_pt2[0], ray_pt[1]-hit_pt2[1]) if hit_pt2 else float('inf')
+        
+        if hit_pt1 and d1 <= d2:
+            _add(ray_pt, hit_pt1)
+            for u in unused:
+                if u[1] == hit_seg1:
+                    current = u
+                    break
+        elif hit_pt2 and hit_seg2:
+            _add(ray_pt, hit_pt2)
+            closest_u, closest_pt = get_closest_unused(hit_pt2)
+            if closest_u:
+                for pA, pB in route_axis_aligned(hit_pt2, closest_pt, ray_dir):
+                    _add(pA, pB)
+                current = closest_u
+        else:
+            closest_u, closest_pt = get_closest_unused(ray_pt)
+            if closest_u:
+                for pA, pB in route_axis_aligned(ray_pt, closest_pt, ray_dir):
+                    _add(pA, pB)
+                current = closest_u
+
+    return connectors, outer_segments
+
 def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
     """Closed polyline of perimeter fire road centerline."""
     d = cl_dist
@@ -529,6 +837,10 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):  # → §3.4.D (used by build_r
     symin, symax = min(y1, y2), max(y1, y2)
     if sxmax <= rx or sxmin >= rx + rw:
         return False
+    if symax <= ry or symin >= ry + rh:
+        return False
+    return True
+
 def compute_snapped_buffers(placed, tolerance=6):  # → §3.7.A
     """Computes road buffers for all blocks, snapping them together if within 2*tolerance (12m).
     PB is an immovable magnet (snaps if within tolerance=6m)."""
@@ -799,7 +1111,7 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None):  # → §3.7.D (Priority 1..3)
+def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None, pb_cx=0):  # → §3.7.D (Priority 1..3)
     if ref_segs is None:
         ref_segs = []
         
@@ -878,23 +1190,57 @@ def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol
     horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
     vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
             
-    # Priority 3: Simplified sweep.
-    # - Horizontal: Top sweep only. Sort by highest Y. Snap lower lines UP within 17m.
-    # - Vertical:   Left sweep only. Sort by lowest X. Snap rightward lines LEFT within 17m.
-    # Each line moves independently. No corner extension.
-    horiz.sort(key=lambda l: l[0][1], reverse=True)
-    for i in range(len(horiz)):
-        for j in range(i + 1, len(horiz)):
-            l1, l2 = horiz[i], horiz[j]
-            if 0 <= l1[0][1] - l2[0][1] <= tol:
-                horiz[j] = [(l2[0][0], l1[0][1]), (l2[1][0], l1[0][1])]
+    # Priority 3: Simplified sweep with Left/Right separation and Buffer Guard.
+    def is_inside_buffer(p_min, p_max, val, is_horiz):
+        for name, b in computed_buffers.items():
+            bx_min, by_min, bx_max, by_max = b
+            if is_horiz:
+                if by_min + 0.1 < val < by_max - 0.1:
+                    if min(p_max, bx_max) > max(p_min, bx_min) + 0.1:
+                        return True
+            else:
+                if bx_min + 0.1 < val < bx_max - 0.1:
+                    if min(p_max, by_max) > max(p_min, by_min) + 0.1:
+                        return True
+        return False
 
-    vert.sort(key=lambda l: l[0][0])
-    for i in range(len(vert)):
-        for j in range(i + 1, len(vert)):
-            l1, l2 = vert[i], vert[j]
-            if 0 <= l2[0][0] - l1[0][0] <= tol:
-                vert[j] = [(l1[0][0], l2[0][1]), (l1[0][0], l2[1][1])]
+    # 1. Horizontal Sweep
+    left_horiz = [l for l in horiz if (l[0][0] + l[1][0]) / 2 < pb_cx]
+    right_horiz = [l for l in horiz if (l[0][0] + l[1][0]) / 2 >= pb_cx]
+    
+    def sweep_horizontal_group(group):
+        group.sort(key=lambda l: l[0][1], reverse=True) # Sort by highest Y
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
+                l1, l2 = group[i], group[j]
+                target_y = l1[0][1]
+                if 0 <= target_y - l2[0][1] <= tol:
+                    # Apply buffer guard check
+                    if not is_inside_buffer(l2[0][0], l2[1][0], target_y, is_horiz=True):
+                        group[j] = [(l2[0][0], target_y), (l2[1][0], target_y)]
+                        
+    sweep_horizontal_group(left_horiz)
+    sweep_horizontal_group(right_horiz)
+    horiz = left_horiz + right_horiz
+
+    # 2. Vertical Sweep
+    left_vert = [l for l in vert if l[0][0] < pb_cx]
+    right_vert = [l for l in vert if l[0][0] >= pb_cx]
+    
+    def sweep_vertical_group(group):
+        group.sort(key=lambda l: l[0][0]) # Sort by lowest X
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
+                l1, l2 = group[i], group[j]
+                target_x = l1[0][0]
+                if 0 <= l2[0][0] - target_x <= tol:
+                    # Apply buffer guard check
+                    if not is_inside_buffer(l2[0][1], l2[1][1], target_x, is_horiz=False):
+                        group[j] = [(target_x, l2[0][1]), (target_x, l2[1][1])]
+                        
+    sweep_vertical_group(left_vert)
+    sweep_vertical_group(right_vert)
+    vert = left_vert + right_vert
         
     # Merge collinear overlapping again after sweeps
     h_merged = []
@@ -972,15 +1318,15 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             placed[name] = (x, y, w, h)
 
         # 2. Power Block  [→ §3.3]
-        # Tight-site logic from Main.py: if vertical clearance on each side < 60m,
-        # shift PB by exactly ±30m instead of ±5% jitter.
+        # Tight-site logic: if vertical clearance on each side < 60m,
+        # shift PB by ±10% of site length instead of ±5% jitter.
         pw, ph = BLOCK_FOOTPRINTS["Power Block"]
         road_w = 8
         tight_site = (sl - ph - road_w * 2) / 2 < 60
         def _pb_sample():
             cx = (sw - pw) / 2 + random.uniform(-sw * 0.05, sw * 0.05)
             if tight_site:
-                cy = (sl - ph) / 2 + random.choice([-20, 20])
+                cy = (sl - ph) / 2 + random.choice([-sl * 0.1, sl * 0.1])
             else:
                 cy = (sl - ph) / 2 + random.uniform(-sl * 0.05, sl * 0.05)
             m = BOUNDARY_MARGIN
@@ -1420,9 +1766,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone)  # → §3.7.D
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)  # → §3.7.D
 
-        # Boom Barrier: 16m line from the Gate House inner edge pointing inwards  [→ §3.1 step 5]
+        loop_connectors, outer_segments = create_perimeter_loop(all_segments_cleaned, sw, sl, raw_segs=all_segments_raw, computed_buffers=computed_buffers, pb_network=pb_network)  # → §3.7.E
         boom_barrier = []
         gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:
@@ -1443,6 +1789,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "perimeter_segments_raw": perimeter_segments_raw,
             "group_a_segments_raw": group_a_segments_raw,
             "all_segments_cleaned": all_segments_cleaned,
+            "loop_connectors": loop_connectors,
+            "outer_segments":  outer_segments,
+            "road_network_final": all_segments_cleaned + loop_connectors,
             "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,

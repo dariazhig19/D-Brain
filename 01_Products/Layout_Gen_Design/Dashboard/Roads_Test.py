@@ -1,4 +1,4 @@
-"""Road debugging dashboard — Phase 05 & Phase 06 side-by-side test.
+"""Road dashboard — Phase 06 sketch roads.
 
 Run with:
     streamlit run 01_Products/Layout_Gen_Design/Dashboard/Roads_Test.py
@@ -10,34 +10,21 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib import cm, colors as mcolors
 
 import importlib
-import Core.Groups, Core.Roads, Core.Rules, Core.Main, Core.Grid, Core.Pathfind, Core.Layout06
+import Core.Groups, Core.Grid, Core.Pathfind, Core.Layout06
 importlib.reload(Core.Grid)
 importlib.reload(Core.Pathfind)
 importlib.reload(Core.Groups)
-importlib.reload(Core.Roads)
-importlib.reload(Core.Rules)
-importlib.reload(Core.Main)
 importlib.reload(Core.Layout06)
 
-from Core.Groups import draw_group, draw_rack, SHAPES
-from Core.Rules import RULES
-from Core.Main import generate_layouts
-from Core.Roads import build_road_network
+from Core.Groups import SHAPES
 from Core.Layout06 import generate_sketch, CELL_SIZE, ROAD_BUFFER
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="Roads Test", layout="wide")
-
-# ── Phase selector ─────────────────────────────────────────────────────────
-phase = st.radio("Engine", ["Phase 05 (A* roads)", "Phase 06 (Sketch roads)"],
-                 horizontal=True)
-
-st.divider()
 
 # ── Shared sidebar: site + gate ────────────────────────────────────────────
 st.sidebar.header("Site")
@@ -49,20 +36,20 @@ wind_dir    = st.sidebar.selectbox("Wind Direction",
 st.sidebar.divider()
 st.sidebar.header("Site Gate")
 gate_side  = st.sidebar.selectbox("Gate edge", ["N", "S", "E", "W"], index=0)
-gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.5, step=0.05)
+gate_ratio = st.sidebar.slider("Gate position along edge", 0.1, 0.9, 0.4, step=0.05)
 
 st.sidebar.divider()
 st.sidebar.header("Fixed Anchors")  # → §3.2
 st.sidebar.subheader("Gate House")
 gh_edge   = st.sidebar.selectbox("Edge (GH)",     ["N", "S", "E", "W"], index=0)
-gh_ratio  = st.sidebar.slider("Position (GH)",    0.0, 1.0, 0.5, step=0.05)
-gh_offset = st.sidebar.slider("Offset (GH)",      0, 50, 0, step=1)
-bb_edge   = st.sidebar.selectbox("Boom Barrier Side (GH)", ["N", "S", "E", "W"], index=1)
+gh_ratio  = st.sidebar.slider("Position (GH)",    0.0, 1.0, 0.6, step=0.05)
+gh_offset = st.sidebar.slider("Offset (GH)",      0, 50, 15, step=1)
+bb_edge   = st.sidebar.selectbox("Boom Barrier Side (GH)", ["N", "S", "E", "W"], index=0)
 
 st.sidebar.subheader("GIS")
-gis_edge   = st.sidebar.selectbox("Edge (GIS)",   ["N", "S", "E", "W"], index=1)
-gis_ratio  = st.sidebar.slider("Position (GIS)",  0.0, 1.0, 0.8, step=0.05)
-gis_offset = st.sidebar.slider("Offset (GIS)",    0, 50, 0, step=1)
+gis_edge   = st.sidebar.selectbox("Edge (GIS)",   ["N", "S", "E", "W"], index=0)
+gis_ratio  = st.sidebar.slider("Position (GIS)",  0.0, 1.0, 0.9, step=0.05)
+gis_offset = st.sidebar.slider("Offset (GIS)",    0, 50, 15, step=1)
 
 st.sidebar.subheader("RAW Water Tank")
 water_edge   = st.sidebar.selectbox("Edge (RAW Water)", ["N", "S", "E", "W"], index=2)
@@ -71,10 +58,7 @@ water_offset = st.sidebar.slider("Offset (RAW Water)",   0, 50, 0, step=1)
 
 st.sidebar.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PHASE 06
-# ══════════════════════════════════════════════════════════════════════════════
-if phase == "Phase 06 (Sketch roads)":
+if True:  # Phase 06 — Sketch roads
     st.title("Phase 06 — Block + Road Sketch")
     st.markdown("Reference: [Phase 06 Plan](file:///x:/CST%EB%B3%B8%EB%B6%80%20%28%EA%B5%AC%20%EA%B8%B0%EC%88%A0%EC%A7%80%EC%9B%90%EB%B6%80%20%ED%8F%B4%EB%8D%94%29/15.%20%EB%8B%A4%EB%A6%AC%EC%95%84/D-Brain/00_Input/Phase_06_Plan.md)")
     st.caption("Steps 1.1–1.5: blocks · ring + perimeter fire roads · stubs · 2-path verification + pruning")
@@ -88,6 +72,8 @@ if phase == "Phase 06 (Sketch roads)":
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_a2_raw       = st.sidebar.checkbox("§3.7.C — Group A access (raw)", value=False)
     show_a2_access    = st.sidebar.checkbox("§3.7.D — Cleaned segments", value=True)
+    show_outer_segs   = st.sidebar.checkbox("§3.7.E — Outer face segments", value=True)
+    show_loop         = st.sidebar.checkbox("§3.7.E — Loop connectors", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines + triangle", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
@@ -173,6 +159,21 @@ if phase == "Phase 06 (Sketch roads)":
         for k, ((x1, y1), (x2, y2)) in enumerate(all_cleaned):
             ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
                     solid_capstyle='round', label='§3.7.D Cleaned' if k == 0 else "")
+
+    if show_outer_segs:  # → §3.7.E outer face segments (classified N/S/E/W outer edges)
+        outer_segs = sketch.get("outer_segments", [])
+        for k, ((x1, y1), (x2, y2)) in enumerate(outer_segs):
+            ax.plot([x1, x2], [y1, y2], color='#ff9800', lw=3.5, alpha=0.9, zorder=3.55,
+                    linestyle='-', solid_capstyle='round',
+                    label='§3.7.E Outer face segs' if k == 0 else "")
+
+    if show_loop:  # → §3.7.E loop connectors
+        loop_segs = sketch.get("loop_connectors", [])
+        for k, seg in enumerate(loop_segs):
+            (x1, y1), (x2, y2) = seg
+            ax.plot([x1, x2], [y1, y2], color='#00e5ff', lw=3.0, alpha=0.95, zorder=3.6,
+                    linestyle='-', solid_capstyle='round',
+                    label='§3.7.E Loop connector' if k == 0 else "")
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)
@@ -298,6 +299,31 @@ if phase == "Phase 06 (Sketch roads)":
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
+    # §3.7.E debug expander
+    with st.expander("§3.7.E Debug — outer segments & loop connectors"):
+        outer_segs_dbg = sketch.get("outer_segments", [])
+        loop_segs_dbg  = sketch.get("loop_connectors", [])
+        cleaned_dbg    = sketch.get("all_segments_cleaned", [])
+        st.write(f"**Outer face segs:** {len(outer_segs_dbg)}  |  **Loop connectors:** {len(loop_segs_dbg)}  |  **Cleaned total:** {len(cleaned_dbg)}")
+
+        st.markdown("**all_segments_cleaned — V (vertical) segments:**")
+        v_rows = [{"#": i, "x": round(a[0],1), "y0": round(min(a[1],b[1]),1), "y1": round(max(a[1],b[1]),1), "len": round(abs(b[1]-a[1]),1)}
+                  for i, (a, b) in enumerate(cleaned_dbg) if abs(a[0]-b[0]) < 0.1]
+        if v_rows:
+            st.dataframe(v_rows, use_container_width=True, hide_index=True)
+        else:
+            st.warning("No vertical segments in cleaned output")
+
+        st.markdown("**Outer face segs:**")
+        if outer_segs_dbg:
+            rows_o = [{"#": i, "x1": round(a[0],1), "y1": round(a[1],1),
+                       "x2": round(b[0],1), "y2": round(b[1],1),
+                       "dir": "H" if abs(a[1]-b[1])<0.1 else "V"}
+                      for i, (a, b) in enumerate(outer_segs_dbg)]
+            st.dataframe(rows_o, use_container_width=True, hide_index=True)
+        else:
+            st.warning("outer_segments is EMPTY")
+
     # Stats
     st.divider()
     st.markdown("#### Block stats")
@@ -328,222 +354,3 @@ if phase == "Phase 06 (Sketch roads)":
                 "cells":  len(pts),
             })
         st.dataframe(trace_rows, use_container_width=True, hide_index=True)
-    st.stop()
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PHASE 05 (unchanged below)
-# ══════════════════════════════════════════════════════════════════════════════
-
-st.sidebar.header("Generation")
-boundary_margin = st.sidebar.slider("Boundary Margin", -50, 50, -20, step=5)
-min_passing = st.sidebar.slider("Min rules passing", 1, len(RULES), 1)
-fix_seed = st.sidebar.checkbox("Fix building positions (seed)", value=True)
-seed_val = st.sidebar.number_input("Random seed", min_value=0, max_value=10_000,
-                                   value=42, step=1, disabled=not fix_seed)
-
-st.sidebar.divider()
-st.sidebar.header("Overlays")
-show_grid    = st.sidebar.checkbox("Grid lines",          value=False)
-show_blocked = st.sidebar.checkbox("Blocked cells (3m buffer)", value=True)
-show_paths   = st.sidebar.checkbox("A* path cells",       value=True)
-show_smooth  = st.sidebar.checkbox("Smoothed road lines", value=True)
-show_snaps   = st.sidebar.checkbox("Gate/entrance snap cells", value=True)
-show_racks   = st.sidebar.checkbox("Racks",               value=True)
-show_entrances = st.sidebar.checkbox("Entrance points",   value=True)
-
-st.title("Road Logic Test Page")
-st.caption(
-    f"Site **{site_width}×{site_length} m** | Wind **{wind_dir}** | "
-    f"Gate **{gate_side}@{gate_ratio:.2f}** | "
-    f"GH **{gh_edge}@{gh_ratio:.2f}/{gh_offset}m** | "
-    f"GIS **{gis_edge}@{gis_ratio:.2f}/{gis_offset}m** | "
-    f"RAW Water **{water_edge}@{water_ratio:.2f}/{water_offset}m** | "
-    f"Min rules **{min_passing}/{len(RULES)}**"
-)
-
-bldg_sig = (
-    site_width, site_length, wind_dir,
-    gate_side, gate_ratio,
-    gh_edge, gh_ratio, gh_offset,
-    gis_edge, gis_ratio, gis_offset,
-    water_edge, water_ratio, water_offset,
-    boundary_margin, min_passing,
-    int(seed_val) if fix_seed else None,
-)
-
-btn_col1, btn_col2 = st.columns([3, 2])
-with btn_col1:
-    do_generate = st.button("Generate Layout", use_container_width=True, type="primary")
-with btn_col2:
-    do_reroll = st.button("Re-roll buildings", use_container_width=True)
-
-if do_generate or do_reroll:
-    cached_sig    = st.session_state.get("bldg_sig")
-    cached_layout = st.session_state.get("layout")
-    reuse_buildings = (
-        do_generate and not do_reroll and fix_seed
-        and cached_sig == bldg_sig and cached_layout is not None
-    )
-
-    if reuse_buildings:
-        with st.spinner("Recomputing roads on cached buildings..."):
-            layout = cached_layout
-            new_road = build_road_network(
-                site_width, site_length, layout["groups"], layout["gate_point"]
-            )
-            if new_road is not None:
-                layout = {**layout, "road": new_road}
-                st.session_state["layout"] = layout
-            else:
-                st.warning("Road network unreachable — try Re-roll.")
-    else:
-        if fix_seed and not do_reroll:
-            random.seed(int(seed_val))
-        with st.spinner("Generating one layout..."):
-            results = generate_layouts(
-                site_width, site_length, wind_dir,
-                n_results=1, min_rules_passing=min_passing, max_pool=300,
-                gate_side=gate_side, gate_ratio=gate_ratio,
-                gh_edge=gh_edge, gh_ratio=gh_ratio, gh_offset=gh_offset,
-                gis_edge=gis_edge, gis_ratio=gis_ratio, gis_offset=gis_offset,
-                water_edge=water_edge, water_ratio=water_ratio, water_offset=water_offset,
-                boundary_margin=boundary_margin,
-            )
-        layout_new = results[0] if results else None
-        st.session_state["layout"]   = layout_new
-        st.session_state["bldg_sig"] = bldg_sig if layout_new else None
-
-    st.session_state["params"] = (site_width, site_length, wind_dir)
-
-layout = st.session_state.get("layout")
-sw, sl, wd = st.session_state.get("params", (site_width, site_length, wind_dir))
-
-if layout is None:
-    if do_generate:
-        st.error("No layout found — try lowering Min rules passing or changing site dims.")
-    else:
-        st.info("Set parameters in the sidebar, then click **Generate Layout**.")
-    st.stop()
-
-road  = layout.get("road", {})
-grid  = road.get("grid")
-segs  = road.get("segments", [])
-gate  = layout.get("gate_point")
-
-fig, ax = plt.subplots(figsize=(12, 8), dpi=110)
-ax.fill([0,sw,sw,0,0], [0,0,sl,sl,0], color='#f7fbff', zorder=0)
-ax.plot([0,sw,sw,0,0], [0,0,sl,sl,0], color='black', lw=1.2, zorder=1)
-
-if grid is not None and show_blocked:
-    blocked_img = grid.blocked.T.astype(float)
-    ax.imshow(blocked_img,
-              extent=(0, grid.ncols*grid.cell_size, 0, grid.nrows*grid.cell_size),
-              origin='lower',
-              cmap=mcolors.ListedColormap([(0,0,0,0),(0.85,0.25,0.25,0.28)]),
-              interpolation='nearest', zorder=0.3)
-
-if grid is not None and show_grid:
-    cs = grid.cell_size
-    for i in range(grid.ncols + 1): ax.axvline(i*cs, color='#cccccc', lw=0.25, zorder=0.5)
-    for j in range(grid.nrows + 1): ax.axhline(j*cs, color='#cccccc', lw=0.25, zorder=0.5)
-
-if grid is not None and show_paths and segs:
-    cmap = cm.get_cmap('tab10', max(len(segs), 1))
-    cs = grid.cell_size
-    wc = road.get("width_cells", 0)
-    drawn_cells = set()
-    for k, seg in enumerate(segs):
-        color = cmap(k % 10)
-        for (i, j) in seg.get("path_cells", []):
-            for di in range(-wc, wc + 1):
-                for dj in range(-wc, wc + 1):
-                    cell = (i+di, j+dj)
-                    if cell not in drawn_cells:
-                        drawn_cells.add(cell)
-                        ax.add_patch(plt.Rectangle(
-                            (cell[0]*cs, cell[1]*cs), cs, cs,
-                            facecolor=color, alpha=0.35, edgecolor='none', zorder=0.6))
-
-if show_smooth and segs:
-    cmap = cm.get_cmap('tab10', max(len(segs), 1))
-    for k, seg in enumerate(segs):
-        pw = seg.get("path_world", [])
-        if len(pw) >= 2:
-            color = cmap(k % 10)
-            rx, ry = zip(*pw)
-            ax.plot(rx, ry, color=color, lw=16, alpha=0.7, zorder=2.5,
-                    solid_capstyle='round', label=f"→ {seg.get('to', '?')}")
-
-if show_racks:
-    for rack in layout["racks"]:
-        draw_rack(ax, rack)
-
-for g in layout["groups"]:
-    draw_group(ax, g)
-
-if show_entrances:
-    for g in layout["groups"]:
-        for ex, ey in g.get("entrance_points", []):
-            ax.plot(ex, ey, 'o', color='red', markersize=5, zorder=5,
-                    markeredgecolor='white', markeredgewidth=0.7)
-
-if grid is not None and show_snaps and segs:
-    cs = grid.cell_size
-    gate_seg = next((s for s in segs if s.get("path_cells")), None)
-    first_cell = gate_seg["path_cells"][0] if gate_seg else None
-    if first_cell:
-        gi, gj = first_cell
-        ax.add_patch(plt.Rectangle((gi*cs, gj*cs), cs, cs,
-                                   facecolor='none', edgecolor='#27ae60', lw=2.0, zorder=3.5))
-    for seg in segs:
-        cells = seg.get("path_cells", [])
-        if cells:
-            ei, ej = cells[-1]
-            ax.add_patch(plt.Rectangle((ei*cs, ej*cs), cs, cs,
-                                       facecolor='none', edgecolor='red', lw=1.5, zorder=3.5))
-
-if gate:
-    gx, gy = gate
-    ax.plot(gx, gy, '^', color='#27ae60', markersize=14, zorder=6,
-            markeredgecolor='white', markeredgewidth=1.0)
-    ax.text(gx, gy+8, 'GATE', color='#27ae60', fontsize=9,
-            fontweight='bold', ha='center', va='bottom', zorder=6)
-
-ax.set_xlim(-20, sw+20); ax.set_ylim(-20, sl+20)
-ax.set_aspect('equal', adjustable='box')
-ax.set_xticks([]); ax.set_yticks([])
-for sp in ax.spines.values(): sp.set_visible(False)
-if show_smooth and segs:
-    ax.legend(loc='upper left', fontsize=6, framealpha=0.85, ncol=2)
-plt.tight_layout(pad=0.4)
-st.pyplot(fig, use_container_width=True)
-plt.close(fig)
-
-st.divider()
-st.markdown("#### Road network stats")
-if grid is not None:
-    free  = int((~grid.blocked).sum())
-    total = grid.ncols * grid.nrows
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Grid size", f"{grid.ncols} × {grid.nrows}")
-    c2.metric("Cell size", f"{grid.cell_size} m")
-    c3.metric("Free cells", f"{free} / {total}")
-    c4.metric("Segments", str(len(segs)))
-
-if segs:
-    rows = []
-    for seg in segs:
-        pw = seg.get("path_world", [])
-        length_m = sum(
-            ((pw[i][0]-pw[i-1][0])**2 + (pw[i][1]-pw[i-1][1])**2)**0.5
-            for i in range(1, len(pw))
-        )
-        rows.append({"to": seg.get("to","?"), "cells": len(seg.get("path_cells",[])),
-                     "length (m)": round(length_m, 1), "to_point": seg.get("to_point")})
-    st.dataframe(rows, use_container_width=True, hide_index=True)
-
-scoring = layout["scoring"]
-passing = sum(1 for r in scoring["results"] if r["passed"])
-st.caption(f"**Score:** {scoring['total_penalty']:,.0f} pts | "
-           f"{passing}/{len(scoring['results'])} rules passing")

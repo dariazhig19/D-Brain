@@ -103,7 +103,7 @@ Fixed anchors use `place_anchor(sw, sl, name, edge, ratio, offset)` — result i
 ### §3.3 Power Block
 
 - Placed by `_try_place` with random sample near site center.
-- **Tight-site rule:** If vertical clearance on each side < 60 m, shift PB by ±20 m instead of ±5% jitter.
+- **Tight-site rule:** If vertical clearance on each side < 60 m, shift PB by ±10% of site length instead of ±5% jitter.
 - 150 m × 150 m square — rotation irrelevant.
 - After placement, `pb_cx, pb_cy` becomes the reference center for all later magnet logic.
 

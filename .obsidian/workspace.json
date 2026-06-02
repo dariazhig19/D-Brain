@@ -11,14 +11,17 @@
             "id": "0a7dcc1c308cb298",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "canvas",
               "state": {
-                "file": "04_Reports/Meeting_Notes/20260508_미팅.md",
-                "mode": "source",
-                "source": false
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+                "viewState": {
+                  "x": 15015.800759769138,
+                  "y": 291.4971700559804,
+                  "zoom": 1
+                }
               },
-              "icon": "lucide-file",
-              "title": "20260508_미팅"
+              "icon": "lucide-layout-dashboard",
+              "title": "Overview"
             }
           },
           {
@@ -136,7 +139,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "04_Reports/Meeting_Notes/20260508_미팅.md",
+                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -146,7 +149,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for 20260508_미팅"
+              "title": "Backlinks for Overview"
             }
           },
           {
@@ -227,6 +230,7 @@
   },
   "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
+    "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "04_Reports/Monthly/Monthly_Report_2026_05.md",
     "Pasted image 20260601180140.png",
@@ -269,7 +273,6 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md"

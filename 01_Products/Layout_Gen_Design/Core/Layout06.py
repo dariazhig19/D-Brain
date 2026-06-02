@@ -332,26 +332,39 @@ def create_perimeter_loop(segs, sw, sl, raw_segs=None, computed_buffers=None, pb
     ]
 
     def _fb_for_h(hy, hx0, hx1, check_above):
-        """Check whether any perimeter block extends above (check_above=True) or
-        below (False) hy in the x-range [hx0, hx1]."""
+        """Outer-face block check for horizontal segments.
+
+        check_above=True  (is_n): any perimeter block whose top > hy with
+            PARTIAL x-overlap blocks the segment — even one taller neighbour
+            means the segment is not the outermost north face.
+        check_above=False (is_s): only block if a perimeter block's bottom
+            < hy AND it FULLY COVERS the segment's x-range.  A block that only
+            partially underlaps still leaves part of the segment as the outer
+            south face (segment-splitting would be needed for exact treatment,
+            full-coverage is the safe conservative approximation).
+        """
         for _, (bx2, by2, bw2, bh2) in _peri_buf:
             if check_above:
                 if (by2 + bh2) > hy + TOL and _x_ranges_overlap(hx0, hx1, bx2, bx2 + bw2):
                     return True
             else:
-                if by2 < hy - TOL and _x_ranges_overlap(hx0, hx1, bx2, bx2 + bw2):
+                if by2 < hy - TOL and bx2 <= hx0 + TOL and (bx2 + bw2) >= hx1 - TOL:
                     return True
         return False
 
     def _fb_for_v(vx, vy0, vy1, check_right):
-        """Check whether any perimeter block extends right (check_right=True) or
-        left (False) of vx in the y-range [vy0, vy1]."""
+        """Outer-face block check for vertical segments.
+
+        check_right=True  (is_e): partial y-overlap is enough to block.
+        check_right=False (is_w): only block if the left-block FULLY covers
+            the segment's y-range (same rationale as _fb_for_h is_s).
+        """
         for _, (bx2, by2, bw2, bh2) in _peri_buf:
             if check_right:
                 if (bx2 + bw2) > vx + TOL and _y_ranges_overlap(vy0, vy1, by2, by2 + bh2):
                     return True
             else:
-                if bx2 < vx - TOL and _y_ranges_overlap(vy0, vy1, by2, by2 + bh2):
+                if bx2 < vx - TOL and by2 <= vy0 + TOL and (by2 + bh2) >= vy1 - TOL:
                     return True
         return False
 
@@ -1806,6 +1819,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "block_buffer":    BLOCK_BUFFER,
             "pb_ring_offset":  PB_RING_OFFSET,
             "perimeter_cl":    PERIMETER_CL_DIST,
+            "computed_buffers_debug": computed_buffers,
         }
 
     return None

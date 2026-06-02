@@ -11,17 +11,14 @@
             "id": "0a7dcc1c308cb298",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
-                "viewState": {
-                  "x": 13929.05598309651,
-                  "y": 425.8592749666211,
-                  "zoom": 1.1102230246251565e-16
-                }
+                "file": "04_Reports/Meeting_Notes/20260508_미팅.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "Overview"
+              "icon": "lucide-file",
+              "title": "20260508_미팅"
             }
           },
           {
@@ -139,7 +136,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "04_Reports/Monthly/Monthly_Report_2026_05.md",
+                "file": "04_Reports/Meeting_Notes/20260508_미팅.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -149,7 +146,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Monthly_Report_2026_05"
+              "title": "Backlinks for 20260508_미팅"
             }
           },
           {
@@ -231,16 +228,21 @@
   "active": "0a7dcc1c308cb298",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
+    "04_Reports/Monthly/Monthly_Report_2026_05.md",
+    "Pasted image 20260601180140.png",
+    "Pasted image 20260601180130.png",
+    "Pasted image 20260601180115.png",
+    "Pasted image 20260601180102.png",
+    "Pasted image 20260601180047.png",
+    "Pasted image 20260601180025.png",
+    "Pasted image 20260601175956.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V7.png",
     "Road Access by Blocks.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V11.png",
-    "04_Reports/Monthly/Monthly_Report_2026_05.md",
     "04_Reports/Monthly",
     "Pasted image 20260519180256.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V6.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06",
     "Untitled.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Dashboard_V5.png",
     "04_Reports/Weekly/Weekly_Report_2026_W23.md",
     "00_Input/Phase_06_Plan_Structured.md",
     "01_Products/Layout_Gen_Design/_fix_layout06.py",
@@ -249,13 +251,8 @@
     "01_Products/Layout_Gen_Design/Dashboard/__pycache__",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06_debug.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Core/Layout06_debug.py",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V10.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V9.png",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V8.png",
     "04_Reports/Weekly/Weekly_Report_2026_W21.md",
-    "Pasted image 20260522112630.png",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
-    "Pasted image 20260519180250.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase_05_Plan.md",
     "04_Reports/Daily/Daily_Report_20260518.md",
     "01_Products/Layout_Gen_Design/debug_placement.py",

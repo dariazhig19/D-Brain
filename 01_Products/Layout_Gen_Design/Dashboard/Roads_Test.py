@@ -318,6 +318,14 @@ if True:  # Phase 06 — Sketch roads
                       for i, (a, b) in enumerate(cleaned_dbg) if abs(a[0]-b[0]) < 0.1]
             st.dataframe(v_rows, use_container_width=True, hide_index=True)
 
+        _PERI = {"Power Block","Cooling Tower","WT/WWT","RAW Water Tank","GIS","Warehouse","Admin Building"}
+        cb = sketch.get("computed_buffers_debug", {})
+        st.markdown("**Perimeter block buffers (bx, by, bw, bh = left, bottom, width, height):**")
+        peri_rows = [{"block": n, "bx(left)": round(b[0],1), "by(bot)": round(b[1],1),
+                      "right": round(b[0]+b[2],1), "top": round(b[1]+b[3],1), "bw": round(b[2],1), "bh": round(b[3],1)}
+                     for n, b in cb.items() if n in _PERI]
+        st.dataframe(sorted(peri_rows, key=lambda r: r["bx(left)"]), use_container_width=True, hide_index=True)
+
         st.markdown("**Outer face segs:**")
         if outer_segs_dbg:
             rows_o = [{"#": i, "x1": round(a[0],1), "y1": round(a[1],1),

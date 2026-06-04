@@ -27,14 +27,14 @@
             "id": "ac525fdfd4c21045",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
+              "type": "markdown",
               "state": {
-                "aFile": "TEST.md",
-                "bFile": "TEST.md",
-                "aRef": ""
+                "file": "TEST.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "diff",
-              "title": "Diff: TEST  (Working Tree)"
+              "icon": "lucide-file",
+              "title": "TEST"
             }
           },
           {
@@ -153,6 +153,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "TEST.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -162,7 +163,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for TEST"
             }
           },
           {
@@ -252,13 +253,15 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "ac525fdfd4c21045",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
+    "Untitled 222.md",
+    "Pasted image 20260601180140.png",
+    "Road Access by Blocks.md",
     "TEST.md",
     "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "04_Reports/Monthly/Monthly_Report_2026_05.md",
-    "Pasted image 20260601180140.png",
     "Pasted image 20260601180130.png",
     "Pasted image 20260601180115.png",
     "Pasted image 20260601180102.png",
@@ -266,12 +269,10 @@
     "Pasted image 20260601180025.png",
     "Pasted image 20260601175956.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V7.png",
-    "Road Access by Blocks.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V11.png",
     "04_Reports/Monthly",
     "Pasted image 20260519180256.png",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06",
-    "Untitled.md",
     "04_Reports/Weekly/Weekly_Report_2026_W23.md",
     "00_Input/Phase_06_Plan_Structured.md",
     "01_Products/Layout_Gen_Design/_fix_layout06.py",
@@ -299,7 +300,6 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_01/Phase_01_Plan.md"
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md"
   ]
 }

@@ -24,24 +24,12 @@
             }
           },
           {
-            "id": "ac525fdfd4c21045",
-            "type": "leaf",
-            "state": {
-              "type": "image",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V12.png"
-              },
-              "icon": "lucide-image",
-              "title": "Dashboard_V12"
-            }
-          },
-          {
             "id": "1cc124c092c8927c",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Road Access by Blocks.md",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Road Access by Blocks.md",
                 "mode": "source",
                 "source": false
               },
@@ -151,7 +139,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V12.png",
+                "file": "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Road Access by Blocks.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -161,7 +149,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Dashboard_V12"
+              "title": "Backlinks for Road Access by Blocks"
             }
           },
           {
@@ -251,11 +239,14 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "1cc124c092c8927c",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V11.png",
+    "01_Products/Layout_Gen_Design/scratch/clockwise_plan_draft.md",
+    "Untitled 222.md",
+    "TEST.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V12.png",
-    "Road Access by Blocks.md",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Dashboard_V11.png",
+    "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Road Access by Blocks.md",
     "Pasted image 20260519172846.png",
     "Pasted image 20260519180250.png",
     "Pasted image 20260519180256.png",
@@ -264,9 +255,6 @@
     "Pasted image 20260601180130.png",
     "Pasted image 20260601180102.png",
     "Pasted image 20260601180047.png",
-    "Pasted image 20260601180025.png",
-    "TEST.md",
-    "Untitled 222.md",
     "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "04_Reports/Monthly/Monthly_Report_2026_05.md",

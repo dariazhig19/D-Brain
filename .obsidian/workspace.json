@@ -244,6 +244,11 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Pathfind.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Grid.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-311.pyc",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Road Access by Blocks.md",
     "01_Products/Layout_Gen_Design/scratch/clockwise_plan_draft.md",
     "Untitled 222.md",
@@ -269,14 +274,10 @@
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Dashboard/__pycache__/Roads_Test.cpython-314.pyc",
     "01_Products/Layout_Gen_Design/Dashboard/__pycache__",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06_debug.cpython-314.pyc",
-    "01_Products/Layout_Gen_Design/Core/Layout06_debug.py",
     "04_Reports/Weekly/Weekly_Report_2026_W21.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase_05_Plan.md",
     "04_Reports/Daily/Daily_Report_20260518.md",
-    "01_Products/Layout_Gen_Design/debug_placement.py",
-    "01_Products/Layout_Gen_Design/test_sizes_debug.py",
     "01_Products/Layout_Gen_Design/Layout_Requirements.md",
     "00_Input/2026-05-14 - Session Report.md",
     "02_Library/Generative_Theory/GlobalMapper_Notes.md",
@@ -289,7 +290,6 @@
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_04/Explanation of Rule Logic.md"
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md"
   ]
 }

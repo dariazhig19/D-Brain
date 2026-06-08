@@ -27,17 +27,14 @@
             "id": "1cc124c092c8927c",
             "type": "leaf",
             "state": {
-              "type": "canvas",
+              "type": "markdown",
               "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/overview.canvas",
-                "viewState": {
-                  "x": 4483.774987299642,
-                  "y": 1101.3755915276727,
-                  "zoom": -1.1310812104072252
-                }
+                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-layout-dashboard",
-              "title": "overview"
+              "icon": "lucide-file",
+              "title": "!Scoring_Logic"
             }
           },
           {
@@ -244,6 +241,7 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Layout_Dev_Methodology_and_UX.md",
     "implementation_plan.md",
     "how to start streamlit",
@@ -289,7 +287,6 @@
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md"
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md"
   ]
 }

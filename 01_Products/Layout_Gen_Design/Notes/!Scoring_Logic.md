@@ -30,15 +30,15 @@ Each rule has a **Rule Type** that maps to a generic evaluator function in `Rule
 
 ## 🏗️ Phase 03: The Three Giants (6 Rules)
 
-| ID        | Group          | Rule Type           | Target              | Threshold | Penalty          | Condition                   |
-| :-------- | :------------- | :------------------ | :------------------ | :-------- | :--------------- | :-------------------------- |
-| **PB-01** | Power Block    | `center_proximity`  | Plot Center         | 20 m      | 100 pts / m      | Only on excess beyond 20 m  |
-| **PB-02** | Power Block    | `boundary_setback`  | Primary Road        | 5 m       | 5000 pts (flat)  | If any edge < 5 m           |
-| **CT-01** | Cooling Tower  | `leeward_edge`      | Wind Direction      | 120 m     | 1000 pts (flat)  | Must be on **downwind** edge |
-| **CT-02** | Cooling Tower  | `min_distance`      | Admin Building      | 50 m      | 500 pts / m      | If distance < 50 m          |
-| **AD-01** | Admin Building | `boundary_setback`  | Primary Road        | 20 m      | 1000 pts (flat)  | If any edge < 20 m          |
-| **AD-02** | Admin Building | `max_gate_distance` | Site Gate           | 80 m      | 100 pts / m      | If distance > 80 m          |
-| **AD-03** | Admin Building | `windward_edge`     | Wind Direction      | 30 m      | 1000 pts (flat)  | Must be on **upwind** edge   |
+| ID        | Group          | Rule Type           | Target         | Threshold | Penalty         | Condition                    |
+| :-------- | :------------- | :------------------ | :------------- | :-------- | :-------------- | :--------------------------- |
+| **PB-01** | Power Block    | `center_proximity`  | Plot Center    | 20 m      | 100 pts / m     | Only on excess beyond 20 m   |
+| **PB-02** | Power Block    | `boundary_setback`  | Primary Road   | 5 m       | 5000 pts (flat) | If any edge < 5 m            |
+| **CT-01** | Cooling Tower  | `leeward_edge`      | Wind Direction | 120 m     | 1000 pts (flat) | Must be on **downwind** edge |
+| **CT-02** | Cooling Tower  | `min_distance`      | Admin Building | 50 m      | 500 pts / m     | If distance < 50 m           |
+| **AD-01** | Admin Building | `boundary_setback`  | Primary Road   | 20 m      | 1000 pts (flat) | If any edge < 20 m           |
+| **AD-02** | Admin Building | `max_gate_distance` | Site Gate      | 80 m      | 100 pts / m     | If distance > 80 m           |
+| **AD-03** | Admin Building | `windward_edge`     | Wind Direction | 30 m      | 1000 pts (flat) | Must be on **upwind** edge   |
 
 ---
 

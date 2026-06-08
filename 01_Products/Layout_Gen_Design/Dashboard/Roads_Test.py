@@ -72,8 +72,11 @@ if True:  # Phase 06 — Sketch roads
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_a2_raw       = st.sidebar.checkbox("§3.7.C — Group A access (raw)", value=False)
     show_a2_access    = st.sidebar.checkbox("§3.7.D — Cleaned segments", value=True)
-    show_outer_segs   = st.sidebar.checkbox("§3.7.E — Outer face segments", value=True)
-    show_loop         = st.sidebar.checkbox("§3.7.E — Loop connectors", value=True)
+    show_loop_line    = st.sidebar.checkbox("§3.7.E — Perimeter loop line", value=True)
+    show_pts_N        = st.sidebar.checkbox("§3.7.E — N points (red)", value=False)
+    show_pts_E        = st.sidebar.checkbox("§3.7.E — E points (green)", value=False)
+    show_pts_S        = st.sidebar.checkbox("§3.7.E — S points (blue)", value=False)
+    show_pts_W        = st.sidebar.checkbox("§3.7.E — W points (orange)", value=False)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines + triangle", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
@@ -93,13 +96,45 @@ if True:  # Phase 06 — Sketch roads
             )
         if sketch is None:
             st.error("Could not place all blocks — try changing site size or parameters.")
+            st.session_state["sketch06"] = None
         else:
             st.session_state["sketch06"] = sketch
             st.session_state["params06"] = (site_width, site_length)
 
     sketch = st.session_state.get("sketch06")
     if sketch is None:
-        st.info("Set parameters in the sidebar, then click **Generate Sketch**.")
+        dbg = Core.Layout06._last_debug
+        if dbg:
+            st.error("Could not place all blocks — try changing site size or parameters.")
+            st.markdown("#### Placement debug")
+            attempts = dbg.get("total_attempts", 0)
+            failed_at = dbg.get("failed_at", "?")
+            section   = dbg.get("failed_section", "?")
+            st.write(f"**Attempts:** {attempts} / {dbg.get('max_pool', '?')}  |  **Failed at:** `{failed_at}` ({section})")
+
+            fail_counts = dbg.get("fail_counts", {})
+            if fail_counts:
+                st.markdown("**Block failure counts across all attempts:**")
+                fc_rows = sorted([{"Block": k, "Fail count": v, "Fail %": f"{100*v//attempts}%"}
+                                   for k, v in fail_counts.items()], key=lambda r: -r["Fail count"])
+                st.dataframe(fc_rows, use_container_width=True, hide_index=True)
+
+            last_placed = dbg.get("last_placed", {})
+            ALL_BLOCKS = list(Core.Layout06.BLOCK_FOOTPRINTS.keys())
+            st.markdown("**Last attempt — block placement status:**")
+            status_rows = []
+            for bname in ALL_BLOCKS:
+                if bname in last_placed:
+                    x, y, w, h = last_placed[bname]
+                    status_rows.append({"Block": bname, "Status": "✓ placed",
+                                        "x": round(x,1), "y": round(y,1), "w": round(w,1), "h": round(h,1)})
+                elif bname == failed_at:
+                    status_rows.append({"Block": bname, "Status": "✗ FAILED", "x": "-", "y": "-", "w": "-", "h": "-"})
+                else:
+                    status_rows.append({"Block": bname, "Status": "– not reached", "x": "-", "y": "-", "w": "-", "h": "-"})
+            st.dataframe(status_rows, use_container_width=True, hide_index=True)
+        else:
+            st.info("Set parameters in the sidebar, then click **Generate Sketch**.")
         st.stop()
 
     sw, sl = st.session_state.get("params06", (site_width, site_length))
@@ -160,20 +195,28 @@ if True:  # Phase 06 — Sketch roads
             ax.plot([x1, x2], [y1, y2], color='#00ff00', lw=2.5, alpha=1.0, zorder=3.5,
                     solid_capstyle='round', label='§3.7.D Cleaned' if k == 0 else "")
 
-    if show_outer_segs:  # → §3.7.E outer face segments (classified N/S/E/W outer edges)
-        outer_segs = sketch.get("outer_segments", [])
-        for k, ((x1, y1), (x2, y2)) in enumerate(outer_segs):
-            ax.plot([x1, x2], [y1, y2], color='#ff9800', lw=3.5, alpha=0.9, zorder=3.55,
-                    linestyle='-', solid_capstyle='round',
-                    label='§3.7.E Outer face segs' if k == 0 else "")
+    # → §3.7.E perimeter loop line (single continuous loop, one color)
+    if show_loop_line:
+        _first = True
+        for item in sketch.get("outer_loop", []):
+            (x1, y1), (x2, y2) = item[0], item[1]
+            ax.plot([x1, x2], [y1, y2], color='#8e44ad', lw=2.5, alpha=0.95,
+                    zorder=3.7, linestyle='-', solid_capstyle='round',
+                    label='§3.7.E perimeter loop' if _first else "")
+            _first = False
 
-    if show_loop:  # → §3.7.E loop connectors
-        loop_segs = sketch.get("loop_connectors", [])
-        for k, seg in enumerate(loop_segs):
-            (x1, y1), (x2, y2) = seg
-            ax.plot([x1, x2], [y1, y2], color='#00e5ff', lw=3.0, alpha=0.95, zorder=3.6,
-                    linestyle='-', solid_capstyle='round',
-                    label='§3.7.E Loop connector' if k == 0 else "")
+    # → §3.7.E collected wall points — one toggle + color per wall
+    _pts = sketch.get("outer_loop_pts", {})
+    for wall, wcol, wshow in (("N", '#e74c3c', show_pts_N), ("E", '#27ae60', show_pts_E),
+                              ("S", '#2980b9', show_pts_S), ("W", '#f39c12', show_pts_W)):
+        if not wshow:
+            continue
+        first = True
+        for (px, py) in _pts.get(wall, []):
+            ax.plot(px, py, 'o', color=wcol, markersize=6,
+                    markeredgecolor='white', markeredgewidth=0.7, zorder=3.8,
+                    label=f'§3.7.E {wall}-pts' if first else "")
+            first = False
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]
     #  - Rack blocks: 14m road buffer (so two rack blocks touching sit 28m apart)
@@ -299,12 +342,42 @@ if True:  # Phase 06 — Sketch roads
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
+    # Placement pass banner — shown below the layout
+    _dbg = Core.Layout06._last_debug
+    _tol_label = _dbg.get("boundary_pass_label", "")
+    if _tol_label:
+        if "pass 1" in _tol_label:
+            st.success(f"✓ {_tol_label} — all blocks fit with 18m inner margin")
+        elif "pass 2" in _tol_label:
+            st.info(f"ℹ {_tol_label} — blocks fit inside plot boundary (no margin)")
+        else:
+            st.warning(f"⚠ {_tol_label} — tight site; some blocks may slightly exceed boundary")
+
     # §3.7.E debug expander
-    with st.expander("§3.7.E Debug — outer segments & loop connectors"):
-        outer_segs_dbg = sketch.get("outer_segments", [])
-        loop_segs_dbg  = sketch.get("loop_connectors", [])
-        cleaned_dbg    = sketch.get("all_segments_cleaned", [])
-        st.write(f"**Outer face segs:** {len(outer_segs_dbg)}  |  **Loop connectors:** {len(loop_segs_dbg)}  |  **Cleaned total:** {len(cleaned_dbg)}")
+    with st.expander("§3.3 Debug — PB gate-side stop line"):
+        gc = Core.Layout06._last_debug.get("pb_gate_check")
+        if gc:
+            st.json(gc)
+            ne = gc.get("gh_near_edge (closest to center)")
+            if ne == "buf_bottom":
+                ok = gc["ring_top"] <= gc["buf_bottom"] + 0.01
+                st.write(f"ring_top {gc['ring_top']} ≤ buf_bottom {gc['buf_bottom']} ? → {'✅' if ok else '❌ ABOVE'}")
+            elif ne == "buf_top":
+                ok = gc["ring_bottom"] >= gc["buf_top"] - 0.01
+                st.write(f"ring_bottom {gc['ring_bottom']} ≥ buf_top {gc['buf_top']} ? → {'✅' if ok else '❌'}")
+            elif ne == "buf_left":
+                ok = gc["ring_right"] <= gc["buf_left"] + 0.01
+                st.write(f"ring_right {gc['ring_right']} ≤ buf_left {gc['buf_left']} ? → {'✅' if ok else '❌'}")
+            elif ne == "buf_right":
+                ok = gc["ring_left"] >= gc["buf_right"] - 0.01
+                st.write(f"ring_left {gc['ring_left']} ≥ buf_right {gc['buf_right']} ? → {'✅' if ok else '❌'}")
+        else:
+            st.warning("no pb_gate_check in debug")
+
+    with st.expander("§3.7.E Debug — cleaned segments & buffers"):
+        cleaned_dbg = sketch.get("all_segments_cleaned", [])
+        loop_dbg = sketch.get("outer_loop", [])
+        st.write(f"**Cleaned total:** {len(cleaned_dbg)}  |  **loop segs:** {len(loop_dbg)}")
 
         col_h, col_v = st.columns(2)
         with col_h:
@@ -326,15 +399,31 @@ if True:  # Phase 06 — Sketch roads
                      for n, b in cb.items() if n in _PERI]
         st.dataframe(sorted(peri_rows, key=lambda r: r["bx(left)"]), use_container_width=True, hide_index=True)
 
-        st.markdown("**Outer face segs:**")
-        if outer_segs_dbg:
-            rows_o = [{"#": i, "x1": round(a[0],1), "y1": round(a[1],1),
-                       "x2": round(b[0],1), "y2": round(b[1],1),
-                       "dir": "H" if abs(a[1]-b[1])<0.1 else "V"}
-                      for i, (a, b) in enumerate(outer_segs_dbg)]
-            st.dataframe(rows_o, use_container_width=True, hide_index=True)
+        # Snap diagnostic: loop segments that run parallel within 0.1–30m of a
+        # cleaned segment (should have snapped but didn't).
+        st.markdown("**Snap check — loop segs with a parallel cleaned seg 0.1–30m away:**")
+        loop_segs = sketch.get("outer_loop", [])
+        clean_h = [(min(a[0],b[0]), max(a[0],b[0]), a[1]) for a,b in cleaned_dbg if abs(a[1]-b[1])<0.1]
+        clean_v = [(a[0], min(a[1],b[1]), max(a[1],b[1])) for a,b in cleaned_dbg if abs(a[0]-b[0])<0.1]
+        near = []
+        for item in loop_segs:
+            (ax, ay), (bx, by) = item[0], item[1]
+            if abs(ay-by) < 0.1:   # horizontal loop seg
+                lo, hi = min(ax,bx), max(ax,bx)
+                for (cx0, cx1, cy) in clean_h:
+                    d = abs(cy-ay)
+                    if 0.1 < d <= 30 and min(hi,cx1) > max(lo,cx0):
+                        near.append({"loop": f"H y={round(ay,1)} x[{round(lo,1)},{round(hi,1)}]", "clean_y": round(cy,1), "gap": round(d,1)}); break
+            elif abs(ax-bx) < 0.1:  # vertical loop seg
+                lo, hi = min(ay,by), max(ay,by)
+                for (cx, cy0, cy1) in clean_v:
+                    d = abs(cx-ax)
+                    if 0.1 < d <= 30 and min(hi,cy1) > max(lo,cy0):
+                        near.append({"loop": f"V x={round(ax,1)} y[{round(lo,1)},{round(hi,1)}]", "clean_x": round(cx,1), "gap": round(d,1)}); break
+        if near:
+            st.dataframe(near, use_container_width=True, hide_index=True)
         else:
-            st.warning("outer_segments is EMPTY")
+            st.success("No loop seg is 0.1–30m parallel to a cleaned seg — snapping left nothing to collapse.")
 
     # Stats
     st.divider()

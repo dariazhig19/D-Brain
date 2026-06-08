@@ -244,6 +244,7 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Notes/!Layout_Dev_Methodology_and_UX.md",
     "implementation_plan.md",
     "how to start streamlit",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-311.pyc",
@@ -289,7 +290,6 @@
     "04_Reports/Daily/Daily_Report_20260428.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
     "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md",
-    "01_Products/Layout_Gen_Design/Notes/!Product_Vision_한국어.md"
+    "01_Products/Layout_Gen_Design/Notes/!Product_Vision.md"
   ]
 }

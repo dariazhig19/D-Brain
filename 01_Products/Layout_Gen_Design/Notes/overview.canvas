@@ -2,8 +2,6 @@
 	"nodes":[
 		{"id":"ad25e67330fad38d","type":"group","x":3160,"y":2920,"width":1840,"height":1040,"label":"Rules Visualisation"},
 		{"id":"t_gate","type":"text","text":"*Gate House*","x":4346,"y":3650,"width":200,"height":60},
-		{"id":"b2e284e702c884ef","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png","x":5977,"y":-48,"width":400,"height":196},
-		{"id":"3759543cf37e75a3","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png","x":5977,"y":-433,"width":400,"height":272},
 		{"id":"5b0f19c9511d7b9f","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/!Prototype/Main Ideas.md","x":521,"y":-720,"width":745,"height":595},
 		{"id":"n_admin","type":"text","text":"**Admin Building**","x":3600,"y":3530,"width":250,"height":80,"color":"2"},
 		{"id":"acbbbfb8c390b929","type":"file","file":"Pasted image 20260601180025.png","x":14960,"y":316,"width":400,"height":224},
@@ -52,7 +50,9 @@
 		{"id":"c6ac6d0d49f73811","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Phase_02_Plan.md","x":3240,"y":1860,"width":981,"height":650},
 		{"id":"aefe42b28b3ea9ff","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_01/Dashboard_V2.png","x":3617,"y":-56,"width":495,"height":204},
 		{"id":"e55f878d070be45d","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_02/Dashboard_V3.png","x":4261,"y":-51,"width":400,"height":189},
-		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png","x":4661,"y":480,"width":639,"height":293}
+		{"id":"0f0031e9f4761233","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Phase 03 Output Example.png","x":4661,"y":480,"width":639,"height":293},
+		{"id":"b2e284e702c884ef","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/Dashboard_V4.png","x":5977,"y":-48,"width":400,"height":196},
+		{"id":"3759543cf37e75a3","type":"file","file":"01_Products/Layout_Gen_Design/Pipeline/Phase_03/CAD Output_V1.png","x":5977,"y":-433,"width":400,"height":272}
 	],
 	"edges":[
 		{"id":"215154e2e50d1b32","fromNode":"6d96f8456a8a6b7b","fromSide":"right","toNode":"e05dc9ad5733ca89","toSide":"left"},

@@ -308,7 +308,7 @@ def compute_unsnapped_buffers(placed):
     return buffers
 
 
-def compute_buffer_union_contour(computed_buffers):
+def compute_buffer_union_contour(computed_buffers, sw, sl):
     # Include all blocks to ensure the perimeter road doesn't cut through them
     filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_") or name == "_gate_death_zone"}
     
@@ -417,6 +417,15 @@ def compute_buffer_union_contour(computed_buffers):
             for y in range(max(0, y0), min(h_cells, y1)):
                 for x in range(max(0, x0), min(w_cells, x1)):
                     e2_grid[y][x] = 0
+    # Clamp to plot bounds to prevent road from going outside the plot!
+    min_gx = int((0 - min_x) / RES)
+    max_gx = int((sw - min_x) / RES)
+    min_gy = int((0 - min_y) / RES)
+    max_gy = int((sl - min_y) / RES)
+    for y in range(h_cells):
+        for x in range(w_cells):
+            if x < min_gx or x > max_gx or y < min_gy or y > max_gy:
+                e2_grid[y][x] = 0
                     
     # 4. Contour Tracing (Flood fill from outside)
     visited = set()
@@ -1664,7 +1673,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 
         all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)
 
-        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers)
+        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers, sw, sl)
         boom_barrier = []
         gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:

@@ -292,321 +292,93 @@ def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):  # → §
     return [(x1,y1),(x2,y1),(x2,y2),(x1,y2),(x1,y1)]
 
 
-def build_outer_loop_pointwise(cleaned_segs, computed_buffers, blocks, sw, sl, ring_road=None, spurs=None, gate_side="N", pb_name="Power Block"):  # → §3.7.E
-    """Point-based outer perimeter loop.
 
-    1. For each wall, collect the near-side endpoint of every PERPENDICULAR
-       segment (N/S ← vertical segs, E/W ← horizontal segs), plus the 2 endpoints
-       of the PB road-buffer edge parallel to that wall.
-    2. Drop points whose segment is fully shadowed by the PB road buffer.
-    3. Order points clockwise by wall (N L→R, E top→bottom, S R→L, W bottom→top)
-       and connect consecutive points with L-shaped (H+V) connectors that avoid
-       block footprints.
+def compute_unsnapped_buffers(placed):
+    buffers = {}
+    for name, bounds in placed.items():
+        if name.startswith("_"): continue
+        offset = 16 if name in RACK_BLOCKS else 8
+        x, y, w, h = bounds
+        buffers[name] = (x - offset, y - offset, w + 2*offset, h + 2*offset)
+    return buffers
 
-    Returns (connectors, debug_points_by_wall).
-    """
+def compute_buffer_union_contour(computed_buffers):
     TOL = 0.1
-    H, V = [], []
-    for (p1, p2) in cleaned_segs:
-        if abs(p1[1] - p2[1]) < TOL:
-            H.append((min(p1[0], p2[0]), max(p1[0], p2[0]), p1[1]))
-        elif abs(p1[0] - p2[0]) < TOL:
-            V.append((p1[0], min(p1[1], p2[1]), max(p1[1], p2[1])))
+    if not computed_buffers: return []
+    min_x = min(b[0] for b in computed_buffers.values()) - 5
+    min_y = min(b[1] for b in computed_buffers.values()) - 5
+    max_x = max(b[0] + b[2] for b in computed_buffers.values()) + 5
+    max_y = max(b[1] + b[3] for b in computed_buffers.values()) + 5
+    
+    RES = 0.5
+    w_cells = int((max_x - min_x) / RES)
+    h_cells = int((max_y - min_y) / RES)
+    grid = [[0]*w_cells for _ in range(h_cells)]
+    
+    for name, (bx, by, bw, bh) in computed_buffers.items():
+        if name.startswith("_"): continue
+        ix0, iy0 = int((bx - min_x) / RES), int((by - min_y) / RES)
+        ix1, iy1 = int((bx + bw - min_x) / RES), int((by + bh - min_y) / RES)
+        for y in range(max(0,iy0), min(h_cells,iy1)):
+            for x in range(max(0,ix0), min(w_cells,ix1)):
+                grid[y][x] = 1
 
-    pb = computed_buffers.get(pb_name)            # (x, y, w, h) road buffer
-    all_rects = [r for n, r in computed_buffers.items() if not str(n).startswith("_")]
+    visited = set()
+    stack = [(0, 0)]
+    visited.add((0, 0))
+    while stack:
+        cx, cy = stack.pop()
+        for nx, ny in [(cx+1,cy), (cx-1,cy), (cx,cy+1), (cx,cy-1)]:
+            if 0 <= nx < w_cells and 0 <= ny < h_cells:
+                if grid[ny][nx] == 0 and (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    stack.append((nx, ny))
+                    
+    edges = set()
+    def is_outside(cx, cy):
+        if cx < 0 or cx >= w_cells or cy < 0 or cy >= h_cells: return True
+        return (cx, cy) in visited
 
-    def shadow_v(x, y_near, toward_n):
-        """True if a vertical seg at x (near endpoint y_near) is hidden behind ANY
-        block road buffer that reaches further toward the wall. A block whose own
-        vertical edge the segment lies on does not shadow it."""
-        for (bx, by, bw, bh) in all_rects:
-            if bx - TOL <= x <= bx + bw + TOL:
-                if abs(x - bx) < TOL or abs(x - (bx + bw)) < TOL:
-                    continue   # segment is on this block's own vertical edge
-                if toward_n and (by + bh) >= y_near - TOL:
-                    return True
-                if (not toward_n) and by <= y_near + TOL:
-                    return True
-        return False
-
-    def shadow_h(y, x_near, toward_e):
-        for (bx, by, bw, bh) in all_rects:
-            if by - TOL <= y <= by + bh + TOL:
-                if abs(y - by) < TOL or abs(y - (by + bh)) < TOL:
-                    continue   # segment is on this block's own horizontal edge
-                if toward_e and (bx + bw) >= x_near - TOL:
-                    return True
-                if (not toward_e) and bx <= x_near + TOL:
-                    return True
-        return False
-
-    n_pts, s_pts, e_pts, w_pts = [], [], [], []
-    for (x, y0, y1) in V:
-        if not shadow_v(x, y1, True):  n_pts.append((x, y1))   # top → N
-        if not shadow_v(x, y0, False): s_pts.append((x, y0))   # bottom → S
-    for (x0, x1, y) in H:
-        if not shadow_h(y, x1, True):  e_pts.append((x1, y))   # right → E
-        if not shadow_h(y, x0, False): w_pts.append((x0, y))   # left → W
-
-    # PB road-buffer parallel-edge endpoints (2 per wall) — also shadow-tested,
-    # so a PB point hidden behind another block (e.g. CT) is dropped too.
-    if pb:
-        bx, by, bw, bh = pb
-        for x in (bx, bx + bw):
-            if not shadow_v(x, by + bh, True):  n_pts.append((x, by + bh))   # top → N
-            if not shadow_v(x, by, False):      s_pts.append((x, by))        # bottom → S
-        for y in (by, by + bh):
-            if not shadow_h(y, bx + bw, True):  e_pts.append((bx + bw, y))   # right → E
-            if not shadow_h(y, bx, False):      w_pts.append((bx, y))        # left → W
-
-    # Exclude points lying ON the ring road — the ring road itself connects them.
-    # EXCEPT the 4 ring-road corner points, which stay as connection nodes.
-    ring_rect = None
-    ring_corners = []
-    if ring_road:
-        rxs = [p[0] for p in ring_road]; rys = [p[1] for p in ring_road]
-        ring_rect = (min(rxs), min(rys), max(rxs), max(rys))
-        rx0, ry0, rx1, ry1 = ring_rect
-        ring_corners = [(rx0, ry0), (rx1, ry0), (rx1, ry1), (rx0, ry1)]
-    def on_ring(p):
-        if not ring_rect:
-            return False
-        rx0, ry0, rx1, ry1 = ring_rect
-        on_vert = (abs(p[0]-rx0) < TOL or abs(p[0]-rx1) < TOL) and ry0-TOL <= p[1] <= ry1+TOL
-        on_horiz = (abs(p[1]-ry0) < TOL or abs(p[1]-ry1) < TOL) and rx0-TOL <= p[0] <= rx1+TOL
-        return on_vert or on_horiz
-    # Exclude every point on the ring road — including the corners — from the
-    # point loop. The ring corners are kept separately (ring_corners) for later use.
-    n_pts = [p for p in n_pts if not on_ring(p)]
-    s_pts = [p for p in s_pts if not on_ring(p)]
-    e_pts = [p for p in e_pts if not on_ring(p)]
-    w_pts = [p for p in w_pts if not on_ring(p)]
-
-    # Clockwise ordering by wall
-    n_pts = sorted(set(n_pts), key=lambda p: p[0])             # left → right
-    e_pts = sorted(set(e_pts), key=lambda p: -p[1])            # top → bottom
-    s_pts = sorted(set(s_pts), key=lambda p: -p[0])            # right → left
-    w_pts = sorted(set(w_pts), key=lambda p: p[1])             # bottom → top
-    ordered = n_pts + e_pts + s_pts + w_pts
-
-    debug_points = {"N": n_pts, "E": e_pts, "S": s_pts, "W": w_pts,
-                    "ring_corners": ring_corners}   # kept for later use
-    if len(n_pts) + len(e_pts) + len(s_pts) + len(w_pts) < 2:
-        return [], debug_points
-
-    # Footprint crossing test (connectors may touch buffers but not cross blocks)
-    foot = [(b["x"], b["y"], b["width"], b["height"]) for b in blocks]
-    def crosses_block(p, q):
-        ax0, ax1 = min(p[0], q[0]), max(p[0], q[0])
-        ay0, ay1 = min(p[1], q[1]), max(p[1], q[1])
-        for (fx, fy, fw, fh) in foot:
-            if ax1 > fx + TOL and ax0 < fx + fw - TOL and ay1 > fy + TOL and ay0 < fy + fh - TOL:
-                return True
-        return False
-
-    cx_plot, cy_plot = sw / 2, sl / 2
-    spur_list = spurs or []
-
-    def _axis_cross(a1, a2, b1, b2):
-        """Do two axis-aligned segments intersect? a is one seg, b another."""
-        a_h = abs(a1[1]-a2[1]) < TOL
-        b_h = abs(b1[1]-b2[1]) < TOL
-        if a_h == b_h:
-            return False   # parallel — ignore (overlap handled elsewhere)
-        # make h the horizontal, v the vertical
-        (hx0, hx1, hy), (vx, vy0, vy1) = (
-            (min(a1[0], a2[0]), max(a1[0], a2[0]), a1[1]),
-            (b1[0], min(b1[1], b2[1]), max(b1[1], b2[1]))
-        ) if a_h else (
-            (min(b1[0], b2[0]), max(b1[0], b2[0]), b1[1]),
-            (a1[0], min(a1[1], a2[1]), max(a1[1], a2[1]))
-        )
-        return hx0 - TOL <= vx <= hx1 + TOL and vy0 - TOL <= hy <= vy1 + TOL
-
-    def crosses_spur(p, q):
-        return any(_axis_cross(p, q, s[0], s[1]) for s in spur_list)
-
-    # Existing-road registry for parallel-reuse snapping. Seed with ring edges.
-    PARALLEL_SNAP = 30.0
-    h_roads = []   # (y, x0, x1)
-    v_roads = []   # (x, y0, y1)
-    if ring_rect:
-        rx0, ry0, rx1, ry1 = ring_rect
-        h_roads += [(ry0, rx0, rx1), (ry1, rx0, rx1)]
-        v_roads += [(rx0, ry0, ry1), (rx1, ry0, ry1)]
-    # Also reuse the §3.7.D cleaned segments as snap targets.
-    h_roads += [(hy, hx0, hx1) for (hx0, hx1, hy) in H]
-    v_roads += [(vx, vy0, vy1) for (vx, vy0, vy1) in V]
-
-    connectors = []           # list of (a, b, side)
-    cur_side = ["N"]          # which wall the current connector belongs to
-    def add_h(y, x0, x1):
-        a, b = (min(x0, x1), y), (max(x0, x1), y)
-        if abs(a[0]-b[0]) > TOL:
-            connectors.append((a, b, cur_side[0])); h_roads.append((y, a[0], b[0]))
-    def add_v(x, y0, y1):
-        a, b = (x, min(y0, y1)), (x, max(y0, y1))
-        if abs(a[1]-b[1]) > TOL:
-            connectors.append((a, b, cur_side[0])); v_roads.append((x, a[1], b[1]))
-
-    def snap_h_y(y, x0, x1):
-        """If a horizontal road runs within 30m & overlaps in X, reuse its Y."""
-        lo, hi = min(x0, x1), max(x0, x1)
-        best, bestd = y, PARALLEL_SNAP + 1
-        for (ry, rx0, rx1) in h_roads:
-            d = abs(ry - y)
-            if 0 < d <= PARALLEL_SNAP and min(hi, rx1) > max(lo, rx0) - TOL and d < bestd:
-                best, bestd = ry, d
-        return best
-    def snap_v_x(x, y0, y1):
-        lo, hi = min(y0, y1), max(y0, y1)
-        best, bestd = x, PARALLEL_SNAP + 1
-        for (rx, ry0, ry1) in v_roads:
-            d = abs(rx - x)
-            if 0 < d <= PARALLEL_SNAP and min(hi, ry1) > max(lo, ry0) - TOL and d < bestd:
-                best, bestd = rx, d
-        return best
-
-    def emit(a, b):
-        """Append one axis-aligned leg, snapping it onto a nearby parallel road
-        (≤30m) when one exists — reuse roads, avoid near-parallel duplicates.
-        A snap is taken only if the resulting Z does NOT cross a block footprint."""
-        if abs(a[1]-b[1]) < TOL:                       # horizontal leg
-            y, sy = a[1], snap_h_y(a[1], a[0], b[0])
-            if abs(sy - y) > TOL:
-                z = [((a[0], y), (a[0], sy)), ((a[0], sy), (b[0], sy)), ((b[0], sy), (b[0], b[1]))]
-                if not any(crosses_block(s[0], s[1]) for s in z):
-                    add_v(a[0], a[1], sy); add_h(sy, a[0], b[0]); add_v(b[0], sy, b[1]); return
-            add_h(y, a[0], b[0])
-        elif abs(a[0]-b[0]) < TOL:                     # vertical leg
-            x, sx = a[0], snap_v_x(a[0], a[1], b[1])
-            if abs(sx - x) > TOL:
-                z = [((a[0], a[1]), (sx, a[1])), ((sx, a[1]), (sx, b[1])), ((sx, b[1]), (b[0], b[1]))]
-                if not any(crosses_block(s[0], s[1]) for s in z):
-                    add_h(a[1], a[0], sx); add_v(sx, a[1], b[1]); add_h(b[1], sx, b[0]); return
-            add_v(x, a[1], b[1])
-
-    cur_side[0] = "loop"      # single-loop tag (no wall sides)
-    def connect(p, q):
-        if abs(p[0]-q[0]) < TOL or abs(p[1]-q[1]) < TOL:
-            # spur reroute for a straight connector too
-            if ring_rect and crosses_spur(p, q):
-                _reroute_via_ring(p, q); return
-            emit(p, q); return
-        c1 = (q[0], p[1]); c2 = (p[0], q[1])   # the two L-corner options
-        c1_ok = not (crosses_block(p, c1) or crosses_block(c1, q))
-        c2_ok = not (crosses_block(p, c2) or crosses_block(c2, q))
-        if c1_ok and not c2_ok: corner = c1
-        elif c2_ok and not c1_ok: corner = c2
-        else:                                   # both ok / both cross → outer corner
-            d1 = (c1[0]-cx_plot)**2 + (c1[1]-cy_plot)**2
-            d2 = (c2[0]-cx_plot)**2 + (c2[1]-cy_plot)**2
-            corner = c1 if d1 >= d2 else c2
-        # Spur-aware: if either leg crosses a road spur, route along the ring road.
-        if ring_rect and (crosses_spur(p, corner) or crosses_spur(corner, q)):
-            _reroute_via_ring(p, q); return
-        emit(p, corner); emit(corner, q)
-
-    def _reroute_via_ring(p, q):
-        """Detour around a spur by dipping to the nearest ring-road edge and
-        running along it: p → ring edge → along → ring edge → q."""
-        rx0, ry0, rx1, ry1 = ring_rect
-        # choose the ring horizontal edge (top/bottom) nearest the connector's mean y
-        my = (p[1] + q[1]) / 2
-        redge = ry1 if abs(ry1 - my) <= abs(ry0 - my) else ry0
-        for pa, pb in [(p, (p[0], redge)), ((p[0], redge), (q[0], redge)), ((q[0], redge), q)]:
-            emit(pa, pb)
-
-    # Combine all collected points (dedup) and order them by NEAREST-NEIGHBOR
-    # (Manhattan) into the shortest connected loop — no wall-side logic.
-    all_pts, seen = [], set()
-    for p in (n_pts + e_pts + s_pts + w_pts):
-        k = (round(p[0], 1), round(p[1], 1))
-        if k not in seen:
-            seen.add(k); all_pts.append(p)
-    chain = all_pts
-
-    # Two points are "road-connected" if an existing CLEANED segment spans
-    # straight between them — the tour prefers these so the loop hugs and reuses
-    # existing roads (stepping in along block edges) instead of cutting straight.
-    def road_between(a, b):
-        if abs(a[0]-b[0]) < TOL:                          # vertical
-            lo, hi = min(a[1], b[1]), max(a[1], b[1])
-            return any(abs(vx-a[0]) < TOL and vy0-TOL <= lo and vy1+TOL >= hi
-                       for (vx, vy0, vy1) in V)
-        if abs(a[1]-b[1]) < TOL:                          # horizontal
-            lo, hi = min(a[0], b[0]), max(a[0], b[0])
-            return any(abs(hy-a[1]) < TOL and hx0-TOL <= lo and hx1+TOL >= hi
-                       for (hx0, hx1, hy) in H)
-        return False
-
-    # Start the tour from the point nearest the GATE side.
-    _start_key = {
-        "N": lambda p: (-p[1], p[0]), "S": lambda p: (p[1], p[0]),
-        "E": lambda p: (-p[0], p[1]), "W": lambda p: (p[0], p[1]),
-    }.get(gate_side, lambda p: (-p[1], p[0]))
-    if len(all_pts) >= 2:
-        remaining = all_pts[:]
-        cur = min(remaining, key=_start_key)
-        tour = [cur]; remaining.remove(cur)
-        while remaining:
-            last = tour[-1]
-            on_road = [p for p in remaining if road_between(last, p)]
-            pool = on_road if on_road else remaining
-            nxt = min(pool, key=lambda p: abs(p[0]-last[0]) + abs(p[1]-last[1]))
-            tour.append(nxt); remaining.remove(nxt)
-        for i in range(len(tour)):
-            connect(tour[i], tour[(i + 1) % len(tour)])
-
-    # Dead-end overshoot trim: shorten each segment to the span between its
-    # outermost junctions; drop segments touching nothing. Closed loop → no
-    # open ends to preserve.
-    def _touches_on(self_idx, a, b):
-        vert = abs(a[0]-b[0]) < TOL
-        lo, hi = (min(a[1], b[1]), max(a[1], b[1])) if vert else (min(a[0], b[0]), max(a[0], b[0]))
-        fixed = a[0] if vert else a[1]
-        ts = []
-        for idx, (c, d, _s) in enumerate(connectors):
-            if idx == self_idx:
-                continue
-            for pt in (c, d):
-                if vert and abs(pt[0]-fixed) < TOL and lo-TOL <= pt[1] <= hi+TOL:
-                    ts.append(pt[1])
-                if (not vert) and abs(pt[1]-fixed) < TOL and lo-TOL <= pt[0] <= hi+TOL:
-                    ts.append(pt[0])
-            if vert and abs(c[1]-d[1]) < TOL:
-                ty = c[1]; tx0, tx1 = min(c[0], d[0]), max(c[0], d[0])
-                if tx0-TOL <= fixed <= tx1+TOL and lo-TOL <= ty <= hi+TOL:
-                    ts.append(ty)
-            if (not vert) and abs(c[0]-d[0]) < TOL:
-                tx = c[0]; ty0, ty1 = min(c[1], d[1]), max(c[1], d[1])
-                if ty0-TOL <= fixed <= ty1+TOL and lo-TOL <= tx <= hi+TOL:
-                    ts.append(tx)
-        return vert, fixed, lo, hi, ts
-
-    changed = True
-    while changed:
-        changed = False
-        new = []
-        for _idx, (a, b, side) in enumerate(connectors):
-            if not (abs(a[0]-b[0]) < TOL or abs(a[1]-b[1]) < TOL):
-                new.append((a, b, side)); continue
-            vert, fixed, lo, hi, ts = _touches_on(_idx, a, b)
-            if not ts:
-                changed = True; continue
-            nlo, nhi = max(lo, min(ts)), min(hi, max(ts))
-            if nhi - nlo <= TOL:
-                changed = True; continue
-            na = (fixed, nlo) if vert else (nlo, fixed)
-            nb = (fixed, nhi) if vert else (nhi, fixed)
-            if abs(nlo-lo) > TOL or abs(nhi-hi) > TOL:
-                changed = True
-            new.append((na, nb, side))
-        connectors = new
-
-    return connectors, debug_points
-
+    for y in range(h_cells):
+        for x in range(w_cells):
+            if not is_outside(x, y):
+                if is_outside(x, y-1): edges.add(((x, y), (x+1, y)))
+                if is_outside(x, y+1): edges.add(((x, y+1), (x+1, y+1)))
+                if is_outside(x-1, y): edges.add(((x, y), (x, y+1)))
+                if is_outside(x+1, y): edges.add(((x+1, y), (x+1, y+1)))
+                
+    real_edges = []
+    for ((x1, y1), (x2, y2)) in edges:
+        rx1, ry1 = min_x + x1*RES, min_y + y1*RES
+        rx2, ry2 = min_x + x2*RES, min_y + y2*RES
+        real_edges.append(((rx1, ry1), (rx2, ry2)))
+        
+    merged = []
+    h_edges = [(min(e[0][0],e[1][0]), max(e[0][0],e[1][0]), e[0][1]) for e in real_edges if abs(e[0][1]-e[1][1]) < TOL]
+    h_edges.sort(key=lambda x: (x[2], x[0]))
+    if h_edges:
+        cur_x0, cur_x1, cur_y = h_edges[0]
+        for x0, x1, y in h_edges[1:]:
+            if abs(y - cur_y) < TOL and x0 <= cur_x1 + TOL:
+                cur_x1 = max(cur_x1, x1)
+            else:
+                merged.append(((cur_x0, cur_y), (cur_x1, cur_y)))
+                cur_x0, cur_x1, cur_y = x0, x1, y
+        merged.append(((cur_x0, cur_y), (cur_x1, cur_y)))
+        
+    v_edges = [(min(e[0][1],e[1][1]), max(e[0][1],e[1][1]), e[0][0]) for e in real_edges if abs(e[0][0]-e[1][0]) < TOL]
+    v_edges.sort(key=lambda y: (y[2], y[0]))
+    if v_edges:
+        cur_y0, cur_y1, cur_x = v_edges[0]
+        for y0, y1, x in v_edges[1:]:
+            if abs(x - cur_x) < TOL and y0 <= cur_y1 + TOL:
+                cur_y1 = max(cur_y1, y1)
+            else:
+                merged.append(((cur_x, cur_y0), (cur_x, cur_y1)))
+                cur_y0, cur_y1, cur_x = y0, y1, x
+        merged.append(((cur_x, cur_y0), (cur_x, cur_y1)))
+        
+    return merged, {"N":[], "S":[], "E":[], "W":[]}
 
 def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
     """Closed polyline of perimeter fire road centerline."""
@@ -875,143 +647,6 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):  # → §3.4.D (used by build_r
     if symax <= ry or symin >= ry + rh:
         return False
     return True
-
-def compute_snapped_buffers(placed, tolerance=6):  # → §3.7.A
-    """Computes road buffers for all blocks, snapping them together if within 2*tolerance (12m).
-    PB is an immovable magnet (snaps if within tolerance=6m)."""
-    buffers = {}
-    for name, bounds in placed.items():
-        if name.startswith("_"): continue
-        offset = 14 if name in RACK_BLOCKS else 8
-        x, y, w, h = bounds
-        buffers[name] = [x - offset, y - offset, x + w + offset, y + h + offset]
-        
-    if "Power Block" in buffers:
-        pb = buffers["Power Block"]
-        for name, b in buffers.items():
-            if name == "Power Block": continue
-            if 0 <= pb[0] - b[2] <= tolerance:
-                if b[3] > pb[1] and b[1] < pb[3]: b[2] = pb[0]
-            if 0 <= b[0] - pb[2] <= tolerance:
-                if b[3] > pb[1] and b[1] < pb[3]: b[0] = pb[2]
-            if 0 <= pb[1] - b[3] <= tolerance:
-                if b[2] > pb[0] and b[0] < pb[2]: b[3] = pb[1]
-            if 0 <= b[1] - pb[3] <= tolerance:
-                if b[2] > pb[0] and b[0] < pb[2]: b[1] = pb[3]
-
-    names = list(buffers.keys())
-    for i in range(len(names)):
-        for j in range(i+1, len(names)):
-            n1, n2 = names[i], names[j]
-            if "Power Block" in (n1, n2): continue
-            b1, b2 = buffers[n1], buffers[n2]
-            
-            if 0 <= b2[0] - b1[2] <= 2 * tolerance:
-                if b1[3] > b2[1] and b1[1] < b2[3]:
-                    mid = (b1[2] + b2[0]) / 2
-                    b1[2] = b2[0] = mid
-            elif 0 <= b1[0] - b2[2] <= 2 * tolerance:
-                if b1[3] > b2[1] and b1[1] < b2[3]:
-                    mid = (b1[0] + b2[2]) / 2
-                    b1[0] = b2[2] = mid
-                    
-            if 0 <= b2[1] - b1[3] <= 2 * tolerance:
-                if b1[2] > b2[0] and b1[0] < b2[2]:
-                    mid = (b1[3] + b2[1]) / 2
-                    b1[3] = b2[1] = mid
-            elif 0 <= b1[1] - b2[3] <= 2 * tolerance:
-                if b1[2] > b2[0] and b1[0] < b2[2]:
-                    mid = (b1[1] + b2[3]) / 2
-                    b1[1] = b2[3] = mid
-
-    for name, b in buffers.items():
-        buffers[name] = (b[0], b[1], b[2] - b[0], b[3] - b[1])
-        
-    return buffers
-
-def generate_perimeter_segments(computed_buffers, pb_cx, pb_cy):  # → §3.7.B (Pass 1..3)
-    """B-1 Algorithm for generating perimeter road segments from snapped block buffers."""
-    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
-    blocks = {name: bounds for name, bounds in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
-        
-    def get_overlap(r1, r2, tol=0.1):
-        x1, y1, w1, h1 = r1
-        x2, y2, w2, h2 = r2
-        l = max(x1, x2)
-        r = min(x1 + w1, x2 + w2)
-        t = max(y1, y2)
-        b = min(y1 + h1, y2 + h2)
-        if r >= l - tol and b >= t - tol:
-            return (l, t, r - l, b - t)
-        return None
-
-    def get_centerline(overlap):
-        ox, oy, ow, oh = overlap
-        if ow > oh:
-            mid_y = oy + oh / 2
-            return ((ox, mid_y), (ox + ow, mid_y))
-        else:
-            mid_x = ox + ow / 2
-            return ((mid_x, oy), (mid_x, oy + oh))
-
-    segments = []
-    connected = set()
-    
-    def process_pass(buffer_expansion, blocks_to_process):
-        block_intersections = {name: [] for name in blocks_to_process}
-        for name1, r1_orig in blocks.items():
-            if name1 not in blocks_to_process: continue
-            for name2, r2_orig in blocks.items():
-                if name1 == name2: continue
-                # Expand them uniformly for Pass 2
-                r1 = (r1_orig[0] - buffer_expansion, r1_orig[1] - buffer_expansion, r1_orig[2] + 2*buffer_expansion, r1_orig[3] + 2*buffer_expansion)
-                r2 = (r2_orig[0] - buffer_expansion, r2_orig[1] - buffer_expansion, r2_orig[2] + 2*buffer_expansion, r2_orig[3] + 2*buffer_expansion)
-                
-                overlap = get_overlap(r1, r2)
-                if overlap:
-                    ox, oy, ow, oh = overlap
-                    length = max(ow, oh)
-                    seg = get_centerline(overlap)
-                    block_intersections[name1].append((length, seg, name2))
-                    
-        for name, inters in block_intersections.items():
-            if inters:
-                for length, seg, target_name in inters:
-                    if seg not in segments and (seg[1], seg[0]) not in segments:
-                        segments.append(seg)
-                    connected.add(name)
-                    connected.add(target_name)
-
-    # Pass 1: Direct intersections (exact buffer)
-    process_pass(0, list(blocks.keys()))
-                
-    # Pass 2: Tolerance pass (+6m buffer) for unconnected blocks
-    unconnected_before_pass2 = [n for n in blocks.keys() if n not in connected]
-    process_pass(6, unconnected_before_pass2)
-                
-    # Pass 3: Orphans
-    for name1, r1 in blocks.items():
-        if name1 in connected: continue
-        x, y, w, h = r1
-        edges = [
-            ((x, y), (x+w, y)),         # bottom
-            ((x, y+h), (x+w, y+h)),     # top
-            ((x, y), (x, y+h)),         # left
-            ((x+w, y), (x+w, y+h))      # right
-        ]
-        best_edge = None
-        max_dist = -1
-        for e in edges:
-            mid_x = (e[0][0] + e[1][0]) / 2
-            mid_y = (e[0][1] + e[1][1]) / 2
-            dist = (mid_x - pb_cx)**2 + (mid_y - pb_cy)**2
-            if dist > max_dist:
-                max_dist = dist
-                best_edge = e
-        if best_edge:
-            segments.append(best_edge)
-            
-    return segments
 
 def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):  # → §3.7.C · §3.8.B
     """A-2 Algorithm for finding 8m road access lines for Group A blocks."""
@@ -1912,15 +1547,11 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 # Add to rack_buffers for dashboard visualization
                 rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
 
-        computed_buffers = compute_snapped_buffers(placed)                                          # → §3.7.A
-        perimeter_segments_raw = generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)       # → §3.7.B
-
-        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])  # → §3.7.C · §3.8.B
-
-        # B-2 Clean up parallel segments on both A-2 and B-1
-        all_segments_raw = perimeter_segments_raw + group_a_segments_raw
+        computed_buffers = compute_unsnapped_buffers(placed)
+        perimeter_segments_raw = []
+        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
+        all_segments_raw = group_a_segments_raw
         
-        # Extract PB Ring Road network (Ring road + Gate spur + Ring spur) for Priority 1 matching
         pb_network = []
         if ring_road:
             for i in range(len(ring_road) - 1):
@@ -1933,14 +1564,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             for i in range(len(ring_spur) - 1):
                 pb_network.append((ring_spur[i], ring_spur[i+1]))
                 
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)  # → §3.7.D
+        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)
 
-        spur_segs = []
-        for _spur in (gate_spur, ring_spur):
-            if _spur:
-                for _i in range(len(_spur) - 1):
-                    spur_segs.append((_spur[_i], _spur[_i + 1]))
-        outer_loop, outer_loop_pts = build_outer_loop_pointwise(all_segments_cleaned, computed_buffers, blocks, sw, sl, ring_road=ring_road, spurs=spur_segs, gate_side=gate_side)  # → §3.7.E
+        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers)
         boom_barrier = []
         gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:

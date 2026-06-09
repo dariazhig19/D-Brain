@@ -301,37 +301,27 @@ Both passes must:
 
 ---
 
-### §3.7 Perimeter Fire Road
+### §3.7 Perimeter Fire Road (Union of Buffers Contour)
 
-#### §3.7.A Snapped Road Buffers (Pre-computation)
+Instead of heuristic intersections, the perimeter fire road is generated mathematically by tracing the boolean union of all block road buffers.
 
-`compute_snapped_buffers(placed)`:
+#### §3.7.A Buffer Inflation
+Each placed block is expanded outward by its required road offset:
+- **Rack Blocks:** 16 m offset.
+- **No-Rack Blocks:** 8 m offset.
 
-1. Inflate each block by its road offset (14 m for rack blocks, 8 m for no-rack blocks) → raw buffer rectangles.
-2. **PB magnet (tolerance = 6 m):** Snap other block buffers to PB's buffer if within 6 m on any axis-aligned side (PB is immovable).
-3. **Pair snapping (tolerance = 12 m, i.e. 2 × 6 m):** For all non-PB pairs, snap adjacent buffers to a shared midline if within 12 m.
-4. Output: `{block_name: (x, y, w, h)}` — each rect is the snapped road buffer.
+This generates an axis-aligned buffer rectangle around every block.
 
-#### §3.7.B Perimeter Segment Generation
+#### §3.7.B Grid-Based Boolean Union
+A high-resolution 2D integer grid is created over the plot bounds. The buffer rectangle of every block is "painted" onto this grid (setting cells to 1). This effectively performs a geometric boolean union of all required road stand-offs, forming a single continuous footprint.
 
-`generate_perimeter_segments(computed_buffers, pb_cx, pb_cy)`:
+#### §3.7.C Contour Tracing (The Perimeter Road)
+A flood-fill algorithm runs from the outside of the grid to identify all "exterior" empty cells. 
+The boundary edges between the exterior (empty) cells and the interior (filled) cells are extracted. These edges are merged into contiguous orthogonal line segments. 
 
-Fire-road blocks: `{WT/WWT, RAW Water, Cooling Tower, Warehouse, GIS, Admin Building, Power Block}`.
+The resulting polyline is mathematically guaranteed to be a closed, continuous, and non-intersecting loop that perfectly hugs the facility at the exact required stand-off distances (8m or 16m), forming the final **Outer Perimeter Loop**.
 
-**Pass 1 — Direct intersections (exact buffer):**
-For every pair, check if their snapped buffer rectangles overlap.
-- If overlap exists → compute centerline through the overlap region → add as segment.
-- Mark both blocks connected.
-
-**Pass 2 — Tolerance pass (expand buffer +6 m on all sides):**
-For any block not yet connected, expand its buffer by 6 m and re-check against all blocks.
-- Overlap found → snap both buffers to shared centerline; add segment.
-- PB is immovable — other block snaps entirely to PB buffer line.
-
-**Pass 3 — Orphans:**
-For any block still unconnected, take its road-buffer edge **farthest from PB** and add that as its segment.
-
-#### §3.7.C Group A — 8m Road Access Lines
+#### §3.7.D Group A — 8m Road Access Lines
 
 `generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy)`:
 

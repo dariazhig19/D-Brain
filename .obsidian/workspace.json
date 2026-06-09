@@ -241,6 +241,8 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/rewrite_md.py",
+    "01_Products/Layout_Gen_Design/rewrite_layout06.py",
     "01_Products/Layout_Gen_Design/scratch_test.py",
     "01_Products/Layout_Gen_Design/Notes/overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Layout_Dev_Methodology_and_UX.md",
@@ -272,8 +274,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06",
     "04_Reports/Weekly/Weekly_Report_2026_W23.md",
     "00_Input/Phase_06_Plan_Structured.md",
-    "01_Products/Layout_Gen_Design/_fix_layout06.py",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-314.pyc",
     "04_Reports/Weekly/Weekly_Report_2026_W21.md",
     "01_Products/Layout_Gen_Design/Notes/!Product_Vision_KR.md",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase_05_Plan.md",

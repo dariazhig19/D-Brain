@@ -398,20 +398,7 @@ def compute_buffer_union_contour(computed_buffers):
             if not e_grid[y][x]: count = K + 1
             elif count > 0: count -= 1
             if count > 0: e2_grid[y][x] = 0
-            
-                pts[0] = (p1[0] + dx, p1[1] + dy)
-                
-            for i in range(len(pts)-1):
-                p1, p2 = pts[i], pts[i+1]
-                x0, y0 = int((p1[0] - min_x)/RES), int((p1[1] - min_y)/RES)
-                x1, y1 = int((p2[0] - min_x)/RES), int((p2[1] - min_y)/RES)
-                if x0 == x1:
-                    for y in range(max(0, min(y0, y1)), min(h_cells, max(y0, y1)+1)):
-                        if 0 <= x0 < w_cells: e2_grid[y][x0] = 0
-                elif y0 == y1:
-                    for x in range(max(0, min(x0, x1)), min(w_cells, max(x0, x1)+1)):
-                        if 0 <= y0 < h_cells: e2_grid[y0][x] = 0
-            
+
     # 4. Contour Tracing (Flood fill from outside)
     visited = set()
     # To avoid recursion limit, use a stack

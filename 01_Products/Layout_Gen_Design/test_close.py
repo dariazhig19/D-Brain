@@ -55,31 +55,32 @@ def dilate_erode(grid, w_cells, h_cells, K):
             
     return e2_grid
 
-w, h = 40, 20
+w, h = 40, 30
 grid = [[0]*w for _ in range(h)]
 # Block A
-for y in range(5, 10):
+for y in range(10, 15):
     for x in range(5, 15): grid[y][x] = 1
 # Block B
-for y in range(5, 10):
+for y in range(10, 15):
     for x in range(25, 35): grid[y][x] = 1
 # PB block at bottom
-for y in range(15, 20):
+for y in range(20, 25):
     for x in range(10, 30): grid[y][x] = 1
-
-# Spur from top to PB
-spur_x = 20
-for y in range(0, 15):
-    grid[y][spur_x] = 1
 
 res = dilate_erode(grid, w, h, 6)
 
-print("Closed without subtracting spur:")
-for row in res: print("".join("X" if c else "." for c in row))
-
-# Now subtract spur from the closed grid
-for y in range(0, 15):
+# Spur from top to PB. Let's pretend Gate is at y=5.
+# If we only cut from y=5 to y=20, it's enclosed by the blob (blob top is y=4)
+spur_x = 20
+for y in range(5, 20):
     res[y][spur_x] = 0
 
-print("\nClosed with subtracted spur:")
+print("Enclosed cut (flood fill can't enter):")
+for row in res: print("".join("X" if c else "." for c in row))
+
+# Extend cut to boundary
+for y in range(0, 5):
+    res[y][spur_x] = 0
+
+print("\nExtended cut (flood fill can enter):")
 for row in res: print("".join("X" if c else "." for c in row))

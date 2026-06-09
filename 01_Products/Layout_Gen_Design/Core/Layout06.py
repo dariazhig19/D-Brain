@@ -398,6 +398,26 @@ def compute_buffer_union_contour(computed_buffers):
             elif count > 0: count -= 1
             if count > 0: e2_grid[y][x] = 0
 
+    # Create a routing dent for Gate House and Gate Death Zone
+    for name, b in computed_buffers.items():
+        if name == "_gate_death_zone":
+            cx0, cy0, cw, ch = b
+            # b already has 8m buffer.
+            x0, y0 = int((cx0 - min_x)/RES), int((cy0 - min_y)/RES)
+            x1, y1 = int((cx0 + cw - min_x)/RES), int((cy0 + ch - min_y)/RES)
+            for y in range(max(0, y0), min(h_cells, y1)):
+                for x in range(max(0, x0), min(w_cells, x1)):
+                    e2_grid[y][x] = 0
+        elif name == "Gate House":
+            cx0, cy0, cw, ch = b
+            # Expand by another 8m to ensure 16m buffer (keeps road 8m away from 8m corners)
+            cx0 -= 8; cy0 -= 8; cw += 16; ch += 16
+            x0, y0 = int((cx0 - min_x)/RES), int((cy0 - min_y)/RES)
+            x1, y1 = int((cx0 + cw - min_x)/RES), int((cy0 + ch - min_y)/RES)
+            for y in range(max(0, y0), min(h_cells, y1)):
+                for x in range(max(0, x0), min(w_cells, x1)):
+                    e2_grid[y][x] = 0
+                    
     # 4. Contour Tracing (Flood fill from outside)
     visited = set()
     # To avoid recursion limit, use a stack

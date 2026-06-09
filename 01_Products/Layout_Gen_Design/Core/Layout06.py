@@ -1645,7 +1645,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 
         all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)
 
-        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers, gate_spur, ring_spur)
+        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers)
         boom_barrier = []
         gh = next((b for b in blocks if b["name"] == "Gate House"), None)
         if gh is not None:

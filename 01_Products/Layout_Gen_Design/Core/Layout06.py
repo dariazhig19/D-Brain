@@ -310,7 +310,7 @@ def compute_unsnapped_buffers(placed):
 
 def compute_buffer_union_contour(computed_buffers):
     # Include all blocks to ensure the perimeter road doesn't cut through them
-    filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_")}
+    filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_") or name == "_gate_death_zone"}
     
     TOL = 0.1
     if not filtered_buffers: return [], {}

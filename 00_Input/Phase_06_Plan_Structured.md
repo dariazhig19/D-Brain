@@ -7,10 +7,12 @@
 
 ## §0. Core Concept
 
-Two-pass generative system.
+Four-step interactive generative system (Generate & Refine modes).
 
-- **Step 1** — sketches the site at block + road level (this document).
-- **Step 2** — refines each block into individual buildings with entrance connections (deferred).
+- **Step 1 (Generate Mode)**: Automatically generates 100+ layout alternatives focusing on core large blocks. User selects the top 3 favorites to refine.
+- **Step 2 (Refine Mode - Detailing)**: Places remaining small blocks based on the 3 selected layouts and subdivides large blocks into detailed individual buildings. User selects the top 3 detailed layouts.
+- **Step 3 (Refine Mode - Variation)**: Generates slightly mutated, similar variations of the selected layouts from Step 2 without adding new elements. User finalizes the top 1~3 layouts.
+- **Step 4 (Final Export)**: Verifies all constraints and outputs the final 1~3 layouts as CAD drawings (DXF).
 
 **Principle:** Roads come *before* buildings. Blocks are placed around roads, not the other way around. Racks are more important than roads — placed before perimeter/spurs/stubs so roads route around rack corridors.
 

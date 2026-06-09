@@ -1,7 +1,7 @@
 # Phase 06: Grid-First Generative Layout — Structured Reference
 
 **Replaces:** Phase 05 (continuous float coordinates + entrance-based A* routing)
-**Status:** Step 1 implemented (`Layout06.py`); Step 2 deferred
+**Status:** UI transitioning to the 4-step interactive wizard (Generate & Refine modes).
 
 ---
 
@@ -449,19 +449,24 @@ Lines that snapped to the PB network are removed from the Priority-3 pool.
 
 All roads are **sketch roads** — centerlines only (lines). No physical width rendered yet.
 
----
+## §5. Refine Modes (Step 2, Step 3, Step 4)
 
-## §5. Step 2 — Building Finalization (Deferred)
+> Executed interactively after the user selects their favorite layouts from Step 1.
 
-> Implemented after Step 1 is validated.
+### Step 2: Detailing and Subdividing
+1. **Place small blocks** — the remaining small and variable blocks are added around the committed roads and large blocks from Step 1.
+2. **Subdivide large blocks** — major blocks are split into detailed individual buildings.
+3. **Add building entrances and access roads** — each building gets a door facing the nearest road, and short access stubs are routed.
+4. **User Selection** — the user reviews the detailed layouts and selects the top 3.
 
-1. **Place buildings inside each block** — buildings subdivide the block footprint.
-2. **Add building entrances** — each building gets a door facing the nearest sketch road.
-3. **Adjust road geometry** — road centerlines shift to align with actual building faces.
-4. **Finalize** — sketch roads become confirmed roads with physical width; buildings lock in.
-5. **Access roads** — short stubs from each building entrance to the nearest road centerline.
+### Step 3: Variation and Mutation
+1. **Generate variations** — slightly mutate and perturb the layouts selected in Step 2 to create similar alternatives (no new elements are added).
+2. **Micro-adjustments** — allows the user to find the perfectly refined version of their chosen layout.
+3. **User Selection** — the user finalizes the top 1~3 layouts.
 
-Step 2 knows Step 1's road network, so buildings are arranged around committed roads.
+### Step 4: Final Export
+1. **Rule Verification** — a final pass of all constraints and penalty scoring.
+2. **CAD Export** — the finalized 1~3 layouts are exported as accurate DXF CAD drawings.
 
 ---
 

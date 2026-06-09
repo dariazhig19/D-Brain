@@ -67,7 +67,7 @@ if True:  # Phase 06 — Sketch roads
     show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
     show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=True)
     show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
-    show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (6m / 14m / 22m / 28m)", value=True)
+    show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=True)
     show_b1_perimeter = st.sidebar.checkbox("§3.7.B — Perimeter segs (raw)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_a2_raw       = st.sidebar.checkbox("§3.7.C — Group A access (raw)", value=False)
@@ -77,7 +77,7 @@ if True:  # Phase 06 — Sketch roads
     show_pts_E        = st.sidebar.checkbox("§3.7.E — E points (green)", value=False)
     show_pts_S        = st.sidebar.checkbox("§3.7.E — S points (blue)", value=False)
     show_pts_W        = st.sidebar.checkbox("§3.7.E — W points (orange)", value=False)
-    show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines + triangle", value=True)
+    show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -249,10 +249,10 @@ if True:  # Phase 06 — Sketch roads
         rack_specs = [
             ("road_no_rack", '§3.6.A 8m road (no-rack)',   '#34495e', '--', 0.8, show_rack_no_rack),
             ("b2b_no_rack",  '§3.6.A 16m b2b (no-rack)',   '#c0392b', ':',  0.8, show_rack_no_rack),
-            ("case1_rack",   '§3.6.A Case 1 CL (6m)',      '#00b894', '-',  1.6, show_rack_w_rack),
-            ("road_w_rack",  '§3.6.A 14m road (w-rack)',   '#2980b9', '-',  1.2, show_rack_w_rack),
-            ("case2_rack",   '§3.6.A Case 2 CL (22m)',     '#8e44ad', ':',  1.4, show_rack_w_rack),
-            ("b2b_w_rack",   '§3.6.A 28m b2b (w-rack)',    '#e67e22', ':',  1.0, show_rack_w_rack),
+            ("case1_rack",   '§3.6.A Case 1 CL (8m)',      '#00b894', '-',  1.6, show_rack_w_rack),
+            ("road_w_rack",  '§3.6.A 16m road (w-rack)',   '#2980b9', '-',  1.2, show_rack_w_rack),
+            ("case2_rack",   '§3.6.A Case 2 CL (24m)',     '#8e44ad', ':',  1.4, show_rack_w_rack),
+            ("b2b_w_rack",   '§3.6.A 30m b2b (w-rack)',    '#e67e22', ':',  1.0, show_rack_w_rack),
         ]
         legended = {spec[0]: False for spec in rack_specs}
         for bname, offsets in rack_buf.items():

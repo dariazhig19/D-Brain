@@ -35,10 +35,10 @@ RACK_WIDTH = 6   # metres
 # Plus two rack-centerline offsets for the two layouts:
 #   - Case 1 (block → rack → road):  rack CL at 6m
 #   - Case 2 (block → road → rack):  rack CL at 22m
-ROAD_W_RACK_OFFSET   = 14   # road CL on a side that has a rack
-B2B_W_RACK_OFFSET    = 28   # block-to-block on a side that has a rack
-RACK_CASE1_OFFSET    = 6
-RACK_CASE2_OFFSET    = 22
+ROAD_W_RACK_OFFSET   = 16   # road CL on a side that has a rack
+B2B_W_RACK_OFFSET    = 30   # block-to-block on a side that has a rack
+RACK_CASE1_OFFSET    = 8
+RACK_CASE2_OFFSET    = 24
 
 # ── Block catalog ──────────────────────────────────────────────────────────
 # Source of truth: Notes/!Scoring_Logic.md — 10 confirmed blocks

@@ -209,10 +209,10 @@ Single rack type, **width = 6 m**, connects 5 "need rack" blocks: PB, Cooling To
 |----------------|--------|-----------|------------------------------------------------|
 | `road_no_rack` | 8 m    | no rack   | Road CL on a side without a rack (baseline)    |
 | `b2b_no_rack`  | 16 m   | no rack   | Block-to-block gap without rack (baseline)     |
-| `case1_rack`   | 6 m    | with rack | Rack CL — Case 1: block → rack → road          |
-| `road_w_rack`  | 14 m   | with rack | Road CL on a side that has a rack              |
-| `case2_rack`   | 22 m   | with rack | Rack CL — Case 2: block → road → rack          |
-| `b2b_w_rack`   | 28 m   | with rack | Block-to-block gap on a side with a rack       |
+| `case1_rack`   | 8 m    | with rack | Rack CL — Case 1: block → rack → road          |
+| `road_w_rack`  | 16 m   | with rack | Road CL on a side that has a rack              |
+| `case2_rack`   | 24 m   | with rack | Rack CL — Case 2: block → road → rack          |
+| `b2b_w_rack`   | 30 m   | with rack | Block-to-block gap on a side with a rack       |
 
 **Active case selection:**
 

@@ -302,22 +302,35 @@ def compute_unsnapped_buffers(placed):
         buffers[name] = (x - offset, y - offset, w + 2*offset, h + 2*offset)
     return buffers
 
+
 def compute_buffer_union_contour(computed_buffers):
     FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
     filtered_buffers = {name: b for name, b in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
     
     TOL = 0.1
     if not filtered_buffers: return [], {}
-    min_x = min(b[0] for b in filtered_buffers.values()) - 5
-    min_y = min(b[1] for b in filtered_buffers.values()) - 5
-    max_x = max(b[0] + b[2] for b in filtered_buffers.values()) + 5
-    max_y = max(b[1] + b[3] for b in filtered_buffers.values()) + 5
+    
+    # 1. Base grid bounds
+    min_x = min(b[0] for b in filtered_buffers.values())
+    min_y = min(b[1] for b in filtered_buffers.values())
+    max_x = max(b[0] + b[2] for b in filtered_buffers.values())
+    max_y = max(b[1] + b[3] for b in filtered_buffers.values())
     
     RES = 0.5
+    K_m = 30 # 30m closing radius -> bridges gaps up to 60m
+    K = int(K_m / RES)
+    
+    # Pad grid by K + 5 cells to prevent morphological edge effects
+    min_x -= (K_m + 5)
+    min_y -= (K_m + 5)
+    max_x += (K_m + 5)
+    max_y += (K_m + 5)
+    
     w_cells = int((max_x - min_x) / RES)
     h_cells = int((max_y - min_y) / RES)
     grid = [[0]*w_cells for _ in range(h_cells)]
     
+    # 2. Paint blocks
     for name, (bx, by, bw, bh) in filtered_buffers.items():
         if name.startswith("_"): continue
         ix0, iy0 = int((bx - min_x) / RES), int((by - min_y) / RES)
@@ -326,14 +339,71 @@ def compute_buffer_union_contour(computed_buffers):
             for x in range(max(0,ix0), min(w_cells,ix1)):
                 grid[y][x] = 1
 
+    # 3. Morphological Closing (Dilate -> Erode)
+    # Dilate
+    d_grid = [[0]*w_cells for _ in range(h_cells)]
+    for y in range(h_cells):
+        count = 0
+        for x in range(w_cells):
+            if grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: d_grid[y][x] = 1
+        count = 0
+        for x in range(w_cells-1, -1, -1):
+            if grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: d_grid[y][x] = 1
+            
+    d2_grid = [[0]*w_cells for _ in range(h_cells)]
+    for x in range(w_cells):
+        count = 0
+        for y in range(h_cells):
+            if d_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: d2_grid[y][x] = 1
+        count = 0
+        for y in range(h_cells-1, -1, -1):
+            if d_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: d2_grid[y][x] = 1
+            
+    # Erode (Dilate the 0s)
+    e_grid = [[1]*w_cells for _ in range(h_cells)]
+    for y in range(h_cells):
+        count = 0
+        for x in range(w_cells):
+            if not d2_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: e_grid[y][x] = 0
+        count = 0
+        for x in range(w_cells-1, -1, -1):
+            if not d2_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: e_grid[y][x] = 0
+            
+    e2_grid = [[1]*w_cells for _ in range(h_cells)]
+    for x in range(w_cells):
+        count = 0
+        for y in range(h_cells):
+            if not e_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: e2_grid[y][x] = 0
+        count = 0
+        for y in range(h_cells-1, -1, -1):
+            if not e_grid[y][x]: count = K + 1
+            elif count > 0: count -= 1
+            if count > 0: e2_grid[y][x] = 0
+            
+    # 4. Contour Tracing (Flood fill from outside)
     visited = set()
+    # To avoid recursion limit, use a stack
     stack = [(0, 0)]
     visited.add((0, 0))
     while stack:
         cx, cy = stack.pop()
         for nx, ny in [(cx+1,cy), (cx-1,cy), (cx,cy+1), (cx,cy-1)]:
             if 0 <= nx < w_cells and 0 <= ny < h_cells:
-                if grid[ny][nx] == 0 and (nx, ny) not in visited:
+                if e2_grid[ny][nx] == 0 and (nx, ny) not in visited:
                     visited.add((nx, ny))
                     stack.append((nx, ny))
                     
@@ -382,6 +452,7 @@ def compute_buffer_union_contour(computed_buffers):
         merged.append(((cur_x, cur_y0), (cur_x, cur_y1)))
         
     return merged, {"N":[], "S":[], "E":[], "W":[]}
+
 
 def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
     """Closed polyline of perimeter fire road centerline."""

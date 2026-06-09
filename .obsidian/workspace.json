@@ -241,6 +241,8 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/apply_close.py",
+    "01_Products/Layout_Gen_Design/test_close.py",
     "01_Products/Layout_Gen_Design/rewrite_md.py",
     "01_Products/Layout_Gen_Design/rewrite_layout06.py",
     "01_Products/Layout_Gen_Design/scratch_test.py",
@@ -270,8 +272,6 @@
     "04_Reports/Meeting_Notes/20260508_미팅.md",
     "01_Products/Layout_Gen_Design/Notes/Overview.canvas",
     "04_Reports/Monthly/Monthly_Report_2026_05.md",
-    "04_Reports/Monthly",
-    "01_Products/Layout_Gen_Design/Pipeline/Phase_06",
     "04_Reports/Weekly/Weekly_Report_2026_W23.md",
     "00_Input/Phase_06_Plan_Structured.md",
     "04_Reports/Weekly/Weekly_Report_2026_W21.md",

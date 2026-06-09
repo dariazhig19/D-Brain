@@ -277,10 +277,11 @@ if True:  # Phase 06 — Sketch roads
                         label='§3.6.B Rack Spines' if i==0 else "")
                 
         # Candidate points (B-2, B-3)  [→ §3.6.B]
-        rack_candidates = sketch.get("rack_candidates", [])
-        for i, pt in enumerate(rack_candidates):
-            ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
-                    label='§3.6.B B-2/B-3 Candidates' if i==0 else "")
+        # (Disabled by user request)
+        # rack_candidates = sketch.get("rack_candidates", [])
+        # for i, pt in enumerate(rack_candidates):
+        #     ax.plot(pt[0], pt[1], 'o', color='#bdc3c7', markersize=4, zorder=3.6, 
+        #             label='§3.6.B B-2/B-3 Candidates' if i==0 else "")
 
         # Water Triangle (B-4)  [→ §3.6.B]
         # (Disabled by user request)

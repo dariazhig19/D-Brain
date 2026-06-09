@@ -303,19 +303,22 @@ def compute_unsnapped_buffers(placed):
     return buffers
 
 def compute_buffer_union_contour(computed_buffers):
+    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
+    filtered_buffers = {name: b for name, b in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
+    
     TOL = 0.1
-    if not computed_buffers: return []
-    min_x = min(b[0] for b in computed_buffers.values()) - 5
-    min_y = min(b[1] for b in computed_buffers.values()) - 5
-    max_x = max(b[0] + b[2] for b in computed_buffers.values()) + 5
-    max_y = max(b[1] + b[3] for b in computed_buffers.values()) + 5
+    if not filtered_buffers: return [], {}
+    min_x = min(b[0] for b in filtered_buffers.values()) - 5
+    min_y = min(b[1] for b in filtered_buffers.values()) - 5
+    max_x = max(b[0] + b[2] for b in filtered_buffers.values()) + 5
+    max_y = max(b[1] + b[3] for b in filtered_buffers.values()) + 5
     
     RES = 0.5
     w_cells = int((max_x - min_x) / RES)
     h_cells = int((max_y - min_y) / RES)
     grid = [[0]*w_cells for _ in range(h_cells)]
     
-    for name, (bx, by, bw, bh) in computed_buffers.items():
+    for name, (bx, by, bw, bh) in filtered_buffers.items():
         if name.startswith("_"): continue
         ix0, iy0 = int((bx - min_x) / RES), int((by - min_y) / RES)
         ix1, iy1 = int((bx + bw - min_x) / RES), int((by + bh - min_y) / RES)

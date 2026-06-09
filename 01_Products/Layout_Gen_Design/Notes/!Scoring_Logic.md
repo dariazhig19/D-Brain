@@ -9,18 +9,18 @@ A score of `0` means a perfect layout with no rule violations.
 
 Each rule has a **Rule Type** that maps to a generic evaluator function in `Rules.py`.
 
-| Rule Type             | Function in Rules.py        | What it checks                                    | Penalty Mode |
-| :-------------------- | :-------------------------- | :------------------------------------------------ | :----------- |
-| `center_proximity`    | `_eval_center_proximity()`  | Distance from building center to plot center       | Linear       |
-| `boundary_setback`    | `_eval_boundary_setback()`  | Min distance from any edge to site boundary        | Flat         |
-| `windward_edge`       | `_eval_windward_edge()`     | Is building on the windward side of the plot?      | Flat         |
-| `min_distance`        | `_eval_min_distance()`      | Center-to-center distance must be ≥ threshold      | Linear       |
-| `max_distance`        | `_eval_max_distance()`      | Center-to-center distance must be ≤ threshold      | Linear       |
-| `leeward_edge`        | `_eval_leeward_edge()`      | Is building on the downwind (leeward) side?        | Flat         |
-| `rack_length`         | `_eval_rack_length()`       | Edge-to-edge distance between two connected buildings | Linear     |
-| `pipe_rack_proximity` | `_eval_pipe_rack_proximity()` | Distance from building edge to nearest rack line | Linear       |
-| `road_proximity`      | `_eval_road_proximity()`    | Distance from building/rack to nearest road      | Linear       |
-| `boundary_overflow`   | `_eval_boundary_overflow()` | Penalty for buildings exceeding site boundaries   | Logarithmic  |
+| Rule Type             | Function in Rules.py          | What it checks                                        | Penalty Mode |
+| :-------------------- | :---------------------------- | :---------------------------------------------------- | :----------- |
+| `center_proximity`    | `_eval_center_proximity()`    | Distance from building center to plot center          | Linear       |
+| `boundary_setback`    | `_eval_boundary_setback()`    | Min distance from any edge to site boundary           | Flat         |
+| `windward_edge`       | `_eval_windward_edge()`       | Is building on the windward side of the plot?         | Flat         |
+| `min_distance`        | `_eval_min_distance()`        | Center-to-center distance must be ≥ threshold         | Linear       |
+| `max_distance`        | `_eval_max_distance()`        | Center-to-center distance must be ≤ threshold         | Linear       |
+| `leeward_edge`        | `_eval_leeward_edge()`        | Is building on the downwind (leeward) side?           | Flat         |
+| `rack_length`         | `_eval_rack_length()`         | Edge-to-edge distance between two connected buildings | Linear       |
+| `pipe_rack_proximity` | `_eval_pipe_rack_proximity()` | Distance from building edge to nearest rack line      | Linear       |
+| `road_proximity`      | `_eval_road_proximity()`      | Distance from building/rack to nearest road           | Linear       |
+| `boundary_overflow`   | `_eval_boundary_overflow()`   | Penalty for buildings exceeding site boundaries       | Logarithmic  |
 
 **Penalty Modes:**
 - **Linear** = `excess_or_shortfall × penalty_rate` (proportional to violation severity)

@@ -303,7 +303,7 @@ def compute_unsnapped_buffers(placed):
     return buffers
 
 
-def compute_buffer_union_contour(computed_buffers, gate_spur=None, ring_spur=None):
+def compute_buffer_union_contour(computed_buffers):
     # Include all blocks to ensure the perimeter road doesn't cut through them
     filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_")}
     
@@ -394,17 +394,6 @@ def compute_buffer_union_contour(computed_buffers, gate_spur=None, ring_spur=Non
             elif count > 0: count -= 1
             if count > 0: e2_grid[y][x] = 0
             
-    # Subtract spurs to cut into the blob
-    for s_idx, spur in enumerate((gate_spur, ring_spur)):
-        if spur:
-            pts = list(spur)
-            # Extend gate spur outwards to pierce the padded boundary wall
-            if s_idx == 0 and len(pts) >= 2:
-                p1, p2 = pts[0], pts[1]
-                dx = p1[0] - p2[0]
-                dy = p1[1] - p2[1]
-                if dx != 0: dx = (dx / abs(dx)) * 200
-                if dy != 0: dy = (dy / abs(dy)) * 200
                 pts[0] = (p1[0] + dx, p1[1] + dy)
                 
             for i in range(len(pts)-1):

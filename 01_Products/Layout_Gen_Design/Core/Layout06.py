@@ -337,7 +337,6 @@ def compute_buffer_union_contour(computed_buffers):
     
     # 2. Paint blocks
     for name, (bx, by, bw, bh) in filtered_buffers.items():
-        if name.startswith("_"): continue
         ix0, iy0 = int((bx - min_x) / RES), int((by - min_y) / RES)
         ix1, iy1 = int((bx + bw - min_x) / RES), int((by + bh - min_y) / RES)
         for y in range(max(0,iy0), min(h_cells,iy1)):

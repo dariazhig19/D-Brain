@@ -303,7 +303,7 @@ def compute_unsnapped_buffers(placed):
     return buffers
 
 
-def compute_buffer_union_contour(computed_buffers):
+def compute_buffer_union_contour(computed_buffers, gate_spur=None, ring_spur=None):
     FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
     filtered_buffers = {name: b for name, b in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
     
@@ -338,6 +338,20 @@ def compute_buffer_union_contour(computed_buffers):
         for y in range(max(0,iy0), min(h_cells,iy1)):
             for x in range(max(0,ix0), min(w_cells,ix1)):
                 grid[y][x] = 1
+                
+    # Paint spurs as solid lines
+    for spur in (gate_spur, ring_spur):
+        if spur:
+            for i in range(len(spur)-1):
+                p1, p2 = spur[i], spur[i+1]
+                x0, y0 = int((p1[0] - min_x)/RES), int((p1[1] - min_y)/RES)
+                x1, y1 = int((p2[0] - min_x)/RES), int((p2[1] - min_y)/RES)
+                if x0 == x1:
+                    for y in range(max(0, min(y0, y1)), min(h_cells, max(y0, y1)+1)):
+                        if 0 <= x0 < w_cells: grid[y][x0] = 1
+                elif y0 == y1:
+                    for x in range(max(0, min(x0, x1)), min(w_cells, max(x0, x1)+1)):
+                        if 0 <= y0 < h_cells: grid[y0][x] = 1
 
     # 3. Morphological Closing (Dilate -> Erode)
     # Dilate

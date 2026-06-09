@@ -317,7 +317,7 @@ def compute_buffer_union_contour(computed_buffers):
     max_y = max(b[1] + b[3] for b in filtered_buffers.values())
     
     RES = 0.5
-    K_m = 30 # 30m closing radius -> bridges gaps up to 60m
+    K_m = 100 # 100m closing radius -> bridges gaps up to 200m to ensure NO isolated blocks
     K = int(K_m / RES)
     
     # Pad grid by K + 5 cells to prevent morphological edge effects

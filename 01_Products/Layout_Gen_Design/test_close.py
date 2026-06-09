@@ -55,17 +55,31 @@ def dilate_erode(grid, w_cells, h_cells, K):
             
     return e2_grid
 
-# We need a big grid so it doesn't touch the edges when K=6
 w, h = 40, 20
 grid = [[0]*w for _ in range(h)]
-grid[10][10] = 1
-grid[10][20] = 1
+# Block A
+for y in range(5, 10):
+    for x in range(5, 15): grid[y][x] = 1
+# Block B
+for y in range(5, 10):
+    for x in range(25, 35): grid[y][x] = 1
+# PB block at bottom
+for y in range(15, 20):
+    for x in range(10, 30): grid[y][x] = 1
 
-print("Original:")
-for row in grid: print("".join("X" if c else "." for c in row))
+# Spur from top to PB
+spur_x = 20
+for y in range(0, 15):
+    grid[y][spur_x] = 1
 
 res = dilate_erode(grid, w, h, 6)
 
-print("\nClosed:")
+print("Closed without subtracting spur:")
 for row in res: print("".join("X" if c else "." for c in row))
 
+# Now subtract spur from the closed grid
+for y in range(0, 15):
+    res[y][spur_x] = 0
+
+print("\nClosed with subtracted spur:")
+for row in res: print("".join("X" if c else "." for c in row))

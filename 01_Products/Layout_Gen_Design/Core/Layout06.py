@@ -304,8 +304,8 @@ def compute_unsnapped_buffers(placed):
 
 
 def compute_buffer_union_contour(computed_buffers, gate_spur=None, ring_spur=None):
-    FIRE_ROAD_BLOCKS = {"WT/WWT", "RAW Water Tank", "Cooling Tower", "Warehouse", "GIS", "Admin Building", "Power Block"}
-    filtered_buffers = {name: b for name, b in computed_buffers.items() if name in FIRE_ROAD_BLOCKS}
+    # Include all blocks to ensure the perimeter road doesn't cut through them
+    filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_")}
     
     TOL = 0.1
     if not filtered_buffers: return [], {}

@@ -283,14 +283,15 @@ if True:  # Phase 06 — Sketch roads
                     label='§3.6.B B-2/B-3 Candidates' if i==0 else "")
 
         # Water Triangle (B-4)  [→ §3.6.B]
-        water_triangle = sketch.get("water_triangle", [])
-        for i, pt in enumerate(water_triangle):
-            ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
-                    label='§3.6.B B-4 Triangle' if i==0 else "")
-        if len(water_triangle) == 3:
-            # Draw lines connecting them
-            wx, wy = zip(*(water_triangle + [water_triangle[0]]))
-            ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
+        # (Disabled by user request)
+        # water_triangle = sketch.get("water_triangle", [])
+        # for i, pt in enumerate(water_triangle):
+        #     ax.plot(pt[0], pt[1], '*', color='#f1c40f', markersize=12, markeredgecolor='black', zorder=3.7, 
+        #             label='§3.6.B B-4 Triangle' if i==0 else "")
+        # if len(water_triangle) == 3:
+        #     # Draw lines connecting them
+        #     wx, wy = zip(*(water_triangle + [water_triangle[0]]))
+        #     ax.plot(wx, wy, color='#f1c40f', linestyle=':', linewidth=1, zorder=3.6)
 
     # Boom Barrier  [→ §3.1 step 5]
     boom_barrier = sketch.get("boom_barrier", [])

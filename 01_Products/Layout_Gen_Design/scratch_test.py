@@ -9,7 +9,7 @@ def test():
     for i in range(total):
         random.seed(42 + i)
         sketch = Layout06.generate_sketch(
-            sw=500, sl=270, wind_dir="East",
+            500, 270, "East",
             gate_side="N", gate_ratio=0.4,
             gh_edge="N", gh_ratio=0.6, gh_offset=15,
             bb_edge="N",

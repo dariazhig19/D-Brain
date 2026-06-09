@@ -296,7 +296,12 @@ def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):  # → §
 def compute_unsnapped_buffers(placed):
     buffers = {}
     for name, bounds in placed.items():
-        if name.startswith("_"): continue
+        if name.startswith("_"):
+            if name == "_gate_death_zone":
+                offset = 8
+                x, y, w, h = bounds
+                buffers[name] = (x - offset, y - offset, w + 2*offset, h + 2*offset)
+            continue
         offset = 16 if name in RACK_BLOCKS else 8
         x, y, w, h = bounds
         buffers[name] = (x - offset, y - offset, w + 2*offset, h + 2*offset)

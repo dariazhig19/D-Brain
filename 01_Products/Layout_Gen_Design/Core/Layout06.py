@@ -395,10 +395,20 @@ def compute_buffer_union_contour(computed_buffers, gate_spur=None, ring_spur=Non
             if count > 0: e2_grid[y][x] = 0
             
     # Subtract spurs to cut into the blob
-    for spur in (gate_spur, ring_spur):
+    for s_idx, spur in enumerate((gate_spur, ring_spur)):
         if spur:
-            for i in range(len(spur)-1):
-                p1, p2 = spur[i], spur[i+1]
+            pts = list(spur)
+            # Extend gate spur outwards to pierce the padded boundary wall
+            if s_idx == 0 and len(pts) >= 2:
+                p1, p2 = pts[0], pts[1]
+                dx = p1[0] - p2[0]
+                dy = p1[1] - p2[1]
+                if dx != 0: dx = (dx / abs(dx)) * 200
+                if dy != 0: dy = (dy / abs(dy)) * 200
+                pts[0] = (p1[0] + dx, p1[1] + dy)
+                
+            for i in range(len(pts)-1):
+                p1, p2 = pts[i], pts[i+1]
                 x0, y0 = int((p1[0] - min_x)/RES), int((p1[1] - min_y)/RES)
                 x1, y1 = int((p2[0] - min_x)/RES), int((p2[1] - min_y)/RES)
                 if x0 == x1:

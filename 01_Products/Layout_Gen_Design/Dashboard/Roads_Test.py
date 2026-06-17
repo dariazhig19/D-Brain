@@ -246,6 +246,61 @@ def draw_network_with_fillets(ax, segments, width, color, fillet_radius=5.0, alp
         draw_road_with_fillets(ax, path, width, color, fillet_radius, alpha, zorder, 
                                label if (i == 0 and label) else "", is_closed=is_closed, free_ends=free_ends)
 
+def draw_network_squared(ax, segments, width, color, alpha=0.95, zorder=3.5, label=""):
+    if not segments:
+        return
+        
+    import collections
+    import math
+    
+    adj = collections.defaultdict(list)
+    
+    def pt_key(p):
+        return (round(p[0], 3), round(p[1], 3))
+        
+    for seg in segments:
+        if not seg or len(seg) < 2:
+            continue
+        p1, p2 = seg[0], seg[1]
+        k1, k2 = pt_key(p1), pt_key(p2)
+        if k1 == k2:
+            continue
+        adj[k1].append(k2)
+        adj[k2].append(k1)
+        
+    r = width / 2
+    
+    for i, seg in enumerate(segments):
+        if not seg or len(seg) < 2:
+            continue
+        p1, p2 = list(seg[0]), list(seg[1])
+        k1, k2 = pt_key(p1), pt_key(p2)
+        
+        dx = p2[0] - p1[0]
+        dy = p2[1] - p1[1]
+        L = math.hypot(dx, dy)
+        if L < 0.1:
+            continue
+            
+        ux = dx / L
+        uy = dy / L
+        
+        ext = min(r, L / 2)
+        
+        # Extend p1 if it is connected to other segments
+        if len(adj[k1]) > 1:
+            p1[0] -= ext * ux
+            p1[1] -= ext * uy
+            
+        # Extend p2 if it is connected to other segments
+        if len(adj[k2]) > 1:
+            p2[0] += ext * ux
+            p2[1] += ext * uy
+            
+        draw_orthogonal_line(ax, p1, p2, width, color, alpha, zorder, 
+                             label if (i == 0 and label) else "", cap_p1=False, cap_p2=False)
+
+
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -452,10 +507,8 @@ if True:  # Phase 06 — Sketch roads
         with open("debug_draw.txt", "w", encoding="utf-8") as f:
             for seg in rack_segments:
                 f.write(f"plotting: {seg}\n")
-        for i, seg in enumerate(rack_segments):
-            if seg and len(seg) == 2:
-                draw_orthogonal_line(ax, seg[0], seg[1], width=6, color='#d35400', zorder=3.5,
-                                     label='§3.6.B Rack Spines' if i==0 else "")
+        draw_network_squared(ax, rack_segments, width=6, color='#d35400', zorder=3.5,
+                             label='§3.6.B Rack Spines')
                 
         # Candidate points (B-2, B-3)  [→ §3.6.B]
         # (Disabled by user request)

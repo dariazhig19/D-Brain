@@ -87,24 +87,76 @@ def _result(id_, name, group, passed, penalty, message, measured, threshold, cal
 #  Phase 03 — Individual Rules (kept for backward compatibility)
 # ══════════════════════════════════════════════════════════════════════════
 
-def rule_pb01(power_block, site_width, site_length):
-    """PB-01: Power Block center within 20 m of plot center = PASS.
-    Beyond 20 m tolerance: 100 pts per metre of excess distance.
+def rule_pb01(power_block, site_width, site_length, wind_dir="East"):
+    """PB-01: Power Block centre must stay within an asymmetric window around
+    the plot centre, scaled by wind direction.
+
+    Tolerances (how far PB centre may drift FROM the plot centre):
+      - Windward side   : 10 % of plot width
+      - Leeward side    : 30 % of plot width
+      - North / South   : 20 % of plot length
+
+    E.g. wind = East → PB may move ≤10 % of width eastward,
+                        ≤30 % of width westward,
+                        ≤20 % of length north or south.
+
+    Beyond tolerance: 100 pts per metre of excess distance.
     """
-    TOLERANCE = 20.0
     cx, cy = _center(power_block)
     site_cx, site_cy = site_width / 2, site_length / 2
-    distance = _dist(cx, cy, site_cx, site_cy)
-    excess  = max(0.0, distance - TOLERANCE)
+
+    # Signed deviation from centre (positive = east/north)
+    dx = cx - site_cx   # positive → east
+    dy = cy - site_cy   # positive → north
+
+    # Asymmetric tolerances per wind direction
+    wind_tol = {
+        "East":  {"pos_x": site_width  * 0.35,   # east (windward) — PB pushed toward wind, frees leeward for CT/Flare
+                  "neg_x": site_width  * 0.05,   # west (leeward)  — restricted, keep space for CT/Flare
+                  "pos_y": site_length * 0.20,   # north
+                  "neg_y": site_length * 0.20},  # south
+        "West":  {"pos_x": site_width  * 0.05,   # east (leeward)  — restricted
+                  "neg_x": site_width  * 0.35,   # west (windward) — free to move
+                  "pos_y": site_length * 0.20,
+                  "neg_y": site_length * 0.20},
+        "North": {"pos_x": site_width  * 0.20,
+                  "neg_x": site_width  * 0.20,
+                  "pos_y": site_length * 0.35,   # north (windward) — free to move
+                  "neg_y": site_length * 0.05},  # south (leeward)  — restricted
+        "South": {"pos_x": site_width  * 0.20,
+                  "neg_x": site_width  * 0.20,
+                  "pos_y": site_length * 0.05,   # north (leeward)  — restricted
+                  "neg_y": site_length * 0.35},  # south (windward) — free to move
+    }
+    tol = wind_tol.get(wind_dir, wind_tol["East"])
+
+    # Excess on each axis (asymmetric — check which direction we've drifted)
+    excess_x = max(0.0, dx - tol["pos_x"]) if dx >= 0 else max(0.0, -dx - tol["neg_x"])
+    excess_y = max(0.0, dy - tol["pos_y"]) if dy >= 0 else max(0.0, -dy - tol["neg_y"])
+
+    excess  = (excess_x ** 2 + excess_y ** 2) ** 0.5
     penalty = excess * 100
-    passed  = excess == 0
+    passed  = excess == 0.0
+
+    measured  = f"{dx:+.1f} m (x), {dy:+.1f} m (y) from plot centre (wind={wind_dir})"
+    threshold = (
+        f"x: −{tol['neg_x']:.0f} m … +{tol['pos_x']:.0f} m  "
+        f"y: −{tol['neg_y']:.0f} m … +{tol['pos_y']:.0f} m"
+    )
+    calc = (
+        f"Excess: √({excess_x:.1f}²+{excess_y:.1f}²) = {excess:.1f} m × 100 pts/m = {penalty:,.0f} pts"
+        if excess > 0 else "0 pts (within asymmetric window)"
+    )
     return _result(
-        "PB-01", "Power Block: Center (±20 m)", "Power Block",
-        passed, penalty,
-        f"Within tolerance ✓ ({distance:.1f} m from center)" if passed else f"Off-center by {excess:.1f} m beyond 20 m tolerance",
-        measured=f"{distance:.1f} m from plot center",
-        threshold="≤ 20 m from center (free zone)",
-        calc=f"Excess: {distance:.1f} − 20 = {excess:.1f} m × 100 pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (within 20 m tolerance)",
+        "PB-01",
+        f"Power Block: Asymmetric centre proximity (wind={wind_dir})",
+        "Power Block",
+        passed,
+        penalty,
+        f"Within window ✓ ({dx:+.1f} m, {dy:+.1f} m)" if passed else f"Outside window by {excess:.1f} m",
+        measured,
+        threshold,
+        calc,
     )
 
 
@@ -242,7 +294,7 @@ def evaluate_all(groups, site_width, site_length, wind_dir):
     adm = by_name["Admin Building"]
 
     results = [
-        rule_pb01(pb,  site_width, site_length),
+        rule_pb01(pb,  site_width, site_length, wind_dir),
         rule_pb02(pb,  site_width, site_length),
         rule_ct01(ct,  site_width, site_length, wind_dir),
         rule_ct02(ct,  adm),
@@ -274,7 +326,8 @@ def evaluate_all(groups, site_width, site_length, wind_dir):
 
 RULES = [
     # ── Phase 03 rules (re-declared as data) ──────────────────────────────
-    {"id": "PB-01", "type": "center_proximity", "group": "Power Block",    "target": "Plot Center",    "threshold": 20,  "penalty_rate": 100,  "penalty_mode": "linear"},
+    # PB-01 uses asymmetric wind-direction tolerances (10%/30%/20%) instead of a fixed radius
+    {"id": "PB-01", "type": "center_proximity_asymmetric", "group": "Power Block", "target": "Plot Center", "penalty_rate": 100, "penalty_mode": "linear"},
     {"id": "PB-02", "type": "boundary_setback", "group": "Power Block",    "target": "Primary Road",   "threshold": 5,   "penalty_rate": 5000, "penalty_mode": "flat"},
     {"id": "CT-01", "type": "leeward_edge",     "group": "Cooling Tower",  "target": "Wind Direction", "threshold": 120, "penalty_rate": 1000, "penalty_mode": "flat"},
     {"id": "CT-02", "type": "min_distance",     "group": "Cooling Tower",  "target": "Admin Building", "threshold": 50,  "penalty_rate": 500,  "penalty_mode": "linear"},
@@ -354,6 +407,59 @@ def _eval_center_proximity(rule, group, site_width, site_length, **_):
         measured=f"{distance:.1f} m from plot center",
         threshold=f"≤ {rule['threshold']} m",
         calc=f"{excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts" if excess > 0 else "0 pts (OK)",
+    )
+
+
+def _eval_center_proximity_asymmetric(rule, group, site_width, site_length, wind_dir="East", **_):
+    """PB-01 asymmetric version: how far PB centre may drift FROM plot centre
+    depends on wind direction.
+
+    Tolerances (fraction of the relevant plot dimension):
+      windward side  → 10 %
+      leeward side   → 30 %
+      perpendicular  → 20 % (both sides)
+    """
+    cx, cy = _center(group)
+    site_cx, site_cy = site_width / 2, site_length / 2
+
+    dx = cx - site_cx   # positive = east
+    dy = cy - site_cy   # positive = north
+
+    wind_tol = {
+        "East":  {"pos_x": site_width  * 0.35, "neg_x": site_width  * 0.05,
+                  "pos_y": site_length * 0.20, "neg_y": site_length * 0.20},
+        "West":  {"pos_x": site_width  * 0.05, "neg_x": site_width  * 0.35,
+                  "pos_y": site_length * 0.20, "neg_y": site_length * 0.20},
+        "North": {"pos_x": site_width  * 0.20, "neg_x": site_width  * 0.20,
+                  "pos_y": site_length * 0.35, "neg_y": site_length * 0.05},
+        "South": {"pos_x": site_width  * 0.20, "neg_x": site_width  * 0.20,
+                  "pos_y": site_length * 0.05, "neg_y": site_length * 0.35},
+    }
+    tol = wind_tol.get(wind_dir, wind_tol["East"])
+
+    excess_x = max(0.0, dx - tol["pos_x"]) if dx >= 0 else max(0.0, -dx - tol["neg_x"])
+    excess_y = max(0.0, dy - tol["pos_y"]) if dy >= 0 else max(0.0, -dy - tol["neg_y"])
+
+    excess  = (excess_x ** 2 + excess_y ** 2) ** 0.5
+    penalty = excess * rule["penalty_rate"]
+    passed  = excess == 0.0
+
+    threshold_str = (
+        f"x: −{tol['neg_x']:.0f} m … +{tol['pos_x']:.0f} m  "
+        f"y: −{tol['neg_y']:.0f} m … +{tol['pos_y']:.0f} m"
+    )
+    return _result(
+        rule["id"],
+        f"{rule['group']}: Asymmetric centre proximity (wind={wind_dir})",
+        rule["group"],
+        passed, penalty,
+        f"Within window ✓ ({dx:+.1f} m, {dy:+.1f} m)" if passed else f"Outside window by {excess:.1f} m",
+        measured=f"Δx={dx:+.1f} m, Δy={dy:+.1f} m from plot centre",
+        threshold=threshold_str,
+        calc=(
+            f"√({excess_x:.1f}²+{excess_y:.1f}²) = {excess:.1f} m × {rule['penalty_rate']} pts/m = {penalty:,.0f} pts"
+            if excess > 0 else "0 pts (within asymmetric window)"
+        ),
     )
 
 
@@ -625,19 +731,20 @@ def _eval_parallel_to_short_edge(rule, group, site_width, site_length, **_):
 # ── Evaluator dispatch table ──────────────────────────────────────────────
 
 _EVALUATORS = {
-    "center_proximity":    _eval_center_proximity,
-    "boundary_setback":    _eval_boundary_setback,
-    "windward_edge":       _eval_windward_edge,
-    "leeward_edge":        _eval_leeward_edge,
-    "min_distance":        _eval_min_distance,
-    "max_distance":        _eval_max_distance,
-    "pipe_rack_proximity": _eval_pipe_rack_proximity,
-    "rack_length":         _eval_rack_length,
-    "road_proximity":      _eval_road_proximity,
-    "boundary_overflow":   _eval_boundary_overflow,
-    "gate_distance":       _eval_gate_distance,
-    "max_gate_distance":   _eval_max_gate_distance,
-    "parallel_to_short_edge": _eval_parallel_to_short_edge,
+    "center_proximity":             _eval_center_proximity,
+    "center_proximity_asymmetric":  _eval_center_proximity_asymmetric,
+    "boundary_setback":             _eval_boundary_setback,
+    "windward_edge":                _eval_windward_edge,
+    "leeward_edge":                 _eval_leeward_edge,
+    "min_distance":                 _eval_min_distance,
+    "max_distance":                 _eval_max_distance,
+    "pipe_rack_proximity":          _eval_pipe_rack_proximity,
+    "rack_length":                  _eval_rack_length,
+    "road_proximity":               _eval_road_proximity,
+    "boundary_overflow":            _eval_boundary_overflow,
+    "gate_distance":                _eval_gate_distance,
+    "max_gate_distance":            _eval_max_gate_distance,
+    "parallel_to_short_edge":       _eval_parallel_to_short_edge,
 }
 
 
@@ -697,7 +804,7 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir, gate_point
             if group is None or target is None:
                 continue
             r = evaluator(rule, group, target)
-        elif rule_type in ("windward_edge", "leeward_edge"):
+        elif rule_type in ("windward_edge", "leeward_edge", "center_proximity_asymmetric"):
             group = by_name.get(rule["group"])
             if group is None:
                 continue

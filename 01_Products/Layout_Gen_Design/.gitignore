@@ -1,0 +1,8 @@
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Throwaway verification artifacts
+_baseline_*.json
+_baseline_check.py

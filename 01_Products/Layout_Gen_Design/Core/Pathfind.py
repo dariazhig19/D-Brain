@@ -92,7 +92,8 @@ def astar(grid, start_ij, goal_ij, *,
           turn_penalty=0.5,
           width_cells=1,
           allow_diagonal=True,
-          passable=None):
+          passable=None,
+          forbid_move=None):
     """A* search on an occupancy Grid with turn penalty and width check.
 
     Args:
@@ -109,6 +110,11 @@ def astar(grid, start_ij, goal_ij, *,
                         per-state width check with an O(1) array lookup —
                         the hot-path optimisation for many A* calls on the
                         same grid.
+        forbid_move:    Optional callable ``(from_cell, di, dj) -> bool``. When
+                        it returns True the step from ``from_cell`` in direction
+                        ``(di, dj)`` is disallowed. Used to forbid travelling
+                        ALONG a road buffer while still permitting perpendicular
+                        crossings.
 
     Returns:
         List of (i, j) cells from start to goal (inclusive), or ``None``
@@ -123,27 +129,46 @@ def astar(grid, start_ij, goal_ij, *,
         def _is_pass(ij):
             return _passable(grid, ij[0], ij[1], width_cells)
 
-    if not _is_pass(start_ij):
+    # Convert start_ij and goal_ij to sets of coordinates to support multi-source / multi-goal pathfinding
+    if isinstance(start_ij, tuple) and len(start_ij) == 2 and isinstance(start_ij[0], (int, np.integer)):
+        start_cells = {start_ij}
+    else:
+        start_cells = set(start_ij)
+
+    if isinstance(goal_ij, tuple) and len(goal_ij) == 2 and isinstance(goal_ij[0], (int, np.integer)):
+        goal_cells = {goal_ij}
+    else:
+        goal_cells = set(goal_ij)
+
+    # Filter starting and goal cells that are passable
+    start_cells = {sc for sc in start_cells if _is_pass(sc)}
+    goal_cells = {gc for gc in goal_cells if _is_pass(gc)}
+
+    if not start_cells or not goal_cells:
         return None
-    if not _is_pass(goal_ij):
-        return None
+
+    def heuristic(cell):
+        return min(_octile(cell, gc) for gc in goal_cells)
 
     moves = _NEIGHBORS if allow_diagonal else [m for m in _NEIGHBORS if m[2] == 1.0]
 
-    # State = (cell, incoming_direction). Without direction in the state,
-    # the turn penalty would not be admissible — two paths arriving at the
-    # same cell from different headings have different remaining costs.
+    # State = (cell, incoming_direction).
     counter = count()
-    start_state = (start_ij, None)
-    open_heap = [(_octile(start_ij, goal_ij), next(counter), 0.0, start_state)]
-    best = {start_state: 0.0}
+    open_heap = []
+    best = {}
     came_from = {}   # state -> parent_state
+
+    for sc in start_cells:
+        state = (sc, None)
+        h = heuristic(sc)
+        heapq.heappush(open_heap, (h, next(counter), 0.0, state))
+        best[state] = 0.0
 
     while open_heap:
         _, _, g, state = heapq.heappop(open_heap)
         cell, pdir = state
 
-        if cell == goal_ij:
+        if cell in goal_cells:
             path = [cell]
             while state in came_from:
                 state = came_from[state]
@@ -158,6 +183,8 @@ def astar(grid, start_ij, goal_ij, *,
             n = (cell[0] + di, cell[1] + dj)
             if not _is_pass(n):
                 continue
+            if forbid_move is not None and forbid_move(cell, di, dj):
+                continue
             ndir = (di, dj)
             extra = turn_penalty if (pdir is not None and ndir != pdir) else 0.0
             ng = g + step + extra
@@ -165,7 +192,7 @@ def astar(grid, start_ij, goal_ij, *,
             if ng < best.get(nstate, math.inf):
                 best[nstate] = ng
                 came_from[nstate] = state
-                nf = ng + _octile(n, goal_ij)
+                nf = ng + heuristic(n)
                 heapq.heappush(open_heap, (nf, next(counter), ng, nstate))
 
     return None

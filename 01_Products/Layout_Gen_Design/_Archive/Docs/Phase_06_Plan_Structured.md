@@ -104,8 +104,18 @@ Fixed anchors use `place_anchor(sw, sl, name, edge, ratio, offset)` — result i
 
 ### §3.3 Power Block
 
-- Placed by `_try_place` with random sample near site center.
-- **Tight-site rule:** If vertical clearance on each side < 60 m, shift PB by ±10% of site length instead of ±5% jitter.
+- Placed by `_pb_sample()` using an **asymmetric wind-direction-aware random offset** from the plot centre.
+- **Placement tolerance (PB-01 rule):** How far the PB centre may drift FROM the plot centre depends on wind direction:
+
+  | Direction relative to wind | Side axis | Max drift |
+  |---------------------------|-----------|----------|
+  | Windward (toward wind)    | width     | 35 % of plot width |
+  | Leeward (away from wind)  | width     | 5 % of plot width  |
+  | Perpendicular (both)      | length    | 20 % of plot length |
+
+  *Goal: push PB toward the windward side, leaving the leeward zone free for Cooling Tower and Flare.*
+
+- **Tight-site rule:** If vertical clearance on each side < 60 m, PB shifts to ±20% of site length (tight discrete choice) instead of a continuous jitter.
 - 150 m × 150 m square — rotation irrelevant.
 - After placement, `pb_cx, pb_cy` becomes the reference center for all later magnet logic.
 
@@ -133,7 +143,7 @@ Uses Gate House as the routing anchor:
 Formed when gate and Gate House share the same edge:
 - Rectangle bounded by `bb_mid` and the Gate point.
 - Stored as `placed["_gate_death_zone"]`.
-- **Effect 1:** All floated blocks except `{Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi Water}` must avoid it.
+- **Effect 1:** All floated blocks must avoid it (no blocks are allowed to overlap with this zone).
 - **Effect 2:** Priority-1 snap in road cleanup skips any PB network segment inside this zone.
 
 #### §3.4.D Ring Spur
@@ -153,7 +163,9 @@ Straight-line connector from PB Ring Road to Perimeter Fire Road.
 - Uses `_try_magnet_place` — magnetizes to previously placed blocks at pair-appropriate gap distances.
 - Tries both orientations (w×h and h×w).
 - `prefer_near` → top-10% closest valid positions, then random choice.
-- **BOUNDARY_TOLERANCE = 10 m**: blocks may spill up to 10 m outside the plot.
+- **Boundary Check**: Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary (hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
+  - Default (tol = BOUNDARY_TOLERANCE = 10): clearance = **0 m** (buffer edge touches boundary but does not exit).
+  - Strict (tol = 0): clearance = **9 m** (buffer stays fully inside, matching perimeter road CL distance).
 - **Fixed anchors are excluded from default magnet targets** (Gate House, GIS, RAW Water Tank). Exception: Demi Water Tank explicitly targets RAW Water Tank.
 
 #### §3.5.B Gap Rules between Blocks
@@ -164,46 +176,48 @@ Straight-line connector from PB Ring Road to Perimeter Fire Road.
 | No-rack ↔ No-rack          | 16 m | 8 m + 8 m (shared road CL)                  |
 | Mixed (rack ↔ no-rack)     | 28 m | `B2B_W_RACK_OFFSET` — no shared road        |
 
-**Rack blocks:** Power Block, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank.
+**Rack blocks:** Power Block, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank, Flare.
 
 #### §3.5.C Floated Block Order & Constraints
 
 | # | Block          | Prefer Near        | Zone Filter       | Magnet Target   |
 |---|----------------|--------------------|-------------------|-----------------|
 | 1 | Cooling Tower  | PB center          | Leeward           | Power Block     |
-| 2 | WT/WWT         | PB center          | Near RAW Water    | Power Block     |
-| 3 | Warehouse      | —                  | —                 | Power Block     |
-| 4 | Flare          | Leeward corner     | Leeward           | —               |
-| 5 | Admin Building | Midpoint(GH, PB)   | —                 | Power Block     |
+| 2 | Flare          | Leeward corner (strict) | Leeward           | —               |
+| 3 | WT/WWT         | PB center          | Near RAW Water    | Power Block     |
+| 4 | Warehouse      | —                  | —                 | Power Block     |
+| 5 | Admin Building | Midpoint(GH, PB)   | Near Midpoint     | Random(PB, GH)  |
 | 6 | Demi Water Tank| RAW Water center   | Near RAW Water    | RAW Water Tank  |
 
 **Leeward zone** by wind direction:
 
 | Wind | Leeward half              |
 |------|---------------------------|
-| East | x ≤ 45% of site width     |
-| West | x ≥ 55% of site width     |
-| North| y ≤ 45% of site length    |
-| South| y ≥ 55% of site length    |
+| East | x ≤ 49% of site width     |
+| West | x ≥ 51% of site width     |
+| North| y ≤ 49% of site length    |
+| South| y ≥ 51% of site length    |
 
 **Near RAW Water filter:** block center within 150 m radius of RAW Water center.
+
+**Near Midpoint filter:** block center within 120 m radius of the exact midpoint between Gate House and Power Block.
 
 ---
 
 ### §3.6 Pipe Rack Algorithm
 
-Single rack type, **width = 6 m**, connects 5 "need rack" blocks: PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank. (Cable Tunnel GIS↔PB is separate logic.)
+Single rack type, **width = 6 m**, connects 6 "need rack" blocks: PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank, Flare. The first five form the spine/water-cluster network (§3.6.B); Flare joins via a single Case-1 stub (§3.6.C-2). (Cable Tunnel GIS↔PB is separate logic.)
 
 #### §3.6.A Buffer Layers per Block
 
-**Non-rack blocks** (Gate House, Warehouse, Flare, Admin, GIS) — 2 offsets:
+**Non-rack blocks** (Gate House, Warehouse, Admin, GIS) — 2 offsets:
 
 | Key    | Offset | Meaning                                  |
 |--------|--------|------------------------------------------|
 | `road` | 8 m    | Road CL must be ≥ 8 m from block edge    |
 | `b2b`  | 16 m   | Block-to-block edge gap                  |
 
-**Rack blocks** (PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank) — 6 offsets per block:
+**Rack blocks** (PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank, Flare) — 6 offsets per block:
 
 | Key            | Offset | Regime    | Meaning                                        |
 |----------------|--------|-----------|------------------------------------------------|
@@ -223,6 +237,7 @@ Single rack type, **width = 6 m**, connects 5 "need rack" blocks: PB, Cooling To
 | RAW Water Tank    | Always Case 1                |
 | Demi Water Tank   | Always Case 1                |
 | WT/WWT            | Always Case 1                |
+| Flare             | Always Case 1                |
 
 During Step 3.5 floated-block placement, only the **baseline** (no-rack) offsets are enforced. The larger "with-rack" offsets are precomputed in Step A and enforced when a rack is confirmed on a given side.
 
@@ -232,9 +247,15 @@ During Step 3.5 floated-block placement, only the **baseline** (no-rack) offsets
 
 **B-1 — PB ↔ CT Spine**
 
-1. For PB and Cooling Tower, randomly select the active rack-buffer case (Case 1 or Case 2).
+1. For PB and Cooling Tower, evaluate the distance of the selected side of Case 2's rack-buffer rectangle to the parallel plot boundary. If it is less than 10 m or if Case 2's selected side goes outside the plot boundary, choose Case 1 (even if Case 1 also goes outside). Otherwise, select randomly between Case 1 and Case 2.
+   - **Overlap Exception**: If the selected rack-buffer sides of PB and CT overlap, apply the following connection rules depending on the cases chosen:
+      - **PB Case 1, CT Case 2**: Draw the closest perpendicular line from the chosen PB segment (`best_pb_half`) to the CT rack buffer. Do not draw the standard "MAIN RACK" from the PB segment.
+      - **PB Case 2, CT Case 1**: Draw the closest perpendicular line from the chosen CT segment (`best_ct_half`) to the PB rack buffer, and draw a perpendicular line from the CT segment to the PB center. Do not draw the standard "MAIN RACK" from the PB segment.
 2. For each block, find the rack-buffer rectangle side whose outward direction points toward RAW Water Tank.
-3. Those 2 rack-buffer line segments become the **PB↔CT spine centerlines** (2 parallel lines).
+3. Divide both selected full segments by their midpoints into two half-lines each.
+4. Compare all 4 combinations of half-lines, take only the 2 closest half-lines to each other as the PB and CT rack segments, and prune the not selected halves.
+5. Draw a perpendicular connection from the Power Block (PB) center to the midpoint of the selected PB segment, and call this line "MAIN RACK" (it will have separate logic later, except under the overlap exception above).
+6. The selected closest half-lines, any constructed perpendicular lines, and the "MAIN RACK" (if drawn) become the **PB↔CT spine centerlines**.
 
 **B-2 — RAW Water candidate points**
 
@@ -315,47 +336,25 @@ This generates an axis-aligned buffer rectangle around every block.
 #### §3.7.B Grid-Based Boolean Union
 A high-resolution 2D integer grid is created over the plot bounds. The buffer rectangle of every block is "painted" onto this grid (setting cells to 1). This effectively performs a geometric boolean union of all required road stand-offs, forming a single continuous footprint.
 
+**Gate Death Zone Extension ("Don't Allow Perimeter Road" Zone):**
+To prevent the perimeter road from creating detours in the space between the gate and the Gate House, the "Don't Allow Perimeter Road" zone is defined strictly as the bounding box starting from the gate point and extending to the farthest corner of the Gate House's 8m road buffer.
+- This zone is painted onto the grid as a solid block.
+- **Combined-Block Routing**: If this zone intersects with the road buffer of any other blocks (such as the Admin Building or Warehouse), the code computes the transitive closure of all overlapping block buffers and merges them with the zone into a single combined block. This combined block is carved as a single unit touching the gate-side boundary, forcing the perimeter road contour to route entirely below all merged blocks (closer to the plot center) rather than passing between them.
+
+**Buffer Sorting Priority:**
+When processing buffers for the perimeter generation, they are explicitly sorted so that the Gate House is processed last. This ensures its priority over other buffers when resolving intersections near the gate.
+
 #### §3.7.C Contour Tracing (The Perimeter Road)
 A flood-fill algorithm runs from the outside of the grid to identify all "exterior" empty cells. 
 The boundary edges between the exterior (empty) cells and the interior (filled) cells are extracted. These edges are merged into contiguous orthogonal line segments. 
 
+**Boundary Collision Carve-out:** If a block is placed so close to the plot boundary that its road buffer extends to or beyond the plot edge (or touches the Gate Death Zone / Gate House), the algorithm will actively "carve out" the boundary-facing side of the buffer from the grid. This prevents the flood-fill from getting cut off at the plot boundary (which would cause the road to cut straight through the block). Instead, the flood-fill enters the carved-out area, forcing the perimeter road to route smoothly around the **inner** buffer of the block.
+
+> [!NOTE]
+> Blocks are permitted to sit right at the plot boundary (road buffer touches boundary = 0 m clearance). They are **not** permitted to have their road buffer exit the plot. This is enforced during magnet placement by `_within_relaxed_bounds`.
+
 The resulting polyline is mathematically guaranteed to be a closed, continuous, and non-intersecting loop that perfectly hugs the facility at the exact required stand-off distances (8m or 16m), forming the final **Outer Perimeter Loop**.
 
-#### §3.7.D Group A — 8m Road Access Lines
-
-`generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy)`:
-
-Generates buffer corner segments for Group A blocks (see §3.8). Each corner produces 2 perpendicular buffer edge lines. Selection logic per block:
-
-| Block         | Corner Selection Rule                                                               |
-|---------------|-------------------------------------------------------------------------------------|
-| Admin         | Corner closest to Gate House                                                        |
-| RAW Water     | Boundary corner **furthest from Demi Water Tank**                                   |
-| WT/WWT        | Corner closest to plot boundary                                                     |
-| GIS           | Corner closest to boundary + its diagonal opposite                                  |
-| Cooling Tower | Corner closest to boundary + its diagonal opposite                                  |
-| Warehouse     | Corner closest to boundary + its diagonal opposite                                  |
-
-#### §3.7.D Parallel Segment Cleanup
-
-`cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs, tol=17.0, gdz)`:
-
-**Priority 1 — Snap to PB Network:**
-- PB Network = PB Ring Road + Gate Spur + Ring Spur.
-- For each A-2/B-1 segment: if it is parallel, overlaps in length, and is ≤ 17 m from a PB network line → snap to that PB network line.
-- *Exception:* Skip if the PB network line's midpoint lies inside the Gate Death Zone.
-- Snapping is **outward-only** (a line never snaps inward toward its block).
-
-**Priority 2 — Filter:**
-Lines that snapped to the PB network are removed from the Priority-3 pool.
-
-**Priority 3 — Simplified Sweep (independent lines, no corner extension):**
-1. **Top Sweep (horizontal):** Sort by highest Y. For each anchor line, snap any horizontal line within 17 m below it UP to the anchor Y.
-2. **Left Sweep (vertical):** Sort by lowest X. For each anchor line, snap any vertical line within 17 m to its right LEFT to the anchor X.
-- No bottom or right sweeps.
-- After sweeps: merge collinear overlapping segments.
-
----
 
 ## §3.8 Road Access by Block
 

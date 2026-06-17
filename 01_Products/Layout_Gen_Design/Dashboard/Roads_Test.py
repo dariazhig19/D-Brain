@@ -80,27 +80,6 @@ def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5, bg_color='#f
     # Draw inner fillet (road color)
     polygon_in = mpatches.Polygon(pts_in, facecolor=color, edgecolor='none', alpha=alpha, zorder=zorder)
     ax.add_patch(polygon_in)
-    
-    # --- Outer Fillet Masking (Concentric) ---
-    R_out = R + 2 * r
-    s = 1.0 if diff > 0 else -1.0
-    
-    # Define outer corner O using robust boundary shift math
-    n1 = (-u1[1] * s, u1[0] * s)
-    n2 = (-u2[1] * s, u2[0] * s)
-    Ox = B[0] - r * n1[0] - r * n2[0]
-    Oy = B[1] - r * n1[1] - r * n2[1]
-    
-    # Since the outer fillet is concentric with the inner fillet,
-    # it shares the exact same center (cx, cy) and angular sweep.
-    pts_out = [(Ox, Oy)]
-    for i in range(num_pts + 1):
-        t = theta1 + diff * (i / num_pts)
-        pts_out.append((cx + R_out * math.cos(t), cy + R_out * math.sin(t)))
-        
-    # Draw outer mask (background color) to mask the sharp corner
-    polygon_out = mpatches.Polygon(pts_out, facecolor=bg_color, edgecolor='none', alpha=1.0, zorder=zorder + 0.1)
-    ax.add_patch(polygon_out)
 
 
 def draw_road_with_fillets(ax, path, width, color, fillet_radius=14.0, alpha=0.95, zorder=2.5, label="", is_closed=False, free_ends=None):
@@ -461,19 +440,19 @@ if True:  # Phase 06 — Sketch roads
     if show_a1_ring:  # → §3.4.A (ring road) · §3.4.B (gate spur) · §3.4.D (ring spur)
         # Ring road (loop)
         if ring_road:
-            draw_road_with_fillets(ax, ring_road, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.5,
+            draw_road_with_fillets(ax, ring_road, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5,
                                    label='§3.4.A Ring Road', is_closed=True)
 
         # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
         gs = sketch.get("gate_spur") or []
         if gs:
-            draw_road_with_fillets(ax, gs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.7, is_closed=False)
+            draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
 
     # Ring spur (ring → perimeter) — primary connector around blocks  [→ §3.4.D]
     if show_a1_ring:
         rs = sketch.get("ring_spur") or []
         if rs:
-            draw_road_with_fillets(ax, rs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.7, is_closed=False)
+            draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
 
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]

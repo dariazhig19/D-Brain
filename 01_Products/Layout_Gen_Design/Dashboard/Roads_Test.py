@@ -81,22 +81,22 @@ def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5, bg_color='#f
     polygon_in = mpatches.Polygon(pts_in, facecolor=color, edgecolor='none', alpha=alpha, zorder=zorder)
     ax.add_patch(polygon_in)
     
-    # --- Outer Fillet Masking ---
-    R_out = R
+    # --- Outer Fillet Masking (Concentric) ---
+    R_out = R + 2 * r
     s = 1.0 if diff > 0 else -1.0
     
-    # Outer corner O
-    Ox = B[0] + r * u1[0] - s * r * u2[0]
-    Oy = B[1] + r * u1[1] - s * r * u2[1]
+    # Define outer corner O using robust boundary shift math
+    n1 = (-u1[1] * s, u1[0] * s)
+    n2 = (-u2[1] * s, u2[0] * s)
+    Ox = B[0] - r * n1[0] - r * n2[0]
+    Oy = B[1] - r * n1[1] - r * n2[1]
     
-    # Center of outer arc (relative to O, not I)
-    cx_out = Ox - R_out * u1[0] + s * R_out * u2[0]
-    cy_out = Oy - R_out * u1[1] + s * R_out * u2[1]
-    
+    # Since the outer fillet is concentric with the inner fillet,
+    # it shares the exact same center (cx, cy) and angular sweep.
     pts_out = [(Ox, Oy)]
     for i in range(num_pts + 1):
         t = theta1 + diff * (i / num_pts)
-        pts_out.append((cx_out + R_out * math.cos(t), cy_out + R_out * math.sin(t)))
+        pts_out.append((cx + R_out * math.cos(t), cy + R_out * math.sin(t)))
         
     # Draw outer mask (background color) to mask the sharp corner
     polygon_out = mpatches.Polygon(pts_out, facecolor=bg_color, edgecolor='none', alpha=1.0, zorder=zorder + 0.1)

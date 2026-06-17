@@ -385,6 +385,7 @@ Both passes must:
 
 **Rack output:** Single connected rack polyline network (centerlines, 6 m wide). Becomes an obstacle for subsequent road placement.
 
+
 ### §3.7 Perimeter Fire Road (Union of Buffers Contour)
 
 Instead of heuristic intersections, the perimeter fire road is generated mathematically by tracing the boolean union of all block road buffers.

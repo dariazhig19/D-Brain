@@ -2235,6 +2235,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "rack_candidates": candidate_points,
             "active_rack_cases": active_cases,
             "water_triangle":  water_triangle,
+            "spine_centerlines": spine_centerlines,
+            "water_cluster_segments": water_cluster_segments,
             "gate_point":      gate_pt,
             "gate_death_zone": gate_death_zone,
             "pb_center":       (pb_cx, pb_cy),

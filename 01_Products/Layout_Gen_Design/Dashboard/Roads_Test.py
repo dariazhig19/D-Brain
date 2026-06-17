@@ -18,8 +18,10 @@ importlib.reload(Core.Pathfind)
 importlib.reload(Core.Groups)
 importlib.reload(Core.Layout06)
 
-from Core.Groups import SHAPES
-from Core.Layout06 import generate_sketch, CELL_SIZE, ROAD_BUFFER
+SHAPES = Core.Groups.SHAPES
+generate_sketch = Core.Layout06.generate_sketch
+CELL_SIZE = Core.Layout06.CELL_SIZE
+ROAD_BUFFER = Core.Layout06.ROAD_BUFFER
 
 def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=1.5, label="", cap_p1=True, cap_p2=True):
     x1, y1 = p1
@@ -355,6 +357,7 @@ if True:  # Phase 06 — Sketch roads
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
+    show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=True)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -514,6 +517,24 @@ if True:  # Phase 06 — Sketch roads
                 f.write(f"plotting: {seg}\n")
         draw_network_squared(ax, rack_segments, width=6, color='#d35400', zorder=3.5,
                              label='§3.6.B Rack Spines')
+
+    if show_spine_debug:
+        spine_centerlines = sketch.get("spine_centerlines") or []
+        water_cluster_segments = sketch.get("water_cluster_segments") or []
+        
+        # Plot raw spine centerlines as thick dashed green lines
+        for i, seg in enumerate(spine_centerlines):
+            p1, p2 = seg
+            ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color='#2ecc71', linestyle='--', linewidth=2.5, alpha=0.9, zorder=3.8,
+                    label='Raw Spine Centerlines (PB-CT)' if i == 0 else "")
+            ax.plot([p1[0], p2[0]], [p1[1], p2[1]], 'o', color='#27ae60', markersize=6, zorder=3.9)
+            
+        # Plot water cluster segments as thick dashed cyan lines
+        for i, seg in enumerate(water_cluster_segments):
+            p1, p2 = seg
+            ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color='#00d2d3', linestyle='--', linewidth=2.5, alpha=0.9, zorder=3.8,
+                    label='Water Cluster Spine (Raw)' if i == 0 else "")
+            ax.plot([p1[0], p2[0]], [p1[1], p2[1]], 'o', color='#01a3a4', markersize=6, zorder=3.9)
                 
         # Candidate points (B-2, B-3)  [→ §3.6.B]
         # (Disabled by user request)
@@ -622,16 +643,73 @@ if True:  # Phase 06 — Sketch roads
             st.write(f"**Cooling Tower Case:** `{sc.get('ct_case')}`")
             st.write(f"**Horizontal Overlap?** `{sc.get('is_horizontal')}` | **Vertical Overlap?** `{sc.get('is_vertical')}`")
             st.write(f"**Overlap Detected?** `{sc.get('overlap')}`")
-            st.markdown("**Spine Centerlines generated:**")
-            st.write(sc.get("spine_centerlines"))
-            if sc.get("perp_line"):
-                st.write(f"**Closest Perpendicular Line:** `{sc.get('perp_line')}`")
-            if sc.get("perp_to_pb_center"):
-                st.write(f"**Perpendicular to PB Center Line:** `{sc.get('perp_to_pb_center')}`")
-            if sc.get("main_rack"):
-                st.write(f"**Standard Main Rack Line:** `{sc.get('main_rack')}`")
         else:
-            st.warning("no spine_creation in debug")
+            st.warning("no spine_creation in debug metadata")
+
+        # Table of all rack spans
+        import pandas as pd
+        import math
+
+        segments_data = []
+
+        # 1. Spine centerlines
+        spine_centerlines = sketch.get("spine_centerlines") or []
+        for i, s in enumerate(spine_centerlines):
+            x1, y1 = s[0]
+            x2, y2 = s[1]
+            L = math.hypot(x2 - x1, y2 - y1)
+            direction = "Horizontal" if abs(y2 - y1) < 0.1 else ("Vertical" if abs(x2 - x1) < 0.1 else "Skewed")
+            segments_data.append({
+                "Span Type": f"Spine Centerline [{i+1}]",
+                "Start Point": f"({round(x1, 1)}, {round(y1, 1)})",
+                "End Point": f"({round(x2, 1)}, {round(y2, 1)})",
+                "Length (m)": round(L, 2),
+                "Direction": direction
+            })
+
+        # 2. Water cluster segments
+        water_cluster_segments = sketch.get("water_cluster_segments") or []
+        for i, s in enumerate(water_cluster_segments):
+            x1, y1 = s[0]
+            x2, y2 = s[1]
+            L = math.hypot(x2 - x1, y2 - y1)
+            direction = "Horizontal" if abs(y2 - y1) < 0.1 else ("Vertical" if abs(x2 - x1) < 0.1 else "Skewed")
+            segments_data.append({
+                "Span Type": f"Water Cluster Spine [{i+1}]",
+                "Start Point": f"({round(x1, 1)}, {round(y1, 1)})",
+                "End Point": f"({round(x2, 1)}, {round(y2, 1)})",
+                "Length (m)": round(L, 2),
+                "Direction": direction
+            })
+
+        # 3. Final rack segments (spines + connections)
+        rack_segments = sketch.get("rack_segments") or []
+        for i, s in enumerate(rack_segments):
+            x1, y1 = s[0]
+            x2, y2 = s[1]
+            L = math.hypot(x2 - x1, y2 - y1)
+            direction = "Horizontal" if abs(y2 - y1) < 0.1 else ("Vertical" if abs(x2 - x1) < 0.1 else "Skewed")
+            segments_data.append({
+                "Span Type": f"Final Connected Span [{i+1}]",
+                "Start Point": f"({round(x1, 1)}, {round(y1, 1)})",
+                "End Point": f"({round(x2, 1)}, {round(y2, 1)})",
+                "Length (m)": round(L, 2),
+                "Direction": direction
+            })
+
+        if segments_data:
+            st.markdown("#### All Rack Spans / Segments")
+            df_segs = pd.DataFrame(segments_data)
+            st.dataframe(df_segs, use_container_width=True, hide_index=True)
+            
+            # Add a copy-pasteable data block
+            st.markdown("#### 📋 Copy-Paste Coordinates")
+            st.code(
+                f"spine_centerlines = {spine_centerlines}\n\n"
+                f"water_cluster_segments = {water_cluster_segments}\n\n"
+                f"final_rack_segments = {rack_segments}",
+                language="python"
+            )
 
 
     # Stats

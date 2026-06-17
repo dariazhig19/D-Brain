@@ -312,6 +312,7 @@ For the Power Block, the sides that do not intersect any created rack path (both
 **B-1 — PB ↔ CT Spine**
 
 1. For PB and Cooling Tower, evaluate the distance of the selected side of Case 2's rack-buffer rectangle to the parallel plot boundary. If it is less than 10 m or if Case 2's selected side goes outside the plot boundary, choose Case 1 (even if Case 1 also goes outside). Otherwise, select randomly between Case 1 and Case 2.
+   - *Note:* the "selected side" here is only a clearance **probe** (the RAW-facing side, via `get_spine_side`) used to measure boundary distance for the case decision. The side actually used for the spine is chosen separately in step 2, after the case is fixed.
    - **Overlap Exception:** If the selected rack-buffer sides of PB and CT overlap, apply the following connection rules depending on the cases chosen:
       - **PB Case 1, CT Case 2:** Draw the closest perpendicular line from the chosen PB segment (`best_pb_half`) to the CT rack buffer. Do not draw the standard "MAIN RACK" from the PB segment.
       - **PB Case 2, CT Case 1:** Draw the closest perpendicular line from the chosen CT segment (`best_ct_half`) to the PB rack buffer, and draw a perpendicular line from the CT segment to the PB center. Do not draw the standard "MAIN RACK" from the PB segment.

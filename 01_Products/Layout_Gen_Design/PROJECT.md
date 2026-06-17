@@ -365,15 +365,14 @@ Connect the 3 triangle points using **orthogonal A\* paths** (no diagonals, cell
 
 #### §3.6.C Network Connection
 
-**C-1 — Unify into one network (two-stage BFS routing)**
+**C-1 — Unify into one network (A* routing)**
 
-1. **First connection:** Route the shortest orthogonal path from the **water cluster spine** to the closer of the two PB/CT spine lines (restricted routing: only along existing spine lines and rack-buffer edges).
-2. **Second connection:** Route from the now-expanded network (water cluster + first path + hit line) to the **remaining disconnected line**.
-   - Fallback: if restricted routing fails, open the grid fully and re-route.
+Route the shortest orthogonal path from the **PB/CT spine network** (comprising the PB centerline, CT centerline, and their connection segment) to the **water cluster spine** (restricted routing: only along existing spine lines and rack-buffer edges).
 
-Both passes must:
+The connection must:
 - Extend an existing spine line, OR route along another rack block's active rack-buffer line.
 - Never cross any block footprint.
+- Fallback: if restricted routing fails, open the grid fully and re-route.
 
 **C-2 — Flare Pipe Rack Connection**
 

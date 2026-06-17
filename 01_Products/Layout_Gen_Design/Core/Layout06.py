@@ -1977,7 +1977,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 def run_routing(restricted):
                     if restricted:
                         grid_c.blocked[:, :] = True
-                        for seg in pb_line + ct_line + water_cluster_segments:
+                        for seg in spine_centerlines + water_cluster_segments:
                             set_extended_line_blocked(seg[0], seg[1], False)
                         for b in blocks:
                             b_name = b["name"]
@@ -2136,8 +2136,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                     return path[-1], new_segs
                 return None, []
 
-            # 1. water cluster spine to closest line (CT line or PB line)
-            found_goal_1, new_segs_1 = route_between(water_cluster_segments, pb_line + ct_line)
+            # 1. PB/CT spine network to water cluster spine
+            found_goal_1, new_segs_1 = route_between(spine_centerlines, water_cluster_segments)
             water_cluster_segments.extend(new_segs_1)
             
             # Second connection stage removed (closest PB/CT connection only)

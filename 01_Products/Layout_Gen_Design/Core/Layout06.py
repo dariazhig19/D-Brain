@@ -1671,7 +1671,27 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             rymin, rymax = min(rys), max(rys)
             ring_corners = [(rxmin, rymin), (rxmax, rymin), (rxmax, rymax), (rxmin, rymax)]
             ehx, ehy = exit_helper
-            spur_start = min(ring_corners, key=lambda c: (c[0]-ehx)**2 + (c[1]-ehy)**2)
+
+            # Filter corners to prevent a 180-degree U-turn (backtracking) at exit_helper.
+            # The direction of the final Ring Spur segment (from turn_pt to exit_helper) must align
+            # with the direction of the first Gate Spur segment (from exit_helper to bb_mid).
+            # - For N/S boom edges, the segments are horizontal:
+            #   Ring Spur: (sx, ehy) -> (ehx, ehy)  (direction: ehx - sx)
+            #   Gate Spur: (ehx, ehy) -> (bb_mid[0], ehy)  (direction: bb_mid[0] - ehx)
+            #   To avoid a U-turn, (ehx - sx) * (bb_mid[0] - ehx) must be >= 0.
+            # - For E/W boom edges, the segments are vertical:
+            #   Ring Spur: (ehx, sy) -> (ehx, ehy)  (direction: ehy - sy)
+            #   Gate Spur: (ehx, ehy) -> (ehx, bb_mid[1])  (direction: bb_mid[1] - ehy)
+            #   To avoid a U-turn, (ehy - sy) * (bb_mid[1] - ehy) must be >= 0.
+            if bb_edge in ("N", "S"):
+                valid_corners = [c for c in ring_corners if (ehx - c[0]) * (bb_mid[0] - ehx) >= 0]
+            else:
+                valid_corners = [c for c in ring_corners if (ehy - c[1]) * (bb_mid[1] - ehy) >= 0]
+
+            if not valid_corners:
+                valid_corners = ring_corners  # Fallback just in case
+
+            spur_start = min(valid_corners, key=lambda c: (c[0]-ehx)**2 + (c[1]-ehy)**2)
             sx, sy = spur_start
 
             # Ring spur L-route (Option A): project spur_start onto exit_line (y = ehy for N/S, x = ehx for E/W)

@@ -21,7 +21,7 @@ importlib.reload(Core.Layout06)
 from Core.Groups import SHAPES
 from Core.Layout06 import generate_sketch, CELL_SIZE, ROAD_BUFFER
 
-def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=2.5, label="", cap_p1=True, cap_p2=True):
+def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=1.5, label="", cap_p1=True, cap_p2=True):
     x1, y1 = p1
     x2, y2 = p2
     r = width / 2
@@ -45,7 +45,7 @@ def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=2.5, label
     else:
         ax.plot([x1, x2], [y1, y2], color=color, linewidth=width, alpha=alpha, zorder=zorder, label=label)
 
-def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5, bg_color='#f0f8ff'):
+def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=1.5, bg_color='#f0f8ff'):
     # I = B - r * u1 + r * u2
     Ix = B[0] - r * u1[0] + r * u2[0]
     Iy = B[1] - r * u1[1] + r * u2[1]
@@ -82,7 +82,7 @@ def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5, bg_color='#f
     ax.add_patch(polygon_in)
 
 
-def draw_road_with_fillets(ax, path, width, color, fillet_radius=14.0, alpha=0.95, zorder=2.5, label="", is_closed=False, free_ends=None):
+def draw_road_with_fillets(ax, path, width, color, fillet_radius=14.0, alpha=0.95, zorder=1.5, label="", is_closed=False, free_ends=None):
     if not path or len(path) < 2:
         return
         
@@ -159,7 +159,7 @@ def draw_road_with_fillets(ax, path, width, color, fillet_radius=14.0, alpha=0.9
             if R < 0.5: continue
             draw_fillet(ax, p_curr, u1, u2, r, R, color, alpha, zorder)
 
-def draw_network_with_fillets(ax, segments, width, color, fillet_radius=5.0, alpha=0.95, zorder=2.5, label=""):
+def draw_network_with_fillets(ax, segments, width, color, fillet_radius=5.0, alpha=0.95, zorder=1.5, label=""):
     if not segments:
         return
         
@@ -440,19 +440,19 @@ if True:  # Phase 06 — Sketch roads
     if show_a1_ring:  # → §3.4.A (ring road) · §3.4.B (gate spur) · §3.4.D (ring spur)
         # Ring road (loop)
         if ring_road:
-            draw_road_with_fillets(ax, ring_road, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5,
+            draw_road_with_fillets(ax, ring_road, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5,
                                    label='§3.4.A Ring Road', is_closed=True)
 
         # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
         gs = sketch.get("gate_spur") or []
         if gs:
-            draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
+            draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
 
     # Ring spur (ring → perimeter) — primary connector around blocks  [→ §3.4.D]
     if show_a1_ring:
         rs = sketch.get("ring_spur") or []
         if rs:
-            draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
+            draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
 
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]

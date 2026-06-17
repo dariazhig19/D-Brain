@@ -443,16 +443,18 @@ if True:  # Phase 06 — Sketch roads
             draw_road_with_fillets(ax, ring_road, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5,
                                    label='§3.4.A Ring Road', is_closed=True)
 
-        # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
+        # Gate & Ring spurs
         gs = sketch.get("gate_spur") or []
-        if gs:
-            draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
-
-    # Ring spur (ring → perimeter) — primary connector around blocks  [→ §3.4.D]
-    if show_a1_ring:
         rs = sketch.get("ring_spur") or []
-        if rs:
-            draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+        if gs and rs:
+            combined_spur = list(rs) + list(gs)[1:]
+            draw_road_with_fillets(ax, combined_spur, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5,
+                                   label='§3.4.B/D Gate & Ring Spur', is_closed=False)
+        else:
+            if gs:
+                draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+            if rs:
+                draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
 
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]

@@ -45,12 +45,12 @@ def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=2.5, label
     else:
         ax.plot([x1, x2], [y1, y2], color=color, linewidth=width, alpha=alpha, zorder=zorder, label=label)
 
-def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5):
+def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5, bg_color='#f0f8ff'):
     # I = B - r * u1 + r * u2
     Ix = B[0] - r * u1[0] + r * u2[0]
     Iy = B[1] - r * u1[1] + r * u2[1]
     
-    # Tangent points
+    # Tangent points for inner arc
     t1x = Ix - R * u1[0]
     t1y = Iy - R * u1[1]
     t2x = Ix + R * u2[0]
@@ -65,22 +65,22 @@ def draw_fillet(ax, B, u1, u2, r, R, color, alpha=0.95, zorder=2.5):
     theta1 = math.atan2(t1y - cy, t1x - cx)
     theta2 = math.atan2(t2y - cy, t2x - cx)
     
-    # Generate points along the arc
-    num_pts = 16
-    pts = [(Ix, Iy)]
-    
     # Determine the step direction
     diff = theta2 - theta1
     if diff > math.pi: diff -= 2 * math.pi
     elif diff < -math.pi: diff += 2 * math.pi
     
+    # Generate points along the inner arc
+    num_pts = 16
+    pts_in = [(Ix, Iy)]
     for i in range(num_pts + 1):
         t = theta1 + diff * (i / num_pts)
-        pts.append((cx + R * math.cos(t), cy + R * math.sin(t)))
+        pts_in.append((cx + R * math.cos(t), cy + R * math.sin(t)))
         
-    # Draw as a filled polygon
-    polygon = mpatches.Polygon(pts, facecolor=color, edgecolor='none', alpha=alpha, zorder=zorder)
-    ax.add_patch(polygon)
+    # Draw inner fillet (road color)
+    polygon_in = mpatches.Polygon(pts_in, facecolor=color, edgecolor='none', alpha=alpha, zorder=zorder)
+    ax.add_patch(polygon_in)
+    
 
 def draw_road_with_fillets(ax, path, width, color, fillet_radius=5.0, alpha=0.95, zorder=2.5, label="", is_closed=False, free_ends=None):
     if not path or len(path) < 2:

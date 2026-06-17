@@ -1444,13 +1444,14 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
 
         placed = {}   # name → (x, y, w, h)
 
-        # 1. Fixed anchors  [→ §3.2] — jitter ±5% of site dim around fixed position
+        # 1. Fixed anchors  [→ §3.2] — jitter ±5% of site dim around fixed position (GIS is fully fixed, no jitter)
         for name, edge, ratio, off in [
             ("Gate House",     gh_edge,    gh_ratio,    gh_offset),
             ("GIS",            gis_edge,   gis_ratio,   gis_offset),
             ("RAW Water Tank", water_edge, water_ratio, water_offset),
         ]:
-            x, y, w, h = place_anchor(sw, sl, name, edge, ratio, off, jitter=0.05)
+            j = 0.0 if name == "GIS" else 0.05
+            x, y, w, h = place_anchor(sw, sl, name, edge, ratio, off, jitter=j)
             placed[name] = (x, y, w, h)
 
         # 2. Power Block  [→ §3.3]

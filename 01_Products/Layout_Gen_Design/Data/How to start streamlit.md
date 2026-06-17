@@ -46,28 +46,9 @@ We will perform system commands to set up the environment. No source files will 
 
 ---
 
-# Sharing the Program with a Coworker
+# Coworker Setup and Launch Steps
 
-If a coworker wants to run this layout program on their own computer, follow these instructions.
-
-## 1. What Files to Share
-
-You should zip and share the **`Layout_Gen_Design`** directory. It should contain the following folders and files:
-
-```text
-Layout_Gen_Design/
-├── Core/               # The core layout generation engine (Layout06.py, Pathfind.py, etc.)
-├── Dashboard/          # The UI dashboard script (Roads_Test.py)
-├── Data/               # Configuration files and this documentation
-└── PROJECT.md          # Project specifications and rules
-```
-
-> [!IMPORTANT]
-> **Do NOT copy or send the `.venv` folder.** Coworkers should create a fresh virtual environment on their own computer since `.venv` paths and binary dependencies are machine-specific.
-
-## 2. Coworker Setup and Launch Steps
-
-Have your coworker open PowerShell, navigate to the unzipped `Layout_Gen_Design` folder, and perform these setup steps:
+If a coworker wants to run this layout program on their own computer, they should open PowerShell, navigate to the `Layout_Gen_Design` directory, and perform these setup steps:
 
 1. **Download and Install Python 3.11**:
    If Python is not installed on their computer, they can install it via:

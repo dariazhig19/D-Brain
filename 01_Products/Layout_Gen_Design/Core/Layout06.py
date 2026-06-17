@@ -1671,16 +1671,45 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             rymin, rymax = min(rys), max(rys)
             ring_corners = [(rxmin, rymin), (rxmax, rymin), (rxmax, rymax), (rxmin, rymax)]
             ehx, ehy = exit_helper
-            spur_start = min(ring_corners, key=lambda c: (c[0]-ehx)**2 + (c[1]-ehy)**2)
-            sx, sy = spur_start
 
-            # Ring spur L-route (Option A): project spur_start onto exit_line (y = ehy for N/S, x = ehx for E/W)
+            # 1. Try closest corner first
+            closest_corner = min(ring_corners, key=lambda c: (c[0]-ehx)**2 + (c[1]-ehy)**2)
+            sx, sy = closest_corner
+
+            # Check if this corner causes a 180-degree U-turn (backtracking) at exit_helper.
+            # The direction of the final Ring Spur segment (from turn_pt to exit_helper) must align
+            # with the direction of the first Gate Spur segment (from exit_helper to bb_mid).
+            # - For N/S boom edges, the segments are horizontal:
+            #   Ring Spur: (sx, ehy) -> (ehx, ehy)  (direction: ehx - sx)
+            #   Gate Spur: (ehx, ehy) -> (bb_mid[0], ehy)  (direction: bb_mid[0] - ehx)
+            #   To avoid a U-turn, (ehx - sx) * (bb_mid[0] - ehx) must be >= 0.
+            # - For E/W boom edges, the segments are vertical:
+            #   Ring Spur: (ehx, sy) -> (ehx, ehy)  (direction: ehy - sy)
+            #   Gate Spur: (ehx, ehy) -> (ehx, bb_mid[1])  (direction: bb_mid[1] - ehy)
+            #   To avoid a U-turn, (ehy - sy) * (bb_mid[1] - ehy) must be >= 0.
             if bb_edge in ("N", "S"):
-                turn_pt = (sx, ehy)
+                is_valid = (ehx - sx) * (bb_mid[0] - ehx) >= 0
             else:
-                turn_pt = (ehx, sy)
+                is_valid = (ehy - sy) * (bb_mid[1] - ehy) >= 0
 
-            ring_spur = [spur_start, turn_pt, exit_helper]
+            if is_valid:
+                spur_start = closest_corner
+                # Ring spur L-route (Option A): project spur_start onto exit_line
+                if bb_edge in ("N", "S"):
+                    turn_pt = (sx, ehy)
+                else:
+                    turn_pt = (ehx, sy)
+                ring_spur = [spur_start, turn_pt, exit_helper]
+            else:
+                # If closest corner is invalid (causes U-turn), fall back to projection of exit_helper onto Ring Road edge.
+                if bb_edge in ("N", "S"):
+                    sy_proj = rymax if abs(ehy - rymax) < abs(ehy - rymin) else rymin
+                    spur_start = (ehx, sy_proj)
+                else:
+                    sx_proj = rxmax if abs(ehx - rxmax) < abs(ehx - rxmin) else rxmin
+                    spur_start = (sx_proj, ehy)
+                # Straight 1-segment spur directly from the projected point on the Ring Road edge
+                ring_spur = [spur_start, exit_helper]
 
             # gate_spur — KEEP original: cross the boom at bb_mid, route to gate.
             if bb_edge in ("N", "S"):

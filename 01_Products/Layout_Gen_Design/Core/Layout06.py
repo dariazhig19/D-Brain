@@ -520,6 +520,11 @@ RACK_BLOCK_OFFSETS = {
     "b2b_w_rack":   B2B_W_RACK_OFFSET,      # 28
 }
 
+# §3.6.B B-1 — weight of the "PB side faces RAW" term relative to the PB↔CT
+# connection gap when jointly selecting the spine sides. Kept small so the gap
+# (which drives the realized spine length) dominates and RAW only breaks ties.
+SPINE_RAW_WEIGHT = 0.25
+
 
 def compute_rack_buffers(blocks):  # → §3.6.A
     """Step A — per-block buffer rectangles for the 6 offsets a rack block uses.
@@ -612,8 +617,58 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
     pb_rect = rack_buffers["Power Block"][active_cases["Power Block"]]
     ct_rect = rack_buffers["Cooling Tower"][active_cases["Cooling Tower"]]
 
-    best_pb_side = get_spine_side(pb_rect, pb_cx, pb_cy)
-    best_ct_side = get_spine_side(ct_rect, ct_cx, ct_cy)
+    # B-1 step 1-2 — choose PB and CT spine sides JOINTLY (see §3.6.B).
+    # The old logic picked each side independently by "which side faces RAW",
+    # which often selected sides that don't face each other and forced the A*
+    # connector to wrap around, producing very long spines. Instead, score every
+    # (pb_side, ct_side) pair by the PB<->CT connection gap (dominant, == the
+    # thing that blows up) plus a small "PB side faces RAW" term (keeps the
+    # downstream water connection short, since pb_spine_mid ranks RAW corners).
+    def rect_sides(rect):
+        x, y, w, h = rect
+        return [
+            [(x, y), (x + w, y)],            # bottom (low y)
+            [(x, y + h), (x + w, y + h)],    # top
+            [(x, y), (x, y + h)],            # left
+            [(x + w, y), (x + w, y + h)],    # right
+        ]
+
+    def side_inside_plot(side):
+        (ax, ay), (bx, by) = side
+        return (0 <= min(ax, bx) and max(ax, bx) <= sw and
+                0 <= min(ay, by) and max(ay, by) <= sl)
+
+    def side_gap(side_a, side_b):
+        # L1 (Manhattan) distance between two axis-aligned segments: the
+        # perpendicular separation plus any lateral offset where their
+        # projections don't overlap. Small when the sides face each other.
+        (ax0, ay0), (ax1, ay1) = side_a
+        (bx0, by0), (bx1, by1) = side_b
+        ax_lo, ax_hi = min(ax0, ax1), max(ax0, ax1)
+        ay_lo, ay_hi = min(ay0, ay1), max(ay0, ay1)
+        bx_lo, bx_hi = min(bx0, bx1), max(bx0, bx1)
+        by_lo, by_hi = min(by0, by1), max(by0, by1)
+        gap_x = max(0.0, ax_lo - bx_hi, bx_lo - ax_hi)
+        gap_y = max(0.0, ay_lo - by_hi, by_lo - ay_hi)
+        return gap_x + gap_y
+
+    def side_mid(side):
+        (ax, ay), (bx, by) = side
+        return ((ax + bx) / 2.0, (ay + by) / 2.0)
+
+    pb_sides = [s for s in rect_sides(pb_rect) if side_inside_plot(s)] or rect_sides(pb_rect)
+    ct_sides = [s for s in rect_sides(ct_rect) if side_inside_plot(s)] or rect_sides(ct_rect)
+
+    best_pb_side, best_ct_side = pb_sides[0], ct_sides[0]
+    best_cost = float('inf')
+    for pb_s in pb_sides:
+        pmx, pmy = side_mid(pb_s)
+        raw_pen = ((pmx - raw_cx) ** 2 + (pmy - raw_cy) ** 2) ** 0.5
+        for ct_s in ct_sides:
+            cost = side_gap(pb_s, ct_s) + SPINE_RAW_WEIGHT * raw_pen
+            if cost < best_cost:
+                best_cost = cost
+                best_pb_side, best_ct_side = pb_s, ct_s
 
     # Helper functions for B-1 midpoint splits and connections
     def split_segment(seg):

@@ -315,7 +315,11 @@ For the Power Block, the sides that do not intersect any created rack path (both
    - **Overlap Exception:** If the selected rack-buffer sides of PB and CT overlap, apply the following connection rules depending on the cases chosen:
       - **PB Case 1, CT Case 2:** Draw the closest perpendicular line from the chosen PB segment (`best_pb_half`) to the CT rack buffer. Do not draw the standard "MAIN RACK" from the PB segment.
       - **PB Case 2, CT Case 1:** Draw the closest perpendicular line from the chosen CT segment (`best_ct_half`) to the PB rack buffer, and draw a perpendicular line from the CT segment to the PB center. Do not draw the standard "MAIN RACK" from the PB segment.
-2. For each block, find the rack-buffer rectangle side whose outward direction points toward RAW Water Tank.
+2. **Jointly** select the PB and CT spine sides (once each block's active case from step 1 is fixed). Instead of choosing each side independently by "which side points toward RAW", score every `(PB side, CT side)` combination of the two rack-buffer rectangles and keep the cheapest:
+   - `cost = gap(PB side, CT side) + W_RAW · dist(PB side midpoint, RAW center)`
+   - **gap** is the L1 (Manhattan) distance between the two sides — perpendicular separation plus any lateral offset where their projections don't overlap. It is the dominant term because it drives the realized PB↔CT connection length (the thing that previously blew up into long wrap-around spines).
+   - The **RAW term** is applied to the **PB side only** (its midpoint ranks the RAW/Demi candidate corners in B-2/B-3, so PB must stay toward RAW; CT's side only needs to face PB). `W_RAW` (`SPINE_RAW_WEIGHT`, default 0.25) is kept small so gap dominates and RAW only breaks ties.
+   - Sides lying fully outside the plot are pruned. The asymmetry (PB anchors toward RAW, CT picks the side closest to PB) and the dependence on the PB↔CT relative position both emerge from this cost — a side-by-side PB/CT yields left/right facing sides, a stacked one yields top/bottom.
 3. Divide both selected full segments by their midpoints into two half-lines each.
 4. Compare all 4 combinations of half-lines, take only the 2 closest half-lines to each other as the PB and CT rack segments, and prune the not selected halves.
 5. Draw a perpendicular connection from the Power Block (PB) center to the perpendicular projection point on the selected PB segment, and call this line "MAIN RACK" (it will have separate logic later, except under the overlap exception above).

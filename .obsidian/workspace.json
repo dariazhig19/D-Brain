@@ -244,6 +244,9 @@
   },
   "active": "1cc124c092c8927c",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/PROJECT.md.tmp.13664.241d71b1af5d",
+    "01_Products/Layout_Gen_Design/Core/Layout06.py.tmp.13664.e79268945a8a",
+    "01_Products/Layout_Gen_Design/Core/Layout06.py.tmp.13664.f55a11d74ca3",
     "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/apply_close.py",
     "01_Products/Layout_Gen_Design/test_close.py",
@@ -256,8 +259,6 @@
     "how to start streamlit",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-311.pyc",
     "01_Products/Layout_Gen_Design/Core/__pycache__/Pathfind.cpython-311.pyc",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Grid.cpython-311.pyc",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-311.pyc",
     "01_Products/Layout_Gen_Design/Pipeline/Phase_06/Road Access by Blocks.md",
     "01_Products/Layout_Gen_Design/scratch/clockwise_plan_draft.md",
     "Untitled 222.md",
@@ -290,7 +291,6 @@
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
     "04_Reports/Daily/Daily_Report_20260429.md",
     "04_Reports/Daily/Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md"
+    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md"
   ]
 }

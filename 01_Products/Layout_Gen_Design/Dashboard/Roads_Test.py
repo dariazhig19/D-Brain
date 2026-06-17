@@ -110,6 +110,9 @@ def draw_road_with_fillets(ax, path, width, color, fillet_radius=14.0, alpha=0.9
     def pt_key(p):
         return (round(p[0], 3), round(p[1], 3))
         
+    if is_closed and len(path) > 2 and pt_key(path[0]) == pt_key(path[-1]):
+        path = list(path)[:-1]
+        
     # Draw all segments
     for i in range(len(path) - 1):
         p1, p2 = path[i], path[i+1]
@@ -464,13 +467,13 @@ if True:  # Phase 06 — Sketch roads
         # Gate spur (perimeter → gate point) — short primary segment  [→ §3.4.B]
         gs = sketch.get("gate_spur") or []
         if gs:
-            draw_road_with_fillets(ax, gs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
+            draw_road_with_fillets(ax, gs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.7, is_closed=False)
 
     # Ring spur (ring → perimeter) — primary connector around blocks  [→ §3.4.D]
     if show_a1_ring:
         rs = sketch.get("ring_spur") or []
         if rs:
-            draw_road_with_fillets(ax, rs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.5, is_closed=False)
+            draw_road_with_fillets(ax, rs, width=8, color='#e91e8c', fillet_radius=14.0, alpha=0.95, zorder=2.7, is_closed=False)
 
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]

@@ -2168,9 +2168,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                         [(fx0, fy0), (fx0, fy1)]  # Left
                     ]
                     
-                    # Target segments: spine centerlines excluding segments that touch pb_center
+                    # Target segments: rack segments excluding segments that touch pb_center
                     target_segs = []
-                    for seg in spine_centerlines:
+                    for seg in rack_segments:
                         p1, p2 = seg
                         d1 = math.hypot(p1[0] - pb_cx, p1[1] - pb_cy)
                         d2 = math.hypot(p2[0] - pb_cx, p2[1] - pb_cy)

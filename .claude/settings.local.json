@@ -73,7 +73,9 @@
       "Bash(PYTHONIOENCODING=utf-8 python -)",
       "Bash(git show *)",
       "Bash(rm -f Core/_old_layout.py Core/__pycache__/_old_layout*.pyc)",
-      "Bash(python -c \"import ast; ast.parse\\(open\\('Core/Layout06.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK: parses'\\)\")"
+      "Bash(python -c \"import ast; ast.parse\\(open\\('Core/Layout06.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK: parses'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('Dashboard/Roads_Test.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK: parses'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('Dashboard/Roads_Test.py', encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('Core/Layout06.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK: both parse'\\)\")"
     ]
   }
 }

@@ -2464,81 +2464,6 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             elif bb_edge == "W": boom_barrier = [(bx, cy), (bx - 16, cy)]
 
         # ---------------------------------------------------------------------
-        # Step 12 — Recenter  [→ §3.8]
-        # Content (blocks/roads/racks) is left untouched; the PLOT rectangle and
-        # the gate point are moved so the plot center lands on the content's
-        # bounding-box center.
-        # ---------------------------------------------------------------------
-        def _bbox_points():
-            for b in blocks:
-                yield (b["x"], b["y"])
-                yield (b["x"] + b["width"], b["y"] + b["height"])
-            # Point polylines: lists of (x, y). The exit road (gate_spur) is
-            # deliberately EXCLUDED — it is the only element pinned to the plot
-            # boundary (it must reach the gate), so including it biases the bbox
-            # toward the gate side and over-clips the opposite side.
-            for poly in (ring_road, ring_spur, boom_barrier):
-                if poly:
-                    for p in poly:
-                        yield (p[0], p[1])
-            # Segment lists: each entry is ((x, y), (x, y)).
-            for segs in (all_segments_cleaned, rack_segments, outer_loop):
-                if segs:
-                    for s in segs:
-                        yield (s[0][0], s[0][1])
-                        yield (s[1][0], s[1][1])
-
-        pts = list(_bbox_points())
-        if pts:
-            min_x = min(p[0] for p in pts); max_x = max(p[0] for p in pts)
-            min_y = min(p[1] for p in pts); max_y = max(p[1] for p in pts)
-            content_cx, content_cy = (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
-            delta = (content_cx - sw / 2.0, content_cy - sl / 2.0)
-        else:
-            delta = (0.0, 0.0)
-        plot_bounds = (delta[0], delta[1], sw, sl)
-        # The gate moves only PERPENDICULAR to its edge: it stays on the moved
-        # boundary line without sliding ALONG the edge (the along-edge component
-        # would stretch the exit road sideways and detach it from the gate house
-        # / its spur). N/S gate -> shift y only; E/W gate -> shift x only.
-        if gate_side in ("N", "S"):
-            gate_pt_recentered = (gate_pt[0], gate_pt[1] + delta[1])
-        else:
-            gate_pt_recentered = (gate_pt[0] + delta[0], gate_pt[1])
-
-        # The exit line (gate spur's gate-ward leg) and the gate death zone are
-        # tied to the gate, so they follow it to the recentered position. The
-        # boom crossing (exit_helper → bb_mid → other_corner) stays put; only the
-        # final L to the gate is rebuilt, and the death zone is recomputed from
-        # the fixed bb_mid to the recentered gate.
-        ng = gate_pt_recentered
-        gate_spur_out = gate_spur
-        gate_death_zone_out = gate_death_zone
-
-        def _same_pt(a, b):
-            return abs(a[0] - b[0]) < 0.5 and abs(a[1] - b[1]) < 0.5
-
-        if gate_spur and len(gate_spur) >= 3 and _same_pt(gate_spur[-1], gate_pt):
-            # Main-branch spur: [..., other_corner, L_corner, gate].
-            oc = gate_spur[-3]
-            l_old = gate_spur[-2]
-            if abs(l_old[1] - oc[1]) < 0.5:          # N/S boom: L shares other_corner's y
-                l_new = (ng[0], oc[1])
-            else:                                     # E/W boom: L shares other_corner's x
-                l_new = (oc[0], ng[1])
-            gate_spur_out = list(gate_spur[:-2]) + [l_new, ng]
-        elif gate_spur and _same_pt(gate_spur[0], gate_pt):
-            # Fallback spur: [gate, perimeter_pt].
-            gate_spur_out = [ng] + list(gate_spur[1:])
-
-        if gate_death_zone is not None and bb_mid is not None:
-            dx0, dx1 = min(bb_mid[0], ng[0]), max(bb_mid[0], ng[0])
-            dy0, dy1 = min(bb_mid[1], ng[1]), max(bb_mid[1], ng[1])
-            if dx1 - dx0 < 1: dx0 -= 1; dx1 += 1
-            if dy1 - dy0 < 1: dy0 -= 1; dy1 += 1
-            gate_death_zone_out = (dx0, dy0, dx1 - dx0, dy1 - dy0)
-
-        # ---------------------------------------------------------------------
         # Final Assembly
         # ---------------------------------------------------------------------
         _last_debug["failed_at"] = None
@@ -2554,7 +2479,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "all_segments_cleaned": all_segments_cleaned,
             "outer_loop":   outer_loop,
             "outer_loop_pts":  outer_loop_pts,
-            "gate_spur":       gate_spur_out,
+            "gate_spur":       gate_spur,
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,
             "rack_segments":   rack_segments,
@@ -2563,11 +2488,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "water_triangle":  water_triangle,
             "spine_centerlines": spine_centerlines,
             "water_cluster_segments": water_cluster_segments,
-            "gate_point":      gate_pt_recentered,
-            "plot_bounds":     plot_bounds,
-            "plot_bounds_before": (0.0, 0.0, sw, sl),
-            "recenter_delta":  delta,
-            "gate_death_zone": gate_death_zone_out,
+            "gate_point":      gate_pt,
+            "gate_death_zone": gate_death_zone,
             "pb_center":       (pb_cx, pb_cy),
             "cell_size":       CELL_SIZE,
             "block_buffer":    BLOCK_BUFFER,

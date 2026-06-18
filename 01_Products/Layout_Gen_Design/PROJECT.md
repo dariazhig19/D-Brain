@@ -142,8 +142,9 @@ All block positions snap to the 2m grid (`snap(v) = round(v / 2) * 2`).
 7.  Pipe Rack            →  6m rack network (§3.6) — before perimeter/spurs/stubs
 8.  Block road buffers   →  Snapped buffer rectangles computed (§3.7.A)
 9.  Perimeter Fire Road  →  Segment generation from buffers (§3.7.B)
-10. Group A access roads →  8m connection lines per block (§3.8.B)
+10. Group A access roads →  8m connection lines per block (§10.1.B)
 11. Segment cleanup      →  Parallel merge pass (§3.7.C)
+12. Recenter             →  Move plot + gate to content bbox center (§3.8)
 ```
 
 ### §3.2 Fixed Anchor Placement
@@ -264,6 +265,9 @@ Single rack type, **width = 6 m**, connects 6 "need rack" blocks: PB, Cooling To
 > [!NOTE]
 > **Rack ↔ road-buffer clearance rule.** A rack path may **cross** a block's road buffer perpendicularly, but may **not run parallel along it** within **9 m** (`RACK_ROAD_CLEARANCE`). The block's own rack-buffer corridors (`case1` / `case2`) are **exempt** — those are the intended rack lanes. Enforced as a direction-aware move filter in both routers (the connector A\* and the water-cluster `astar` via its `forbid_move` hook). This keeps connectors out of road corridors while still letting them reach a block's rack buffer.
 
+> [!NOTE]
+> **Buffer-corridor routing rule.** A rack path may **not** cut through the gap between a block's footprint and its active rack-buffer line — if a block is in the way, the path must run **on** the rack-buffer line. Enforced by `mark_rack_obstacles`, which blocks each rack block's footprint inflated to one grid cell *inside* its active buffer line (leaving the buffer-line ring free for travel). Applied to every rack routing grid (PB↔CT connect B-1, water-cluster B-5, network connect C-1, Flare C-2). Routing degrades gracefully: the network/flare router (`route_between`) tries **restricted** (buffer-lines & spines only) → **inflated full grid** (buffer-corridor) → **footprint-only full grid** as a last resort; B-1/B-5 try **inflated** → **footprint-only**.
+
 #### §3.6.A Buffer Layers per Block
 
 **Non-rack blocks** (Warehouse, Admin, GIS) — 2 offsets:
@@ -314,13 +318,13 @@ For the Power Block, the sides that do not intersect any created rack path (both
 1. For PB and Cooling Tower, evaluate the distance of the selected side of Case 2's rack-buffer rectangle to the parallel plot boundary. If it is less than 10 m or if Case 2's selected side goes outside the plot boundary, choose Case 1 (even if Case 1 also goes outside). Otherwise, select randomly between Case 1 and Case 2.
    - *Note:* the "selected side" here is only a clearance **probe** (the RAW-facing side, via `get_spine_side`) used to measure boundary distance for the case decision. The side actually used for the spine is chosen separately in step 2, after the case is fixed.
    - **Overlap Exception:** If the selected rack-buffer sides of PB and CT overlap, apply the following connection rules depending on the cases chosen:
-      - **PB Case 1, CT Case 2:** Draw the closest perpendicular line from the chosen PB segment (`best_pb_half`) to the CT rack buffer. Do not draw the standard "MAIN RACK" from the PB segment.
-      - **PB Case 2, CT Case 1:** Draw the closest perpendicular line from the chosen CT segment (`best_ct_half`) to the PB rack buffer, and draw a perpendicular line from the CT segment to the PB center. Do not draw the standard "MAIN RACK" from the PB segment.
-2. **Jointly** select the PB and CT spine sides (once each block's active case from step 1 is fixed). Instead of choosing each side independently by "which side points toward RAW", score every `(PB side, CT side)` combination of the two rack-buffer rectangles and keep the cheapest:
-   - `cost = gap(PB side, CT side) + W_RAW · dist(PB side midpoint, RAW center)`
-   - **gap** is the L1 (Manhattan) distance between the two sides — perpendicular separation plus any lateral offset where their projections don't overlap. It is the dominant term because it drives the realized PB↔CT connection length (the thing that previously blew up into long wrap-around spines).
-   - The **RAW term** is applied to the **PB side only** (its midpoint ranks the RAW/Demi candidate corners in B-2/B-3, so PB must stay toward RAW; CT's side only needs to face PB). `W_RAW` (`SPINE_RAW_WEIGHT`, default 0.25) is kept small so gap dominates and RAW only breaks ties.
-   - Sides lying fully outside the plot are pruned. The asymmetry (PB anchors toward RAW, CT picks the side closest to PB) and the dependence on the PB↔CT relative position both emerge from this cost — a side-by-side PB/CT yields left/right facing sides, a stacked one yields top/bottom.
+      - **PB Case 1, CT Case 2:** Draw **one straight perpendicular line** along the MAIN RACK axis (through the PB center `(pb_cx, pb_cy)`, perpendicular to the overlapping sides) spanning from the **PB center** to **CT's Case 1 rack-buffer line**. Split it at the overlapped PB/CT side into **two separate segments**: the **PB center → overlap** part is the **MAIN RACK**, and the **overlap → CT Case 1 buffer** part is the CT connector. Keep them separate (the MAIN RACK takes a different width later). This rule *replaces* the standard "MAIN RACK" — do **not** additionally draw the step-5 MAIN RACK.
+      - **PB Case 2, CT Case 1:** Mirror of the above. Here PB is Case 2 (active side far from PB) and CT is Case 1 (active side close to CT), so the gap to bridge is on the PB side. Draw **one straight perpendicular line** on the MAIN RACK axis from the **PB center** to **CT's Case 1 rack buffer** (the overlapped CT side) — its far ("start") point lands on the CT rack buffer, and the line serves as the MAIN RACK. Because the bridging gap is on the PB side (which this line traverses), no separate CT connector is drawn. This *replaces* the step-5 MAIN RACK.
+      - **Same case (PB & CT both Case 1, or both Case 2):** The standard A\* connection (step 7) is skipped for overlapping sides, so bridge the two parallel half-segments (`best_pb_half`, `best_ct_half`) with a single perpendicular connector. The standard "MAIN RACK" from the PB center is still drawn.
+2. **Jointly** select the PB and CT spine sides (once each block's active case from step 1 is fixed). Instead of choosing each side independently by "which side points toward RAW":
+   - **Mutual-facing filter (primary).** Keep only `(PB side, CT side)` combinations where **both** sides face each other — i.e. CT's center lies on the outward side of the chosen PB side, and vice versa. A side facing *away* from the other block always forces a U-shaped wrap, so those pairs are excluded. (If no pair qualifies, fall back to all combinations.) Sides lying fully outside the plot are pruned first.
+   - **Tie-break.** Among the surviving facing pairs, minimise `gap(PB side, CT side) + W_RAW · dist(PB side midpoint, RAW center)`, where **gap** is the L1 (Manhattan) distance between the two sides (perpendicular separation + any lateral offset where their projections don't overlap), picking the closest facing pair. `W_RAW` (`SPINE_RAW_WEIGHT`, default 0.25) is small — RAW only nudges the PB side (whose midpoint ranks the RAW/Demi candidates in B-2/B-3) when gaps tie.
+   - The dependence on the PB↔CT relative position emerges naturally: a side-by-side PB/CT yields left/right facing sides, a stacked one yields top/bottom — always the sides that let the connection run straight out toward the other block rather than wrapping around.
 3. Divide both selected full segments by their midpoints into two half-lines each.
 4. Compare all 4 combinations of half-lines, take only the 2 closest half-lines to each other as the PB and CT rack segments, and prune the not selected halves.
 5. Draw a perpendicular connection from the Power Block (PB) center to the perpendicular projection point on the selected PB segment, and call this line "MAIN RACK" (it will have separate logic later, except under the overlap exception above).
@@ -363,8 +367,8 @@ Take all 4 candidate points (2 from B-2 + 2 from B-3).
 
 **B-5 — Water Cluster Spine**
 
-Connect the 3 triangle points using **orthogonal A\* paths** (no diagonals, cell size = 2 m).
-- Paths may travel along any block's active rack-buffer line or through empty grid cells.
+Connect the 3 triangle points using **orthogonal A\* paths** (no diagonals, cell size = 2 m) with a **turn penalty of 10** so paths come out straight or single-L rather than zig-zagging.
+- Paths may travel along any block's active rack-buffer line or through empty grid cells, but must run **on** a block's rack-buffer line rather than cutting the footprint→buffer gap (buffer-corridor rule above; footprint-only fallback if blocked).
 - Cannot intersect any block footprint.
 - Two shortest paths of the three possible pairings are kept; the longest pair is dropped.
 
@@ -384,8 +388,19 @@ The connection must:
 1. If any existing rack segment already touches the Flare's active rack-buffer rectangle → connection satisfied.
 2. Otherwise:
    - Route the shortest orthogonal path from the boundary (all 4 segments) of the Flare's active rack-buffer rectangle to the PB↔CT spine centerlines or their connection line from Step 7 (excluding any segments that touch the Power Block center).
+   - The Flare connection uses the **geometric** (buffer-corridor) grid directly, *skipping* the extended-line restricted mode — the latter spans each spine/water segment across the whole site and can pull the link to a non-nearest point. This makes the Flare attach at the closest corner of its rack buffer.
    - This single A* search automatically connects the closest points between the Flare's rack-buffer boundary and the target spine network.
    - Add this path to the unified network.
+
+**C-3 — Cleanup**
+
+After the full rack network is routed, trim redundant geometry.
+
+1. **Cooling Tower free ends.** The CT spine half (`best_ct_half`) often sticks out past the points where the network actually connects to it (e.g. the PB↔CT connector meets it partway along, leaving a dangling stub).
+   - Find every **junction** on `best_ct_half` — each point where another rack segment meets it.
+   - **≥ 2 distinct junctions:** trim `best_ct_half` to span only between the outermost junctions, removing the free end(s) beyond them.
+   - **< 2 junctions** (both ends free, or only a single touch): the half is redundant → **prune it entirely** (the touching connector already reaches the CT rack-buffer line).
+2. **Stub segments.** Prune any rack segment shorter than **4.5 m** (`MIN_RACK_SEG_LEN`) — tiny leftover stubs from snapping/trimming.
 
 **Rack output:** Single connected rack polyline network (centerlines, 6 m wide). Becomes an obstacle for subsequent road placement.
 
@@ -402,7 +417,7 @@ Each placed block is expanded outward by its required road offset:
 This generates an axis-aligned buffer rectangle around every block.
 
 > [!NOTE]
-> **Flare exclusion.** The Flare is deliberately excluded from the perimeter fire-road union — no fire road is ever drawn around it (radiation safety). It still receives its 6 m plant-facing access road via Group B (§3.8.C).
+> **Flare exclusion.** The Flare is deliberately excluded from the perimeter fire-road union — no fire road is ever drawn around it (radiation safety). It still receives its 6 m plant-facing access road via Group B (§10.1.C).
 
 #### §3.7.B Grid-Based Boolean Union
 A high-resolution 2D integer grid (cell size **0.5 m**) is created over the plot bounds, padded outward to absorb the morphological-closing kernel. The buffer rectangle of every block is "painted" onto this grid (setting cells to 1). This effectively performs a geometric boolean union of all required road stand-offs.
@@ -431,56 +446,45 @@ The boundary edges between the exterior (empty) cells and the interior (filled) 
 
 The resulting polyline is mathematically guaranteed to be a closed, continuous, and non-intersecting loop that perfectly hugs the facility at the exact required stand-off distances (8m or 16m), forming the final **Outer Perimeter Loop**.
 
-### §3.8 Road Access by Block
 
-#### §3.8.A Special Cases
 
-| Block       | Road   | Access Points                  | Notes                            |
-|-------------|--------|--------------------------------|----------------------------------|
-| Gate House  | 8m     | 1 — the gate itself            | Gate IS the access point         |
-| Power Block | 8m     | 4 corners of PB Ring Road      | Ring road serves as access       |
 
-#### §3.8.B Group A — 8m Road Connections
 
-| #  | Block         | Count | Corner Selection Rule                                               |
-|----|---------------|-------|---------------------------------------------------------------------|
-| 2  | GIS           | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
-| 3  | RAW Water     | 1     | Boundary corner **furthest from Demi Water Tank**                  |
-| 5  | Cooling Tower | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
-| 6  | WT/WWT        | 1     | Corner nearest to plot boundary                                     |
-| 7  | Warehouse     | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
-| 9  | Admin         | 1     | Corner nearest to Gate House                                        |
 
-**Total:** 9 × 8m connections across 6 blocks.
 
-#### §3.8.C Group B — 6m Road Connections
 
-6m roads represent lower-traffic secondary access (rack corridors, chemical delivery, maintenance).
 
-| #  | Block         | Count | Access Point Position                             | Notes                                    |
-|----|---------------|-------|---------------------------------------------------|------------------------------------------|
-| 3  | RAW Water     | 1     | Corner near WT/WWT                                | Chemical/maintenance delivery            |
-| 6  | WT/WWT        | 1     | Corner near RAW Water                             | Truck-heavy chemical delivery on 8m side |
-| 8  | Flare         | 1     | Corner on plant-facing side only                  | NEVER boundary/leeward (radiation)       |
-| 9  | Admin         | 1     | Corner opposite to Gate                           |                                          |
-| 10 | Demi Water    | 1     | Corner near pump skid (PB-facing)                 | Low-traffic, single access               |
 
-**Total:** 5 × 6m connections across 5 blocks.
 
-#### §3.8.D Complete Access Summary
+### §3.8 Recenter
 
-| #  | Block          | 8m | 6m | Total | Key Constraint                                 |
-|----|----------------|----|----|-------|------------------------------------------------|
-| 1  | Gate House     | 1  | 0  | 1     | Gate = access                                  |
-| 2  | GIS            | 2  | 0  | 2     | Boundary corner + PB corner                    |
-| 3  | RAW Water      | 1  | 1  | 2     | 8m: far from Demi; 6m: near WT/WWT            |
-| 4  | Power Block    | 1  | 0  | 1     | Ring road = access (4 corners)                 |
-| 5  | Cooling Tower  | 2  | 0  | 2     | Boundary + PB corners                          |
-| 6  | WT/WWT         | 1  | 1  | 2     | 8m: near boundary; 6m: near RAW Water          |
-| 7  | Warehouse      | 2  | 0  | 2     | Boundary + PB corners                          |
-| 8  | Flare          | 0  | 1  | 1     | Plant-facing only; NEVER leeward/boundary       |
-| 9  | Admin          | 1  | 1  | 2     | 8m: near Gate; 6m: opposite corner             |
-| 10 | Demi Water     | 0  | 1  | 1     | Near pump skid (PB-facing)                     |
+Final step. The placed layout is usually off-center inside the plot. Recenter
+fixes this **without moving any content** — instead it slides the **plot
+rectangle** (and the gate point, which belongs to the plot) so the plot's center
+lands on the content's bounding-box center.
+
+1. Compute the **content bounding box** over all block footprints + roads (ring
+   road, ring spur, perimeter fire-road contour, cleaned access segments, boom
+   barrier) + all rack segments. The **exit road (gate spur) is excluded** — it
+   is the only element pinned to the plot boundary (it must reach the gate), so
+   including it would bias the bbox toward the gate side and over-clip the
+   opposite side.
+2. `content_center = ((min_x+max_x)/2, (min_y+max_y)/2)`.
+3. `delta = content_center − plot_center`, where `plot_center = (sw/2, sl/2)`.
+4. **Move the plot:** new plot rectangle `= (delta_x, delta_y, sw, sl)` — its
+   center now equals `content_center`. Output as `plot_bounds`.
+5. **Move the gate point perpendicular to its edge only** — N/S gate shifts by
+   `delta_y`, E/W gate shifts by `delta_x`. This keeps the gate on the moved
+   boundary line without sliding *along* the edge (which would stretch the exit
+   road sideways and detach it from the gate house / its spur).
+6. **Extend the exit line to the recentered gate.** The gate spur's boom crossing
+   (`exit_helper → bb_mid → other_corner`) stays put; only its final L to the
+   gate is rebuilt so the gate spur reaches the recentered gate.
+7. **Recompute the gate death zone** as the rectangle between the fixed `bb_mid`
+   and the recentered gate.
+8. **All other content keeps its original coordinates** (blocks, racks, ring
+   road, ring spur, buffers, pb_center — unchanged). Only `plot_bounds`,
+   `gate_point`, the gate spur's exit-line leg, and the death zone move.
 
 ## §4. Step 1 Output Dictionary
 
@@ -499,7 +503,9 @@ The resulting polyline is mathematically guaranteed to be a closed, continuous, 
     "rack_candidates":       list[tuple],  # RAW/Demi candidate corner points
     "active_rack_cases":     dict,         # {block_name: "case1_rack"|"case2_rack"}
     "water_triangle":        list[tuple],  # 3 points: RAW, Demi, WWT on rack buffers
-    "gate_point":            tuple,        # (x, y) gate midpoint on boundary
+    "gate_point":            tuple,        # (x, y) gate midpoint, recentered (§3.8)
+    "plot_bounds":           tuple,        # (x0, y0, sw, sl) plot rect, recentered (§3.8)
+    "recenter_delta":        tuple,        # (dx, dy) plot/gate shift (§3.8)
     "gate_death_zone":       tuple|None,   # (x, y, w, h) or None
     "pb_center":             tuple,        # (pb_cx, pb_cy)
     "cell_size":             int,          # 2
@@ -566,6 +572,61 @@ RACK_CASE2_OFFSET  = 22   # rack CL: Case 2 (block → road → rack)
 > (`Core/Layout06.py`) is the runtime authority — where it differs (e.g.
 > `PB_RING_OFFSET = 16`, `ROAD_W_RACK_OFFSET = 16`, `B2B_W_RACK_OFFSET = 30`,
 > `RACK_CASE1_OFFSET = 8`, `RACK_CASE2_OFFSET = 24`), the engine value wins.
+
+## §10. References
+
+Reference material (not procedural steps).
+
+### §10.1 Road Access by Block
+
+#### §10.1.A Special Cases
+
+| Block       | Road   | Access Points                  | Notes                            |
+|-------------|--------|--------------------------------|----------------------------------|
+| Gate House  | 8m     | 1 — the gate itself            | Gate IS the access point         |
+| Power Block | 8m     | 4 corners of PB Ring Road      | Ring road serves as access       |
+
+#### §10.1.B Group A — 8m Road Connections
+
+| #  | Block         | Count | Corner Selection Rule                                               |
+|----|---------------|-------|---------------------------------------------------------------------|
+| 2  | GIS           | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
+| 3  | RAW Water     | 1     | Boundary corner **furthest from Demi Water Tank**                  |
+| 5  | Cooling Tower | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
+| 6  | WT/WWT        | 1     | Corner nearest to plot boundary                                     |
+| 7  | Warehouse     | 2     | Corner near boundary + corner near PB (diagonal opposite)          |
+| 9  | Admin         | 1     | Corner nearest to Gate House                                        |
+
+**Total:** 9 × 8m connections across 6 blocks.
+
+#### §10.1.C Group B — 6m Road Connections
+
+6m roads represent lower-traffic secondary access (rack corridors, chemical delivery, maintenance).
+
+| #  | Block         | Count | Access Point Position                             | Notes                                    |
+|----|---------------|-------|---------------------------------------------------|------------------------------------------|
+| 3  | RAW Water     | 1     | Corner near WT/WWT                                | Chemical/maintenance delivery            |
+| 6  | WT/WWT        | 1     | Corner near RAW Water                             | Truck-heavy chemical delivery on 8m side |
+| 8  | Flare         | 1     | Corner on plant-facing side only                  | NEVER boundary/leeward (radiation)       |
+| 9  | Admin         | 1     | Corner opposite to Gate                           |                                          |
+| 10 | Demi Water    | 1     | Corner near pump skid (PB-facing)                 | Low-traffic, single access               |
+
+**Total:** 5 × 6m connections across 5 blocks.
+
+#### §10.1.D Complete Access Summary
+
+| #  | Block          | 8m | 6m | Total | Key Constraint                                 |
+|----|----------------|----|----|-------|------------------------------------------------|
+| 1  | Gate House     | 1  | 0  | 1     | Gate = access                                  |
+| 2  | GIS            | 2  | 0  | 2     | Boundary corner + PB corner                    |
+| 3  | RAW Water      | 1  | 1  | 2     | 8m: far from Demi; 6m: near WT/WWT            |
+| 4  | Power Block    | 1  | 0  | 1     | Ring road = access (4 corners)                 |
+| 5  | Cooling Tower  | 2  | 0  | 2     | Boundary + PB corners                          |
+| 6  | WT/WWT         | 1  | 1  | 2     | 8m: near boundary; 6m: near RAW Water          |
+| 7  | Warehouse      | 2  | 0  | 2     | Boundary + PB corners                          |
+| 8  | Flare          | 0  | 1  | 1     | Plant-facing only; NEVER leeward/boundary       |
+| 9  | Admin          | 1  | 1  | 2     | 8m: near Gate; 6m: opposite corner             |
+| 10 | Demi Water     | 0  | 1  | 1     | Near pump skid (PB-facing)                     |
 
 ---
 

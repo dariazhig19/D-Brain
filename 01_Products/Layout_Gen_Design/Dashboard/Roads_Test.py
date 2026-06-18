@@ -351,7 +351,6 @@ if True:  # Phase 06 — Sketch roads
 
     st.sidebar.header("Phase 06 Settings")
     show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
-    show_alt_ring = st.sidebar.checkbox("Use 18 m inner corners (alternative ring road)", value=False)
     show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=False)
     show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
@@ -365,8 +364,6 @@ if True:  # Phase 06 — Sketch roads
     if st.button("Generate Sketch", type="primary", use_container_width=True):
         if fix_seed:
             random.seed(int(seed_val))
-        # Set ring road geometry based on UI toggle
-        Core.Layout06.set_use_alt_ring_road(show_alt_ring)
         with st.spinner("Generating Phase 06 sketch..."):
             sketch = generate_sketch(  # → §3.1 Master Placement Sequence
                 site_width, site_length, wind_dir,
@@ -427,9 +424,22 @@ if True:  # Phase 06 — Sketch roads
 
     fig, ax = plt.subplots(figsize=(13, 8), dpi=110)
 
-    # Site fill + boundary
-    ax.fill([0,sw,sw,0,0], [0,0,sl,sl,0], color='#f0f8ff', zorder=0)
-    ax.plot([0,sw,sw,0,0], [0,0,sl,sl,0], color='black', lw=1.2, zorder=1)
+    # Plot rectangle — recentered on the content bbox (§3.8 Recenter). Content
+    # keeps its coords; only the plot frame (and gate) move.
+    px0, py0, pw, ph = sketch.get("plot_bounds", (0, 0, sw, sl))
+    px1, py1 = px0 + pw, py0 + ph
+
+    # Plot BEFORE recenter (original frame) — drawn faded/dashed for comparison.
+    bx0, by0, bw, bh = sketch.get("plot_bounds_before", (0, 0, sw, sl))
+    bx1, by1 = bx0 + bw, by0 + bh
+    if (bx0, by0) != (px0, py0):
+        ax.plot([bx0,bx1,bx1,bx0,bx0], [by0,by0,by1,by1,by0],
+                color='#b0b0b0', lw=1.0, linestyle='--', alpha=0.7, zorder=0.5,
+                label='Plot (before recenter)')
+
+    # Site fill + boundary (after recenter)
+    ax.fill([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='#f0f8ff', zorder=0)
+    ax.plot([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='black', lw=1.2, zorder=1)
 
     # 2m grid
     if show_grid:
@@ -592,8 +602,8 @@ if True:  # Phase 06 — Sketch roads
     ax.text(gx, gy + 8, 'GATE', color='#27ae60', fontsize=9,
             fontweight='bold', ha='center', va='bottom', zorder=6)
 
-    ax.set_xlim(-20, sw + 20)
-    ax.set_ylim(-20, sl + 20)
+    ax.set_xlim(min(0, px0) - 20, max(sw, px1) + 20)
+    ax.set_ylim(min(0, py0) - 20, max(sl, py1) + 20)
     ax.set_aspect('equal', adjustable='box')
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values(): sp.set_visible(False)
@@ -718,6 +728,26 @@ if True:  # Phase 06 — Sketch roads
     rows = [{"Block": b["name"], "X (m)": b["x"], "Y (m)": b["y"],
              "W (m)": b["width"], "H (m)": b["height"]} for b in blocks]
     st.dataframe(rows, use_container_width=True, hide_index=True)
+
+    # Position before / after recenter (§3.8). The plot moves by recenter_delta,
+    # so a block/road keeps its world coords but sits at (world − delta)
+    # relative to the recentered plot — useful to check it still fits [0,sw]×[0,sl].
+    dx, dy = sketch.get("recenter_delta", (0, 0))
+    st.markdown("#### Block + Road/Spur position (before / after recenter)")
+    st.caption(f"recenter_delta = ({dx:.1f}, {dy:.1f}). 'After' = position relative to the recentered plot (world − delta).")
+    pos_rows = []
+    for b in blocks:
+        pos_rows.append({"Element": b["name"],
+                         "X before": round(b["x"], 1), "Y before": round(b["y"], 1),
+                         "X after": round(b["x"] - dx, 1), "Y after": round(b["y"] - dy, 1)})
+    for label, key in (("Ring Road", "ring_road"), ("Gate Spur", "gate_spur"), ("Ring Spur", "ring_spur")):
+        poly = sketch.get(key)
+        if poly:
+            ax, ay = poly[0][0], poly[0][1]
+            pos_rows.append({"Element": f"{label} (start)",
+                             "X before": round(ax, 1), "Y before": round(ay, 1),
+                             "X after": round(ax - dx, 1), "Y after": round(ay - dy, 1)})
+    st.dataframe(pos_rows, use_container_width=True, hide_index=True)
 
     c1, c2 = st.columns(2)
     c1.metric("Blocks placed", len(blocks))

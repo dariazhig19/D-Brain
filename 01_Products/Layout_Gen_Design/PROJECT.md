@@ -463,14 +463,17 @@ fixes this **without moving any content** — instead it slides the **plot
 rectangle** (and the gate point, which belongs to the plot) so the plot's center
 lands on the content's bounding-box center.
 
-1. Compute the **content bounding box** over all block footprints + roads (ring
-   road, ring spur, perimeter fire-road contour, cleaned access segments, boom
-   barrier) + all rack segments. The **exit road (gate spur) is excluded** — it
-   is the only element pinned to the plot boundary (it must reach the gate), so
-   including it would bias the bbox toward the gate side and over-clip the
-   opposite side.
+1. Compute the **content bounding box** over **all** elements — block footprints
+   + roads (ring road, gate spur, ring spur, perimeter fire-road contour, cleaned
+   access segments, boom barrier) + all rack segments.
 2. `content_center = ((min_x+max_x)/2, (min_y+max_y)/2)`.
-3. `delta = content_center − plot_center`, where `plot_center = (sw/2, sl/2)`.
+3. `delta = content_center − plot_center`. The **plot center cuts the gate death
+   zone** off the gate's edge: the death zone is reserved entrance space, so the
+   content is centered in the *remaining usable* plot. Origin unchanged — just
+   shorten the plot by the death zone's depth on the gate side. With death-zone
+   depth `d` on edge: N → `pcy=(sl−d)/2`; S → `pcy=(sl+d)/2`; E → `pcx=(sw−d)/2`;
+   W → `pcx=(sw+d)/2` (e.g. death zone 10 m deep on top of a 100×50 plot →
+   center the 100×40 region). No death zone → `plot_center = (sw/2, sl/2)`.
 4. **Move the plot:** new plot rectangle `= (delta_x, delta_y, sw, sl)` — its
    center now equals `content_center`. Output as `plot_bounds`.
 5. **Move the gate point perpendicular to its edge only** — N/S gate shifts by

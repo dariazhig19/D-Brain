@@ -2473,11 +2473,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             for b in blocks:
                 yield (b["x"], b["y"])
                 yield (b["x"] + b["width"], b["y"] + b["height"])
-            # Point polylines: lists of (x, y). The exit road (gate_spur) is
-            # deliberately EXCLUDED — it is the only element pinned to the plot
-            # boundary (it must reach the gate), so including it biases the bbox
-            # toward the gate side and over-clips the opposite side.
-            for poly in (ring_road, ring_spur, boom_barrier):
+            # Point polylines: lists of (x, y). ALL elements are included,
+            # the exit road (gate_spur) too.
+            for poly in (ring_road, gate_spur, ring_spur, boom_barrier):
                 if poly:
                     for p in poly:
                         yield (p[0], p[1])
@@ -2493,7 +2491,18 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             min_x = min(p[0] for p in pts); max_x = max(p[0] for p in pts)
             min_y = min(p[1] for p in pts); max_y = max(p[1] for p in pts)
             content_cx, content_cy = (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
-            delta = (content_cx - sw / 2.0, content_cy - sl / 2.0)
+            # Plot center with the gate death zone "cut" off the gate's edge:
+            # the death zone is reserved entrance space, so the content is
+            # centered in the remaining usable plot. Origin is unchanged — we
+            # just shorten the plot by the death zone's depth on the gate side.
+            pcx, pcy = sw / 2.0, sl / 2.0
+            if gate_death_zone is not None:
+                _, _, dzw, dzh = gate_death_zone
+                if gate_side == "N":   pcy = (sl - dzh) / 2.0
+                elif gate_side == "S": pcy = (sl + dzh) / 2.0
+                elif gate_side == "E": pcx = (sw - dzw) / 2.0
+                elif gate_side == "W": pcx = (sw + dzw) / 2.0
+            delta = (content_cx - pcx, content_cy - pcy)
         else:
             delta = (0.0, 0.0)
         plot_bounds = (delta[0], delta[1], sw, sl)

@@ -357,6 +357,7 @@ if True:  # Phase 06 — Sketch roads
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
     show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=True)
+    show_before_recenter = st.sidebar.checkbox("§3.8 — Plot + gate before recenter", value=False)
     show_legend   = st.sidebar.checkbox("Legend", value=True)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
@@ -432,7 +433,7 @@ if True:  # Phase 06 — Sketch roads
     # Plot BEFORE recenter (original frame) — drawn faded/dashed for comparison.
     bx0, by0, bw, bh = sketch.get("plot_bounds_before", (0, 0, sw, sl))
     bx1, by1 = bx0 + bw, by0 + bh
-    if (bx0, by0) != (px0, py0):
+    if show_before_recenter and (bx0, by0) != (px0, py0):
         ax.plot([bx0,bx1,bx1,bx0,bx0], [by0,by0,by1,by1,by0],
                 color='#b0b0b0', lw=1.0, linestyle='--', alpha=0.7, zorder=0.5,
                 label='Plot (before recenter)')
@@ -595,7 +596,14 @@ if True:  # Phase 06 — Sketch roads
                 fontweight='bold', ha='center', va='center', zorder=3,
                 bbox=dict(facecolor='#333', alpha=0.75, edgecolor='none', pad=1))
 
-    # Gate marker
+    # Gate marker — recentered (solid) + before recenter (faded, if different)
+    gb = sketch.get("gate_point_before")
+    if show_before_recenter and gb and (abs(gb[0] - gate_pt[0]) > 0.1 or abs(gb[1] - gate_pt[1]) > 0.1):
+        ax.plot(gb[0], gb[1], '^', color='#27ae60', markersize=14, alpha=0.35,
+                zorder=5.5, markeredgecolor='white', markeredgewidth=1.0,
+                label='Gate (before recenter)')
+        ax.text(gb[0], gb[1] + 8, 'gate (before)', color='#27ae60', fontsize=7,
+                alpha=0.6, ha='center', va='bottom', zorder=5.5)
     gx, gy = gate_pt
     ax.plot(gx, gy, '^', color='#27ae60', markersize=14, zorder=6,
             markeredgecolor='white', markeredgewidth=1.0)

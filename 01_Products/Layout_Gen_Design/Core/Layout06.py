@@ -246,6 +246,25 @@ def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
     return cands
 
 
+def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
+                            step=8, boundary_tol=BOUNDARY_TOLERANCE):
+    """Generate (x, y) candidates by scanning a coarse grid over the whole plot
+    (not magnetized to any block). Honors relaxed bounds and the collision check.
+    Used as the last-resort placement when magnetizing to every block fails."""
+    cands = []
+    x = 0.0
+    while x <= sw - w + 0.1:
+        y = 0.0
+        while y <= sl - h + 0.1:
+            sx, sy = snap_xy(x, y)
+            if (_within_relaxed_bounds(sx, sy, w, h, sw, sl, tol=boundary_tol)
+                    and not _overlaps_any(name, placed, sx, sy, w, h)):
+                cands.append((sx, sy))
+            y += step
+        x += step
+    return cands
+
+
 def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None,  # → §3.5
                       boundary_tol=BOUNDARY_TOLERANCE):
     """Place a floated block by magnetizing to a previously placed block.
@@ -274,6 +293,17 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
                                            boundary_tol=boundary_tol):
                 if filter_fn is None or filter_fn(x, y, w, h):
                     valid.append((x, y, w, h))
+
+    # Last resort: place in EMPTY SPACE (not magnetized) so the block lands
+    # somewhere valid instead of failing the whole layout. Prefer the zone
+    # filter, but drop it if nothing in-zone fits.
+    if not valid:
+        empty = []
+        for w, h in orientations:
+            empty += [(x, y, w, h) for x, y in
+                      _empty_space_candidates(name, w, h, placed, sw, sl, boundary_tol=boundary_tol)]
+        in_zone = [c for c in empty if filter_fn is None or filter_fn(c[0], c[1], c[2], c[3])]
+        valid = in_zone if in_zone else empty
 
     if not valid:
         return None
@@ -528,7 +558,7 @@ RACK_BLOCK_OFFSETS = {
 SPINE_RAW_WEIGHT = 0.25
 
 # §3.6.C-3 — rack segments shorter than this (metres) are pruned as stubs.
-MIN_RACK_SEG_LEN = 4.5
+MIN_RACK_SEG_LEN = 6.0
 
 
 def compute_rack_buffers(blocks):  # → §3.6.A
@@ -2491,18 +2521,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             min_x = min(p[0] for p in pts); max_x = max(p[0] for p in pts)
             min_y = min(p[1] for p in pts); max_y = max(p[1] for p in pts)
             content_cx, content_cy = (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
-            # Plot center with the gate death zone "cut" off the gate's edge:
-            # the death zone is reserved entrance space, so the content is
-            # centered in the remaining usable plot. Origin is unchanged — we
-            # just shorten the plot by the death zone's depth on the gate side.
-            pcx, pcy = sw / 2.0, sl / 2.0
-            if gate_death_zone is not None:
-                _, _, dzw, dzh = gate_death_zone
-                if gate_side == "N":   pcy = (sl - dzh) / 2.0
-                elif gate_side == "S": pcy = (sl + dzh) / 2.0
-                elif gate_side == "E": pcx = (sw - dzw) / 2.0
-                elif gate_side == "W": pcx = (sw + dzw) / 2.0
-            delta = (content_cx - pcx, content_cy - pcy)
+            delta = (content_cx - sw / 2.0, content_cy - sl / 2.0)
         else:
             delta = (0.0, 0.0)
         plot_bounds = (delta[0], delta[1], sw, sl)
@@ -2573,6 +2592,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "spine_centerlines": spine_centerlines,
             "water_cluster_segments": water_cluster_segments,
             "gate_point":      gate_pt_recentered,
+            "gate_point_before": gate_pt,
             "plot_bounds":     plot_bounds,
             "plot_bounds_before": (0.0, 0.0, sw, sl),
             "recenter_delta":  delta,

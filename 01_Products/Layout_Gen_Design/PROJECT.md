@@ -243,6 +243,9 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 | 6 | Demi Water Tank| RAW Water center   | Near RAW Water    | RAW Water Tank  |
 
 > [!NOTE]
+> **Placement fallback chain.** Each floated block (`_try_magnet_place`) tries, in order: (1) magnetize to its **specified** magnet target within the zone filter; (2) magnetize to **any** placed block; (3) **empty-space** scan — a coarse grid over the whole plot, picking any collision-free, in-bounds spot (zone filter preferred, dropped if nothing in-zone fits). Only if all three fail does the block return `None` and the whole layout attempt is discarded and retried. `prefer_near` (top-10%-closest) still applies across whichever candidate set wins, so blocks cluster near their anchor.
+
+> [!NOTE]
 > **Flare corner placement.** Unlike other blocks (which use the magnet placement engine), the `Flare` bypasses magnetization entirely. It is placed directly in one of the leeward corners of the site (prioritizing bottom-left, top-left, bottom-right, or top-right depending on the wind direction `wind_dir`). It calculates grid-snapped and clamped coordinates matching the active pass tolerance (`_pass_tol` or `BOUNDARY_TOLERANCE` fallback) and runs collision checks against already placed blocks.
 
 **Leeward zone** by wind direction:
@@ -400,7 +403,7 @@ After the full rack network is routed, trim redundant geometry.
    - Find every **junction** on `best_ct_half` — each point where another rack segment meets it.
    - **≥ 2 distinct junctions:** trim `best_ct_half` to span only between the outermost junctions, removing the free end(s) beyond them.
    - **< 2 junctions** (both ends free, or only a single touch): the half is redundant → **prune it entirely** (the touching connector already reaches the CT rack-buffer line).
-2. **Stub segments.** Prune any rack segment shorter than **4.5 m** (`MIN_RACK_SEG_LEN`) — tiny leftover stubs from snapping/trimming.
+2. **Stub segments.** Prune any rack segment shorter than **6 m** (`MIN_RACK_SEG_LEN`) — tiny leftover stubs from snapping/trimming.
 
 **Rack output:** Single connected rack polyline network (centerlines, 6 m wide). Becomes an obstacle for subsequent road placement.
 
@@ -467,13 +470,8 @@ lands on the content's bounding-box center.
    + roads (ring road, gate spur, ring spur, perimeter fire-road contour, cleaned
    access segments, boom barrier) + all rack segments.
 2. `content_center = ((min_x+max_x)/2, (min_y+max_y)/2)`.
-3. `delta = content_center − plot_center`. The **plot center cuts the gate death
-   zone** off the gate's edge: the death zone is reserved entrance space, so the
-   content is centered in the *remaining usable* plot. Origin unchanged — just
-   shorten the plot by the death zone's depth on the gate side. With death-zone
-   depth `d` on edge: N → `pcy=(sl−d)/2`; S → `pcy=(sl+d)/2`; E → `pcx=(sw−d)/2`;
-   W → `pcx=(sw+d)/2` (e.g. death zone 10 m deep on top of a 100×50 plot →
-   center the 100×40 region). No death zone → `plot_center = (sw/2, sl/2)`.
+3. `delta = content_center − plot_center`, where `plot_center = (sw/2, sl/2)`
+   (full plot center).
 4. **Move the plot:** new plot rectangle `= (delta_x, delta_y, sw, sl)` — its
    center now equals `content_center`. Output as `plot_bounds`.
 5. **Move the gate point perpendicular to its edge only** — N/S gate shifts by
@@ -488,6 +486,10 @@ lands on the content's bounding-box center.
 8. **All other content keeps its original coordinates** (blocks, racks, ring
    road, ring spur, buffers, pb_center — unchanged). Only `plot_bounds`,
    `gate_point`, the gate spur's exit-line leg, and the death zone move.
+
+The pre-recenter plot and gate are also output (`plot_bounds_before`,
+`gate_point_before`) and can be drawn as a faded overlay in the dashboard via the
+"§3.8 — Plot + gate before recenter" toggle (default off).
 
 ## §4. Step 1 Output Dictionary
 
@@ -507,7 +509,9 @@ lands on the content's bounding-box center.
     "active_rack_cases":     dict,         # {block_name: "case1_rack"|"case2_rack"}
     "water_triangle":        list[tuple],  # 3 points: RAW, Demi, WWT on rack buffers
     "gate_point":            tuple,        # (x, y) gate midpoint, recentered (§3.8)
+    "gate_point_before":     tuple,        # (x, y) gate before recenter (§3.8; debug overlay)
     "plot_bounds":           tuple,        # (x0, y0, sw, sl) plot rect, recentered (§3.8)
+    "plot_bounds_before":    tuple,        # (0, 0, sw, sl) plot before recenter (§3.8; debug overlay)
     "recenter_delta":        tuple,        # (dx, dy) plot/gate shift (§3.8)
     "gate_death_zone":       tuple|None,   # (x, y, w, h) or None
     "pb_center":             tuple,        # (pb_cx, pb_cy)

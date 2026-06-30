@@ -456,8 +456,10 @@ if True:  # Phase 06 — Sketch roads
                     last = holder["err"].strip().splitlines()[-1]
                     gen_log.append(f"#{i+1:>2} ✗ ERROR (seed={seed}, {secs:.1f}s): {last}")
                 elif holder.get("s") is None:
+                    reason = ("⏱ engine time-budget exceeded" if dbg.get("timed_out")
+                              else f"failed_at={dbg.get('failed_at','?')}")
                     gen_log.append(f"#{i+1:>2} ✗ no-fit (seed={seed}, {secs:.1f}s, "
-                                   f"attempts={dbg.get('total_attempts','?')}, failed_at={dbg.get('failed_at','?')})")
+                                   f"attempts={dbg.get('total_attempts','?')}, {reason})")
                 else:
                     sketches.append(holder["s"])
                     gen_log.append(f"#{i+1:>2} ✓ ok (seed={seed}, {secs:.1f}s, {len(holder['s']['blocks'])} blocks)")

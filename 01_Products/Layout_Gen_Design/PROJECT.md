@@ -119,8 +119,6 @@ The working engine is [`Core/Step01.py`](Core/Step01.py), driven by the
 **Grid-first** — every block, road centerline and rack path snaps to a 2 m grid
 (`snap(v) = round(v/2)*2`), shrinking the search space versus continuous coords.
 
-**Block-first placement** — blocks are placed first (anchors, Power Block, then floated blocks), and the rack network and roads are built around them. Racks have priority over roads (roads route around rack corridors).
-
 **3-pass boundary tolerance** — if a tight site can't satisfy every rule, the
 engine retries with relaxing bounds:
 - **Pass 1 (strict):** ≥18 m interior safety margin (`boundary_tol = -18`).
@@ -134,17 +132,19 @@ engine retries with relaxing bounds:
 - **Stage 2 (Refine Mode – Detailing):** Places remaining small blocks based on the 3 selected layouts and subdivides large blocks into detailed individual buildings. User selects the top 3 detailed layouts.
 - **Stage 3 (Refine Mode – Variation):** Generates slightly mutated, similar variations of the selected layouts from Stage 2 without adding new elements. User finalizes the top 1~3 layouts.
 - **Stage 4 (Final Export):** Verifies all constraints and outputs the final 1~3 layouts as CAD drawings (DXF).
+
 ---
 
 # PART II — STAGE 1 TECHNICAL SPEC
 
-> Complete grid-first generative-layout reference. **Replaces** Phase 05
-> (continuous float coordinates + entrance-based A* routing).
-> **Status:** UI transitioning to the 4-step interactive wizard (Generate & Refine modes).
+**Stage 1 Scope:** In this stage, we place all the core large blocks and generate the skeleton of the infrastructure. The algorithm executes a block-first workflow where blocks are placed, followed by the pipe rack network, and finally the perimeter and access roads are routed around them.
 
-
-
-**Principle:** Blocks are placed *before* the pipe rack and road networks. The rack and road networks are then built around the placed blocks. Racks are more important than roads — placed before perimeter/spurs/stubs so roads route around rack corridors.
+Specifically, Stage 1 accomplishes the following:
+1. **Reads CAD Anchors:** Extracts the custom polygon plot, gate point, Gate House, GIS, RAW tank, and boom barrier directly from the drawing on disk.
+2. **Generates Core Layouts:** Places the Power Block (wind-aware centroid shift) and floats the remaining blocks (Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi Water) using a randomized magnet scan constraint-checked against the polygon.
+3. **Routes Pipe Racks:** Generates a unified 6 m pipe rack spine and water cluster network connecting the key blocks.
+4. **Traces Perimeter Road:** Traces the outer perimeter fire road loop by performing a morphological union of all block buffers clamped to the plot polygon.
+5. **Re-centers Plot:** Slides the plot polygon corners to center the finalized layout, returning a complete sketch dictionary.
 
 ## §1. Block Catalog
 

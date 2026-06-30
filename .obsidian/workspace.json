@@ -21,7 +21,7 @@
                     "file": "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
                     "viewState": {
                       "x": 52.944860265255784,
-                      "y": 922.2575239445493,
+                      "y": 2348.0961002027734,
                       "zoom": -0.13108121040722553
                     }
                   },
@@ -252,7 +252,7 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "783316305ef77321",
+  "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Core/__pycache__/Stage01.cpython-311.pyc",
     "01_Products/Layout_Gen_Design/Core/Stage01.py",

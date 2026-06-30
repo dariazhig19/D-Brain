@@ -119,8 +119,7 @@ The working engine is [`Core/Step01.py`](Core/Step01.py), driven by the
 **Grid-first** — every block, road centerline and rack path snaps to a 2 m grid
 (`snap(v) = round(v/2)*2`), shrinking the search space versus continuous coords.
 
-**Infrastructure-first** — roads and racks are the skeleton; buildings are placed
-around them. Racks have priority over roads (roads route around rack corridors).
+**Block-first placement** — blocks are placed first (anchors, Power Block, then floated blocks), and the rack network and roads are built around them. Racks have priority over roads (roads route around rack corridors).
 
 **3-pass boundary tolerance** — if a tight site can't satisfy every rule, the
 engine retries with relaxing bounds:
@@ -150,7 +149,7 @@ Four-step interactive generative system (Generate & Refine modes).
 - **Step 3 (Refine Mode – Variation):** Generates slightly mutated, similar variations of the selected layouts from Step 2 without adding new elements. User finalizes the top 1~3 layouts.
 - **Step 4 (Final Export):** Verifies all constraints and outputs the final 1~3 layouts as CAD drawings (DXF).
 
-**Principle:** Roads come *before* buildings. Blocks are placed around roads, not the other way around. Racks are more important than roads — placed before perimeter/spurs/stubs so roads route around rack corridors.
+**Principle:** Blocks are placed *before* the pipe rack and road networks. The rack and road networks are then built around the placed blocks. Racks are more important than roads — placed before perimeter/spurs/stubs so roads route around rack corridors.
 
 ## §1. Block Catalog
 
@@ -674,7 +673,7 @@ All roads are **sketch roads** — centerlines only (lines). No physical width r
 | Aspect              | Phase 05                              | Phase 06                                          |
 |---------------------|---------------------------------------|---------------------------------------------------|
 | Coordinate system   | Continuous float (metres)             | Snapped to 2m grid                                |
-| Road creation       | A* from gate to each building entrance| Road graph first; blocks placed around it         |
+| Road creation       | A* from gate to each building entrance| Blocks placed first; road network built around block buffers |
 | Building entrances  | Required for routing                  | Not used in Step 1; deferred to Step 2            |
 | Ring Road           | Hand-injected geometry segment        | Native graph edge, merges where overlapping       |
 | Road classification | Single type                           | Primary (fire) / Secondary (stubs) / Access (S2) |

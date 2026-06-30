@@ -27,6 +27,10 @@ generate_sketch = Core.Layout06.generate_sketch
 CELL_SIZE = Core.Layout06.CELL_SIZE
 ROAD_BUFFER = Core.Layout06.ROAD_BUFFER
 
+@st.cache_data
+def cached_load_plot_dxf(path, mtime):
+    return Core.CADImport.load_plot_dxf(path)
+
 def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=1.5, label="", cap_p1=True, cap_p2=True):
     x1, y1 = p1
     x2, y2 = p2
@@ -345,7 +349,8 @@ plot_import = None
 if load_dxf and dxf_path:
     if os.path.exists(dxf_path):
         try:
-            plot_import = Core.CADImport.load_plot_dxf(dxf_path)
+            mtime = os.path.getmtime(dxf_path)
+            plot_import = cached_load_plot_dxf(dxf_path, mtime)
             st.session_state["plot_import"] = plot_import
         except Exception as ex:  # noqa: BLE001
             st.sidebar.error(f"Could not read DXF: {ex}")

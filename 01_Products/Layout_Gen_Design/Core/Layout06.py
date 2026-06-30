@@ -582,12 +582,6 @@ def compute_buffer_union_contour(computed_buffers, sw, sl):
     return merged, {"N":[], "S":[], "E":[], "W":[]}
 
 
-def build_perimeter_road(sw, sl, cl_dist=PERIMETER_CL_DIST):
-    """Closed polyline of perimeter fire road centerline."""
-    d = cl_dist
-    return [(d,d),(sw-d,d),(sw-d,sl-d),(d,sl-d),(d,d)]
-
-
 # ── Rack — Step A: buffer rectangles per "need rack" block ───────────────
 def rack_buffer_rect(block, offset):  # → §3.6.A
     """Axis-aligned rectangle around a block's footprint, inflated by `offset`.

@@ -8,6 +8,7 @@ Steps covered:
 
 import random
 import math
+import time
 import networkx as nx
 from Core.Grid import Grid
 from Core.Pathfind import astar
@@ -2126,6 +2127,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
     water_edge="E", water_ratio=0.2, water_offset=0,
     max_pool=300,
     plot=None, dxf_anchors=None, dxf_gate=None, dxf_boom=None, blocks_only=False,
+    time_budget=25.0,
 ):
     """Polygon migration parameters (all optional; None/False = legacy rectangle):
       plot         : Core.Plot.Plot — the convex plot polygon. When given, site_w
@@ -2193,7 +2195,16 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         ( BOUNDARY_TOLERANCE, f"pass 3 — relaxed ({BOUNDARY_TOLERANCE}m spillage)"),
     ]
 
+    # Wall-clock safety cap: no seed may run forever. If the budget is exceeded
+    # we stop trying and return None (a "no-fit" result) instead of spinning —
+    # this is what prevents a hung/looping seed from pinning a CPU core.
+    _t_start = time.time()
+
     for _attempt in range(max_pool * len(_PASS_TOLS)):
+        if time_budget and (time.time() - _t_start) > time_budget:
+            _last_debug["timed_out"] = True
+            _last_debug["failed_section"] = f"time budget {time_budget:.0f}s exceeded"
+            break
         _pass_tol, _pass_label = _PASS_TOLS[_attempt // max_pool]
         _last_debug["total_attempts"] += 1
         _last_debug["boundary_pass_label"] = _pass_label
@@ -3090,6 +3101,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
 
                     changed = True
                     while changed:
+                        if time_budget and (time.time() - _t_start) > time_budget:
+                            break
                         changed = False
                         for i, seg1 in enumerate(segments):
                             for j, seg2 in enumerate(segments):
@@ -3362,6 +3375,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             # We do this iteratively until no more stubs can be pruned.
             import networkx as nx
             while True:
+                if time_budget and (time.time() - _t_start) > time_budget:
+                    break
                 G = nx.Graph()
                 for seg in rack_segments:
                     p1 = (round(seg[0][0], 3), round(seg[0][1], 3))

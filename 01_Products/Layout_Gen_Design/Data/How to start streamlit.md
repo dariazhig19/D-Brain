@@ -55,7 +55,7 @@ Only works if a `.venv` was created **inside** the `Layout_Gen_Design` folder
 .venv\Scripts\streamlit run Dashboard/WebDashboard01.py
 ```
 
-Streamlit will automatically open a tab in your web browser (usually at `http://localhost:8501`) displaying the interactive layout generator.
+Streamlit will automatically open a tab in your web browser (usually at `http://localhost:8503`) displaying the interactive layout generator.
 
 
-http://localhost:8501/
+http://localhost:8503/

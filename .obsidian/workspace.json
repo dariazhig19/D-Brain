@@ -16,10 +16,17 @@
                 "id": "b1cf4bd6b5fd7f7e",
                 "type": "leaf",
                 "state": {
-                  "type": "empty",
-                  "state": {},
-                  "icon": "lucide-file",
-                  "title": "New tab"
+                  "type": "canvas",
+                  "state": {
+                    "file": "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
+                    "viewState": {
+                      "x": 1497.1836283840519,
+                      "y": 707.3897163697862,
+                      "zoom": -2.797747877073892
+                    }
+                  },
+                  "icon": "lucide-layout-dashboard",
+                  "title": "overview"
                 }
               }
             ]
@@ -245,7 +252,7 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "783316305ef77321",
+  "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
     "Untitled 1.base",
     "Untitled.base",

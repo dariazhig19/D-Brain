@@ -108,7 +108,7 @@ Your file `Data/sample_plot.dxf` was tested and read correctly:
 | **06** | Grid-first generative layout | 🔄 |
 | **P** | **Polygon plot migration** | 🔄 Phase 0 done — see the PLAN |
 
-- Engine: [`Core/Layout06.py`](Core/Layout06.py)
+- Engine: [`Core/Step01.py`](Core/Step01.py)
 - Dashboard: [`Dashboard/Road_Test.py`](Dashboard/Road_Test.py)
 
 ## 3. Methodology
@@ -382,7 +382,7 @@ now includes the plot as a **polygon**:
 Core/
   Plot.py        [NEW] the plot-shape helper
   CADImport.py  [NEW] reads the CAD file by layer
-  Layout06.py    the layout engine
+  Step01.py    the layout engine
   Grid.py        the 2 m grid
   Pathfind.py    road/rack routing (A*)
   Groups.py      block sizes, shapes, colors

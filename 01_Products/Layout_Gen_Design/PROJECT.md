@@ -111,7 +111,7 @@ verification.
 | **06** | **Grid-first generative layout (current)** | 🔄 In progress |
 | **P** | **Polygon plot migration** | 🔄 Phase 0 done — see the PLAN |
 
-The working engine is [`Core/Layout06.py`](Core/Layout06.py), driven by the
+The working engine is [`Core/Step01.py`](Core/Step01.py), driven by the
 [`Dashboard/Road_Test.py`](Dashboard/Road_Test.py) Streamlit app.
 
 ## 3. Methodology
@@ -201,7 +201,7 @@ All block positions snap to the 2m grid (`snap(v) = round(v / 2) * 2`).
 - **[Polygon change]** The grid covers the **box around the polygon**. Grid squares that fall **outside the polygon** are blocked, so roads and racks **cannot cross a diagonal cut-off corner**.
 
 > **Note on `PB_RING_OFFSET`:** the original plan text specified 14 m; the working
-> engine (`Core/Layout06.py`) uses **16 m**. The engine value is authoritative.
+> engine (`Core/Step01.py`) uses **16 m**. The engine value is authoritative.
 
 ## §3. Step 1 — Block + Road + Rack Sketch
 
@@ -702,7 +702,7 @@ RACK_CASE2_OFFSET  = 22   # rack CL: Case 2 (block → road → rack)
 ```
 
 > The values above are quoted from the original Phase 06 plan. The live engine
-> (`Core/Layout06.py`) is the runtime authority — where it differs (e.g.
+> (`Core/Step01.py`) is the runtime authority — where it differs (e.g.
 > `PB_RING_OFFSET = 16`, `ROAD_W_RACK_OFFSET = 16`, `B2B_W_RACK_OFFSET = 30`,
 > `RACK_CASE1_OFFSET = 8`, `RACK_CASE2_OFFSET = 24`), the engine value wins.
 
@@ -766,7 +766,7 @@ Reference material (not procedural steps).
 # PART III — RULE ENGINE REFERENCE
 
 > The scoring engine currently lives in [`_Archive/Legacy_Pipeline_P05/`](_Archive/Legacy_Pipeline_P05/)
-> (`rules.py`) and is **to be re-integrated** with the Layout06 output in a later
+> (`rules.py`) and is **to be re-integrated** with the Step01 output in a later
 > step. Kept here as the rule SSoT. Layouts are scored by a **Total Penalty Score**
 > (lower = better; 0 = perfect).
 >
@@ -883,7 +883,7 @@ favorites → Step 2 (detail/subdivide + score) → Step 3 (rank) → export DXF
 Core/
   Plot.py        # [Polygon change] new plot-shape helper
   CADImport.py  # [Polygon change] new CAD DXF importer
-  Layout06.py    # the Phase 06 engine — generate_sketch() → plain dict
+  Step01.py      # the Phase 06 engine — generate_sketch() → plain dict
   Grid.py        # 2 m occupancy grid (obstacle marking, passability)
   Pathfind.py    # A* routing (turn penalty, width-aware)
   Groups.py      # block footprints, SHAPES, colors, dimensions
@@ -894,11 +894,11 @@ tests/
   Test_Plot.py   # [Polygon change] new automatic checks
 ```
 
-Dependency: `Road_Test.py → Layout06.py → Grid.py, Pathfind.py` (+ `Groups.py`, `Plot.py`, `CADImport.py`).
+Dependency: `Road_Test.py → Step01.py → Grid.py, Pathfind.py` (+ `Groups.py`, `Plot.py`, `CADImport.py`).
 
 ### Recommended future module split (professionalisation path)
 
-`Layout06.py` is ~2.5k lines. For Streamlit scaling and a future C#/PyRevit port,
+`Step01.py` is ~2.5k lines. For Streamlit scaling and a future C#/PyRevit port,
 split it along these seams (engine stays UI-free; only `engine.generate_sketch()`
 is public and returns a plain data dict that any front-end consumes):
 

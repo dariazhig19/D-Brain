@@ -403,13 +403,19 @@ if True:  # Phase 06 — Sketch roads
     # real plot polygon (current migration version, blocks only). Without a DXF
     # it falls back to the legacy full rectangle sketch.
     _has_poly = bool(plot_import and plot_import.get("plot_polygon"))
+    N_LAYOUTS = st.sidebar.number_input("Layouts to generate", 1, 30, 10)
     if st.button("Generate Layouts", type="primary", use_container_width=True):
-        if fix_seed:
-            random.seed(int(seed_val))
-        with st.spinner("Generating layout..."):
-            if _has_poly:
-                p = Plot(plot_import["plot_polygon"])
-                sketch = generate_sketch(
+        sketches = []
+        if _has_poly:
+            p = Plot(plot_import["plot_polygon"])
+            params = p.size
+            prog = st.progress(0.0, text=f"Generating {N_LAYOUTS} layouts…")
+            for i in range(int(N_LAYOUTS)):
+                # Vary the seed per layout so each is distinct yet reproducible
+                # when "Fix seed" is on; otherwise rely on the engine's own jitter.
+                if fix_seed:
+                    random.seed(int(seed_val) + i)
+                s = generate_sketch(
                     p.size[0], p.size[1], wind_dir,
                     plot=p,
                     dxf_anchors=plot_import.get("anchors") or {},
@@ -417,9 +423,15 @@ if True:  # Phase 06 — Sketch roads
                     dxf_boom=plot_import.get("boom_barrier"),
                     blocks_only=True,
                 )
-                params = p.size
-            else:
-                sketch = generate_sketch(  # → §3.1 (legacy rectangle fallback)
+                if s is not None:
+                    sketches.append(s)
+                prog.progress((i + 1) / int(N_LAYOUTS), text=f"Generating layouts… {i+1}/{int(N_LAYOUTS)}")
+            prog.empty()
+        else:
+            if fix_seed:
+                random.seed(int(seed_val))
+            with st.spinner("Generating layout…"):
+                s = generate_sketch(  # → §3.1 (legacy rectangle fallback)
                     site_width, site_length, wind_dir,
                     gate_side=gate_side, gate_ratio=gate_ratio,
                     gh_edge=gh_edge,    gh_ratio=gh_ratio,    gh_offset=gh_offset,
@@ -427,12 +439,16 @@ if True:  # Phase 06 — Sketch roads
                     gis_edge=gis_edge,  gis_ratio=gis_ratio,  gis_offset=gis_offset,
                     water_edge=water_edge, water_ratio=water_ratio, water_offset=water_offset,
                 )
-                params = (site_width, site_length)
-        if sketch is None:
+            params = (site_width, site_length)
+            if s is not None:
+                sketches = [s]
+        if not sketches:
             st.error("Could not place all blocks — try changing the plot or wind.")
+            st.session_state["sketches06"] = None
             st.session_state["sketch06"] = None
         else:
-            st.session_state["sketch06"] = sketch
+            st.session_state["sketches06"] = sketches
+            st.session_state["sketch06"] = sketches[0]
             st.session_state["params06"] = params
 
     sketch = st.session_state.get("sketch06")

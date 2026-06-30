@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\상상진화\Documents\GitHub\D-Brain\.venv"
+VIRTUAL_ENV="E:\SKEE_LAYOUT\GitHub\D-Brain\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

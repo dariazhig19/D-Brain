@@ -8,6 +8,77 @@
 
 ---
 
+# PART 0 — THE NEW PLOT SHAPE (read this first)
+
+## 0.1 What changed, in simple words
+
+- The plot used to be a **rectangle**, described by just **width and length**.
+- Now the plot is a **polygon** — a shape made of **straight sides** (up to 6),
+  and the sides can be **diagonal**.
+- A **rectangle is still allowed** — it is simply a polygon with 4 corners.
+- **You draw the plot in CAD** and the program reads the shape from the file.
+- The **only setting on the screen** is now the **wind direction**. Everything
+  else (gate, gate house, GIS, RAW tank, boom) comes from the drawing.
+
+## 0.2 The plot helper — `Core/Plot.py`
+
+All the shape math lives in one new file, [`Core/Plot.py`](Core/Plot.py). It can
+answer these questions about the plot:
+
+- **Is a point inside the plot?**
+- **Is a whole block inside the plot?** (and how far it may stick out)
+- **Where is the plot center?**
+- **How far is a point from the nearest side?**
+- **Shrink the plot inward by N metres** — used to make the perimeter fire road.
+- **Move the whole plot** — used when the layout is re-centered.
+
+> [!IMPORTANT]
+> **Why this is safe.** For a **rectangle**, the new helper gives the **exact same
+> answer** as the old rectangle code. We proved it with an automatic test over
+> **23,820 cases** — every one matches. So using the polygon **cannot change** how
+> rectangles behave. New diagonal plots get the new behavior; old rectangles stay
+> identical.
+
+## 0.3 Reading the CAD file — `Core/CADImport.py`
+
+The program reads the drawing with [`Core/CADImport.py`](Core/CADImport.py).
+Each item must be on its **own layer**, named exactly:
+
+| Layer in the drawing       | What you draw     | What it becomes                     |
+|----------------------------|-------------------|--------------------------------------|
+| `Plot`                     | one closed outline (up to 6 corners) | the plot shape    |
+| `Gate`                     | a **circle**      | the gate point (the circle's center) |
+| `Gate House`               | a rectangle       | the gate house building              |
+| `RAW Tank`                 | a **circle**      | the RAW water tank                   |
+| `GIS`                      | a rectangle       | the GIS building                     |
+| `Gate House Boom Barrier`  | a **line**        | the boom barrier                     |
+
+The reader also **fixes common problems by itself**:
+
+- **Units.** If the drawing is in **millimetres**, it converts everything to
+  **metres** automatically (it checks the GIS size, which should be 110 × 51 m).
+- **Position.** It **moves the drawing so it starts at (0,0)**.
+- **Circles.** Tanks drawn as circles are read correctly.
+- **Warnings.** If a layer is missing, or something was left on the wrong layer
+  (for example on layer `0`), it shows a **warning** but does not crash.
+
+## 0.4 Checked against your real drawing
+
+Your file `Data/sample_plot.dxf` was tested and read correctly:
+
+- A **5-sided plot** (a rectangle with one diagonal corner), **512 × 280 m**.
+- Units read as **millimetres** and converted to metres.
+- The **gate is exactly on the boundary**.
+- Gate House (12×12), GIS (110×51), RAW Tank (37×37) are the **right size** and
+  **inside the plot**.
+
+> [!NOTE]
+> **One surprise:** your **gate is on a diagonal side**, but the boom barrier is
+> drawn straight. So later (Phase 5) the gate road must handle a boom on a
+> diagonal side. This is written down so we don't forget.
+
+---
+
 # PART I — PRODUCT
 
 ## 1. Vision & Goal
@@ -17,9 +88,10 @@ Automate the generation of power-plant **Plot Plans**: optimise the placement of
 layout on narrow sites, with controlled flexibility to exceed boundaries when
 necessary. Every result is meant to be verified against existing reference
 drawings for real-world viability.
+- **[Polygon change]** Sites can now be **real-shaped plots with diagonal sides**, not only rectangles.
 
 **Tech stack:** Obsidian (organisation) · VS Code (engine) · **Python** ·
-**Matplotlib** (visualisation) · **Streamlit** (web dashboard). The engine is
+**Matplotlib** (visualisation) · **Streamlit** (web dashboard) · **ezdxf** (reading CAD files). The engine is
 deliberately UI-free so it can later be wrapped by Streamlit (now) or ported to a
 **C# / PyRevit add-in** (future) — see [Part IV](#part-iv--code--roadmap).
 
@@ -37,9 +109,10 @@ verification.
 | 04 | 12 groups, generic rule engine, rule network | ✅ Done |
 | 05 | Advanced routing & sequential placement | ✅ Done |
 | **06** | **Grid-first generative layout (current)** | 🔄 In progress |
+| **P** | **Polygon plot migration** | 🔄 Phase 0 done — see the PLAN |
 
 The working engine is [`Core/Layout06.py`](Core/Layout06.py), driven by the
-[`Dashboard/Roads_Test.py`](Dashboard/Roads_Test.py) Streamlit app.
+[`Dashboard/Streamlit.py`](Dashboard/Streamlit.py) Streamlit app.
 
 ## 3. Methodology
 
@@ -54,6 +127,7 @@ engine retries with relaxing bounds:
 - **Pass 1 (strict):** ≥18 m interior safety margin (`boundary_tol = -18`).
 - **Pass 2 (standard):** fully inside the plot (`boundary_tol = 0`).
 - **Pass 3 (tight):** allow select blocks up to 10 m past the boundary (`boundary_tol = +10`).
+- **[Polygon change]** This "inside / outside" check is now done against the **polygon** (including diagonal sides), not the rectangle.
 
 **Multi-stage refinement** — Step 1 mass-generates large-block layouts (user picks
 3 favorites); Step 2 details/subdivides; Step 3 ranks & exports. Every step pairs a
@@ -124,6 +198,7 @@ Non-square blocks may be rotated 90°.
 | `PERIMETER_CL_DIST`  | 9 m      | Perimeter road CL from boundary (5 + 8/2)   |
 
 All block positions snap to the 2m grid (`snap(v) = round(v / 2) * 2`).
+- **[Polygon change]** The grid covers the **box around the polygon**. Grid squares that fall **outside the polygon** are blocked, so roads and racks **cannot cross a diagonal cut-off corner**.
 
 > **Note on `PB_RING_OFFSET`:** the original plan text specified 14 m; the working
 > engine (`Core/Layout06.py`) uses **16 m**. The engine value is authoritative.
@@ -133,29 +208,52 @@ All block positions snap to the 2m grid (`snap(v) = round(v / 2) * 2`).
 ### §3.1 Master Placement Sequence
 
 ```
-1.  Fixed anchors        →  Gate House, GIS, RAW Water Tank
-2.  Power Block          →  Site center ± jitter
+1.  Fixed anchors        →  Gate House, GIS, RAW Water Tank   [from the drawing]
+2.  Power Block          →  Plot center ± wind jitter
 3.  PB Ring Road         →  Geometry drawn; corridor locked for floated-block placement
-4.  Gate Spur + Ring Spur→  Both spurs built from fixed anchors before floated blocks
-5.  Boom Barrier         →  16m line from Gate House inner edge
+4.  Gate Spur + Ring Spur→  Both spurs built from fixed anchors before floated blocks [from the drawing]
+5.  Boom Barrier         →  Read from the drawing              [from the drawing]
 6.  Floated blocks       →  Cooling Tower, WT/WWT, Warehouse, Flare, Admin, Demi Water
 7.  Pipe Rack            →  6m rack network (§3.6) — before perimeter/spurs/stubs
 8.  Block road buffers   →  Snapped buffer rectangles computed (§3.7.A)
-9.  Perimeter Fire Road  →  Segment generation from buffers (§3.7.B)
+9.  Perimeter Fire Road  →  Segment generation from buffers (§3.7.B) [follows the polygon]
 10. Group A access roads →  8m connection lines per block (§10.1.B)
 11. Segment cleanup      →  Parallel merge pass (§3.7.C)
-12. Recenter             →  Move plot + gate to content bbox center (§3.8)
+12. Recenter             →  Move plot + gate to content bbox center (§3.8) [moves the polygon]
 ```
 
-### §3.2 Fixed Anchor Placement
+### §3.2 Fixed Anchor Placement — **[Polygon change]**
 
-Fixed anchors use `place_anchor(sw, sl, name, edge, ratio, offset)` — result is grid-snapped and clamped to plot bounds.
+- Gate House, GIS, and RAW Water Tank are **read from the drawing** as real positions. There are **no more screen sliders** for them.
+- They are grid-snapped and checked to be strictly **inside the plot** (using the new polygon check).
+- In the legacy rectangle fallback mode, fixed anchors use `place_anchor(sw, sl, name, edge, ratio, offset)` — result is grid-snapped and clamped to plot bounds.
 
 | # | Block          | Position Rule                         | Buffer |
 |---|----------------|---------------------------------------|--------|
 | A | Gate House     | User-defined edge + ratio + offset    | 16 m   |
 | B | GIS            | User-defined edge + ratio + offset    | 8 m    |
 | C | RAW Water Tank | User-defined edge + ratio + offset    | 8 m    |
+
+#### §3.2.1 How much each block MOVES per generation (jitter rules)
+
+Every time you press **Generate Layouts**, some blocks shift a little so you get different options. This table is the **single source of truth** for that movement:
+
+| Block | Moves each generation? | Rule |
+|-------|------------------------|------|
+| **Power Block** | ✅ Yes | wind-aware shift from the **plot center** — windward **35%**, leeward **5%**, sideways **20%** of the plot size (see §3.3) |
+| **Gate House** | ❌ **No (fixed)** | stays exactly at its CAD position |
+| **Boom Barrier** | ❌ **No (fixed)** | attached to the Gate House, so it stays put too |
+| **GIS** | ❌ No (fixed) | stays exactly at its CAD position |
+| **RAW Water Tank** | ✅ Yes | **±5%** of the plot size around its CAD position |
+| **Cooling Tower** | ✅ Yes | no fixed jitter — sticks to the Power Block in the leeward zone, so it moves as the Power Block moves |
+| **WT/WWT** | ✅ Yes | sticks to the Power Block, near RAW Water |
+| **Warehouse** | ✅ Yes | sticks to the Power Block |
+| **Admin Building** | ✅ Yes | placed between Gate House and Power Block |
+| **Demi Water Tank** | ✅ Yes | sticks to the RAW Water Tank |
+| **Flare** | ✅ Yes | placed at the leeward **corner of the plot** |
+
+> [!NOTE]
+> **Why Gate House and boom are fixed.** The boom barrier is drawn touching the gate house. If the gate house jittered, the boom would float away from it. So the gate house (and its boom) are kept fixed; only RAW Water Tank still jitters among the CAD anchors.
 
 ### §3.3 Power Block
 
@@ -169,6 +267,7 @@ Fixed anchors use `place_anchor(sw, sl, name, edge, ratio, offset)` — result i
   | Perpendicular (both)      | length    | 20 % of plot length |
 
   *Goal: push PB toward the windward side, leaving the leeward zone free for Cooling Tower and Flare.*
+- **[Polygon change]** "Plot center" now means the **polygon center** (centroid/average), and the "inside the plot" collision checks use the polygon bounds.
 
 - **Tight-site rule:** If vertical clearance on each side < 60 m, PB shifts to ±20% of site length (tight discrete choice) instead of a continuous jitter.
 - 150 m × 150 m square — rotation irrelevant.
@@ -190,6 +289,7 @@ Uses Gate House as the routing anchor:
 2. Project the two road-buffer corners of the selected Gate House side onto the exit line (Gate → `bb_mid`).
 3. Identify `exit_helper` (unprojectable corner) and `other_corner` (projectable corner).
 4. Route: **spur_start → `exit_helper` → `bb_mid` → `other_corner` → Gate** (perfect 90° crossing at Boom Barrier).
+- **[Polygon change]** the boom side (N/S/E/W) and midpoint are taken from the **CAD boom line**, so the road crosses the boom exactly where it is drawn.
 
 #### §3.4.C Gate Death Zone
 
@@ -208,6 +308,7 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 - **L-route** (2 axis-aligned segments):
   - Strictly use Option A (project `spur_start` onto exit_line): `turn_pt = (sx, ehy)` [N/S] / `(ehx, sy)` [E/W]. This extends the vertical edge of the ring road for N/S booms, and the horizontal edge for E/W booms.
 - Ring spur path: **`spur_start → turn_pt → exit_helper`**
+- **[Polygon change] Ring-spur connection rule.** When `exit_helper` falls **within** the ring road's x/y span → a clean straight projection drops onto the nearest ring edge (original behaviour). When `exit_helper` is **outside** the span → the ring spur routes an **L from the closest ring corner** with a **perpendicular final approach**, which guarantees it connects to the ring road (instead of landing just off it).
 
 ### §3.5 Floated Block Placement
 
@@ -216,7 +317,7 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 - Uses `_try_magnet_place` — magnetizes to previously placed blocks at pair-appropriate gap distances.
 - Tries both orientations (w×h and h×w).
 - `prefer_near` → top-10% closest valid positions, then random choice.
-- **Boundary Check:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary (hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
+- **Boundary Check — [Polygon change]:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary. In polygon mode, this check is done against the **polygon boundary** (including diagonal sides, hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
   - Default (tol = BOUNDARY_TOLERANCE = 10): clearance = **0 m** (buffer edge touches boundary but does not exit).
   - Strict (tol = 0): clearance = **9 m** (buffer stays fully inside, matching perimeter road CL distance).
 - **Fixed anchors are excluded from default magnet targets** (Gate House, GIS, RAW Water Tank). Exception: Demi Water Tank explicitly targets RAW Water Tank.
@@ -246,9 +347,9 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 > **Placement fallback chain.** Each floated block (`_try_magnet_place`) tries, in order: (1) magnetize to its **specified** magnet target within the zone filter; (2) magnetize to **any** placed block; (3) **empty-space** scan — a coarse grid over the whole plot, picking any collision-free, in-bounds spot (zone filter preferred, dropped if nothing in-zone fits). Only if all three fail does the block return `None` and the whole layout attempt is discarded and retried. `prefer_near` (top-10%-closest) still applies across whichever candidate set wins, so blocks cluster near their anchor.
 
 > [!NOTE]
-> **Flare corner placement.** Unlike other blocks (which use the magnet placement engine), the `Flare` bypasses magnetization entirely. It is placed directly in one of the leeward corners of the site (prioritizing bottom-left, top-left, bottom-right, or top-right depending on the wind direction `wind_dir`). It calculates grid-snapped and clamped coordinates matching the active pass tolerance (`_pass_tol` or `BOUNDARY_TOLERANCE` fallback) and runs collision checks against already placed blocks.
+> **Flare corner placement — [Polygon change].** Unlike other blocks (which use the magnet placement engine), the `Flare` bypasses magnetization entirely. It is placed directly in one of the leeward **corners of the polygon** (prioritizing bottom-left, top-left, bottom-right, or top-right depending on the wind direction `wind_dir`). It calculates grid-snapped and clamped coordinates matching the active pass tolerance (`_pass_tol` or `BOUNDARY_TOLERANCE` fallback) and runs collision checks against already placed blocks.
 
-**Leeward zone** by wind direction:
+**Leeward zone — [Polygon change]** by wind direction. The leeward half is now the half of the plot on the downwind side of the **plot center** (polygon center):
 
 | Wind | Leeward half              |
 |------|---------------------------|
@@ -264,6 +365,9 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 ### §3.6 Pipe Rack Algorithm
 
 Single rack type, **width = 6 m**, connects 6 "need rack" blocks: PB, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank, Flare. The first five form the spine/water-cluster network (§3.6.B); Flare joins via a single Case-1 stub (§3.6.C-2). (Cable Tunnel GIS↔PB is separate logic.)
+
+> [!NOTE]
+> **[Polygon change] Racks stay inside the plot.** Every rack routing grid now blocks all cells **outside the polygon** (`_mask_grid_to_plot`), so a rack can **never cross a diagonal/cut corner**. (The grids are re-masked after each reset inside `mark_b1_grids`, since the reset wiped the mask.)
 
 > [!NOTE]
 > **Rack ↔ road-buffer clearance rule.** A rack path may **cross** a block's road buffer perpendicularly, but may **not run parallel along it** within **9 m** (`RACK_ROAD_CLEARANCE`). The block's own rack-buffer corridors (`case1` / `case2`) are **exempt** — those are the intended rack lanes. Enforced as a direction-aware move filter in both routers (the connector A\* and the water-cluster `astar` via its `forbid_move` hook). This keeps connectors out of road corridors while still letting them reach a block's rack buffer.
@@ -321,13 +425,13 @@ For the Power Block, the sides that do not intersect any created rack path (both
 1. For PB and Cooling Tower, evaluate the distance of the selected side of Case 2's rack-buffer rectangle to the parallel plot boundary. If it is less than 10 m or if Case 2's selected side goes outside the plot boundary, choose Case 1 (even if Case 1 also goes outside). Otherwise, select randomly between Case 1 and Case 2.
    - *Note:* the "selected side" here is only a clearance **probe** (the RAW-facing side, via `get_spine_side`) used to measure boundary distance for the case decision. The side actually used for the spine is chosen separately in step 2, after the case is fixed.
    - **Overlap Exception:** If the selected rack-buffer sides of PB and CT overlap, apply the following connection rules depending on the cases chosen:
-      - **PB Case 1, CT Case 2:** Draw **one straight perpendicular line** along the MAIN RACK axis (through the PB center `(pb_cx, pb_cy)`, perpendicular to the overlapping sides) spanning from the **PB center** to **CT's Case 1 rack-buffer line**. Split it at the overlapped PB/CT side into **two separate segments**: the **PB center → overlap** part is the **MAIN RACK**, and the **overlap → CT Case 1 buffer** part is the CT connector. Keep them separate (the MAIN RACK takes a different width later). This rule *replaces* the standard "MAIN RACK" — do **not** additionally draw the step-5 MAIN RACK.
-      - **PB Case 2, CT Case 1:** Mirror of the above. Here PB is Case 2 (active side far from PB) and CT is Case 1 (active side close to CT), so the gap to bridge is on the PB side. Draw **one straight perpendicular line** on the MAIN RACK axis from the **PB center** to **CT's Case 1 rack buffer** (the overlapped CT side) — its far ("start") point lands on the CT rack buffer, and the line serves as the MAIN RACK. Because the bridging gap is on the PB side (which this line traverses), no separate CT connector is drawn. This *replaces* the step-5 MAIN RACK.
-      - **Same case (PB & CT both Case 1, or both Case 2):** The standard A\* connection (step 7) is skipped for overlapping sides, so bridge the two parallel half-segments (`best_pb_half`, `best_ct_half`) with a single perpendicular connector. The standard "MAIN RACK" from the PB center is still drawn.
+       - **PB Case 1, CT Case 2:** Draw **one straight perpendicular line** along the MAIN RACK axis (through the PB center `(pb_cx, pb_cy)`, perpendicular to the overlapping sides) spanning from the **PB center** to **CT's Case 1 rack-buffer line**. Split it at the overlapped PB/CT side into **two separate segments**: the **PB center → overlap** part is the **MAIN RACK**, and the **overlap → CT Case 1 buffer** part is the CT connector. Keep them separate (the MAIN RACK takes a different width later). This rule *replaces* the standard "MAIN RACK" — do **not** additionally draw the step-5 MAIN RACK.
+       - **PB Case 2, CT Case 1:** Mirror of the above. Here PB is Case 2 (active side far from PB) and CT is Case 1 (active side close to CT), so the gap to bridge is on the PB side. Draw **one straight perpendicular line** on the MAIN RACK axis from the **PB center** to **CT's Case 1 rack buffer** (the overlapped CT side) — its far ("start") point lands on the CT rack buffer, and the line serves as the MAIN RACK. Because the bridging gap is on the PB side (which this line traverses), no separate CT connector is drawn. This *replaces* the step-5 MAIN RACK.
+       - **Same case (PB & CT both Case 1, or both Case 2):** If the best halves for CT and PB are parallel and share the same x-range or y-range projection (overlapping), the standard A* connection (step 7) is skipped. Instead, extend the Power Block's MAIN RACK line directly to meet the Cooling Tower (CT) rack buffer line, connecting them in a single straight perpendicular line aligned with the Power Block's center.
 2. **Jointly** select the PB and CT spine sides (once each block's active case from step 1 is fixed). Instead of choosing each side independently by "which side points toward RAW":
-   - **Mutual-facing filter (primary).** Keep only `(PB side, CT side)` combinations where **both** sides face each other — i.e. CT's center lies on the outward side of the chosen PB side, and vice versa. A side facing *away* from the other block always forces a U-shaped wrap, so those pairs are excluded. (If no pair qualifies, fall back to all combinations.) Sides lying fully outside the plot are pruned first.
-   - **Tie-break.** Among the surviving facing pairs, minimise `gap(PB side, CT side) + W_RAW · dist(PB side midpoint, RAW center)`, where **gap** is the L1 (Manhattan) distance between the two sides (perpendicular separation + any lateral offset where their projections don't overlap), picking the closest facing pair. `W_RAW` (`SPINE_RAW_WEIGHT`, default 0.25) is small — RAW only nudges the PB side (whose midpoint ranks the RAW/Demi candidates in B-2/B-3) when gaps tie.
-   - The dependence on the PB↔CT relative position emerges naturally: a side-by-side PB/CT yields left/right facing sides, a stacked one yields top/bottom — always the sides that let the connection run straight out toward the other block rather than wrapping around.
+     - **Mutual-facing filter (primary).** Keep only `(PB side, CT side)` combinations where **both** sides face each other — i.e. CT's center lies on the outward side of the chosen PB side, and vice versa. A side facing *away* from the other block always forces a U-shaped wrap, so those pairs are excluded. (If no pair qualifies, fall back to all combinations.) Sides lying fully outside the plot are pruned first.
+     - **Tie-break.** Among the surviving facing pairs, minimise `gap(PB side, CT side) + W_RAW · dist(PB side midpoint, RAW center)`, where **gap** is the L1 (Manhattan) distance between the two sides (perpendicular separation + any lateral offset where their projections don't overlap), picking the closest facing pair. `W_RAW` (`SPINE_RAW_WEIGHT`, default 0.25) is small — RAW only nudges the PB side (whose midpoint ranks the RAW/Demi candidates in B-2/B-3) when gaps tie.
+     - The dependence on the PB↔CT relative position emerges naturally: a side-by-side PB/CT yields left/right facing sides, a stacked one yields top/bottom — always the sides that let the connection run straight out toward the other block rather than wrapping around.
 3. Divide both selected full segments by their midpoints into two half-lines each.
 4. Compare all 4 combinations of half-lines, take only the 2 closest half-lines to each other as the PB and CT rack segments, and prune the not selected halves.
 5. Draw a perpendicular connection from the Power Block (PB) center to the perpendicular projection point on the selected PB segment, and call this line "MAIN RACK" (it will have separate logic later, except under the overlap exception above).
@@ -336,17 +440,28 @@ For the Power Block, the sides that do not intersect any created rack path (both
    - **Search 1**: An A* path between the PB spine (`best_pb_half`) and the CT spine (`best_ct_half`), where all block footprints (including the Power Block) are blocked as standard obstacles.
    - **Search 2**: An A* path between the full `MAIN RACK` (starting from the PB center point `(pb_cx, pb_cy)`) and the CT spine (`best_ct_half`), where the Power Block footprint is unblocked, allowing the connection to step on the PB footprint.
    Prune the unchosen path and snaps/simplifies the chosen path to form the single continuous spine network (enforcing road clearances and turn penalties for simple L-shapes).
+   - **Same-case Overlap Exception**: If both blocks use the same case (both Case 1 or both Case 2), are parallel, and overlap, the standard A* routing is skipped. The connection is made by extending the Power Block's MAIN RACK line directly to connect the Power Block center to the Cooling Tower (CT) rack buffer line in a single straight perpendicular line aligned with the Power Block's center.
+   - **[Polygon change] MAIN RACK vs the PB↔CT connection.** In polygon mode, the same-case overlap shortcuts are **skipped**:
+     - The **MAIN RACK** is only the short stub from the **PB centre to the PB rack-buffer line**.
+     - The **PB↔CT connection always uses the A\*** routing (Search 1, with **all blocks — including the Power Block — treated as obstacles**), so it **routes around blocks** like the Warehouse instead of cutting a U-shaped or straight line through them. (Search 2 is used as a fallback).
+     - Legacy **rectangle** mode is unchanged (guarded by the polygon flag).
+8. **Cut the MAIN RACK from the PB↔CT spine (case1 buffer split).** After the spine network is connected (step 7), intersect the **MAIN RACK** axis (PB center → active PB rack-buffer) with the Power Block's **Case 1 (6 m) rack buffer**. This crossing is the **cut point**.
+     - **PB center → cut point** = **MAIN RACK OUTPUT** — the part of the spine that lies *inside* the PB's own 6 m rack zone (drawn/handled as the Power Block's own main rack).
+     - **cut point → rest** = part of the **PB↔CT spine** (it joins `best_pb_half` and the step-7 A\* connection toward CT).
+     - The cut only **adds a vertex** at the case1-buffer line — geometry and connectivity are unchanged, and the PB↔CT connection still uses the step-7 A\* routing. When the active PB case is already **Case 1**, the cut lands on the rack's far end (degenerate leftover) and the MAIN RACK OUTPUT equals the whole stub.
 
 **B-2 — RAW Water candidate points**
 
 1. Take RAW Water Tank's active rack-buffer rectangle — 4 corner points
 2. Prune any corner outside the plot boundary.
+   - **[Polygon change] Candidate pruning.** Rack-buffer candidate points that fall **outside the polygon** are dropped.
 3. Measure distance from each remaining corner to the **center of PB's selected rack-buffer line** (from B-1).
 4. Keep the **2 closest corners** as candidate RAW points.
 
 **B-3 — Demi Water candidate points**
 
 Same process as B-2, applied to Demi Water Tank → keep 2 candidate Demi points.
+- **[Polygon change] Candidate pruning.** Rack-buffer candidate points that fall **outside the polygon** are dropped.
 
 **B-4 — Pick WWT join point**
 
@@ -366,7 +481,12 @@ Take all 4 candidate points (2 from B-2 + 2 from B-3).
 - Take WWT rack buffer 4 corners; pick the one closest to RAW Water center → kept WWT point.
 - From the 4 candidate points, pick the one closest to WWT point; apply same RAW/Demi selection rule.
 
-**Result:** 3 points — one each on RAW, Demi, WWT rack-buffer lines → tightest water triangle.
+*WWT Split Rule:*
+If the projection line (or closest connection line) between the WWT and the RAW/Demi candidates intersects the Power Block footprint, WWT is on the opposite side of the Power Block. WWT is disconnected from the RAW-Demi network.
+
+**Result:** 
+- If not split: 3 points — one each on RAW, Demi, WWT rack-buffer lines → tightest water triangle.
+- If split: 2 points — one each on RAW and Demi rack-buffer lines → RAW-Demi network (WWT is split).
 
 **B-5 — Water Cluster Spine**
 
@@ -379,12 +499,17 @@ Connect the 3 triangle points using **orthogonal A\* paths** (no diagonals, cell
 
 **C-1 — Unify into one network (A* routing)**
 
-Route the shortest orthogonal path from the **PB/CT spine network** (comprising the PB centerline, CT centerline, and their connection segment) to the **water cluster spine** (restricted routing: only along existing spine lines and rack-buffer edges).
+Route the shortest orthogonal path from the **PB/CT spine network** (comprising the PB centerline, CT centerline, their connection segment, and the **main rack segment**) to the **water cluster spine** (restricted routing: only along existing spine lines and rack-buffer edges).
 
 The connection must:
 - Extend an existing spine line, OR route along another rack block's active rack-buffer line.
 - Never cross any block footprint.
 - Fallback: if restricted routing fails, open the grid fully and re-route.
+
+**WWT Split Connection:**
+If WWT was split:
+- Route the RAW-Demi network to the PB/CT spine network (which automatically routes from Demi if it is closer).
+- Route WWT's rack-buffer boundary separately to the PB/CT spine network via the shortest orthogonal path.
 
 **C-2 — Flare Pipe Rack Connection**
 
@@ -392,6 +517,7 @@ The connection must:
 2. Otherwise:
    - Route the shortest orthogonal path from the boundary (all 4 segments) of the Flare's active rack-buffer rectangle to the PB↔CT spine centerlines or their connection line from Step 7 (excluding any segments that touch the Power Block center).
    - The Flare connection uses the **geometric** (buffer-corridor) grid directly, *skipping* the extended-line restricted mode — the latter spans each spine/water segment across the whole site and can pull the link to a non-nearest point. This makes the Flare attach at the closest corner of its rack buffer.
+   - **[Polygon change] Flare connects to the NEAREST rack.** The Flare attaches to the closest segment of the **whole rack network** (spine + water cluster + connectors, including the main rack at the PB centre) — not only the PB↔CT spine.
    - This single A* search automatically connects the closest points between the Flare's rack-buffer boundary and the target spine network.
    - Add this path to the unified network.
 
@@ -399,11 +525,12 @@ The connection must:
 
 After the full rack network is routed, trim redundant geometry.
 
-1. **Cooling Tower free ends.** The CT spine half (`best_ct_half`) often sticks out past the points where the network actually connects to it (e.g. the PB↔CT connector meets it partway along, leaving a dangling stub).
-   - Find every **junction** on `best_ct_half` — each point where another rack segment meets it.
-   - **≥ 2 distinct junctions:** trim `best_ct_half` to span only between the outermost junctions, removing the free end(s) beyond them.
-   - **< 2 junctions** (both ends free, or only a single touch): the half is redundant → **prune it entirely** (the touching connector already reaches the CT rack-buffer line).
+1. **Power Block and Cooling Tower free ends.** The PB and CT spine halves (`best_pb_half` and `best_ct_half`) often stick out past the points where the network actually connects to them (e.g. the PB↔CT connector meets them partway along, leaving dangling stubs).
+   - Find every **junction** on `best_pb_half` and `best_ct_half` — each point where another rack segment meets them.
+   - **≥ 2 distinct junctions:** trim the half to span only between the outermost junctions, removing the free end(s) beyond them.
+   - **< 2 junctions** (both ends free, or only a single touch): the half is redundant → **prune it entirely**, and also **prune any perpendicular connector** created to bridge to it (to avoid leaving dangling stubs like the 13m bridge segment).
 2. **Stub segments.** Prune any rack segment shorter than **6 m** (`MIN_RACK_SEG_LEN`) — tiny leftover stubs from snapping/trimming.
+3. **[Polygon change] Water-cluster free-end cleanup.** The water spine gets the same free-end trimming as the PB/CT spine, but **anchored to the water-triangle connection points** (on the RAW/Demi/WWT rack buffers): a trim is kept only if the network **still touches every water rack buffer** it touched before — otherwise it is reverted.
 
 **Rack output:** Single connected rack polyline network (centerlines, 6 m wide). Becomes an obstacle for subsequent road placement.
 
@@ -461,10 +588,9 @@ The resulting polyline is mathematically guaranteed to be a closed, continuous, 
 
 ### §3.8 Recenter
 
-Final step. The placed layout is usually off-center inside the plot. Recenter
-fixes this **without moving any content** — instead it slides the **plot
-rectangle** (and the gate point, which belongs to the plot) so the plot's center
-lands on the content's bounding-box center.
+Final step. The placed layout is usually off-center inside the plot. Recenter fixes this **without moving any content** — instead it slides the **plot polygon** (and the gate point, which belongs to the plot) so the plot's center lands on the content's bounding-box center.
+
+**[Polygon change]** Recenter slides the **plot polygon (all corners)** by the same amount, rather than just shifting a bounding box, while preserving the content coordinates.
 
 1. Compute the **content bounding box** over **all** elements — block footprints
    + roads (ring road, gate spur, ring spur, perimeter fire-road contour, cleaned
@@ -472,8 +598,7 @@ lands on the content's bounding-box center.
 2. `content_center = ((min_x+max_x)/2, (min_y+max_y)/2)`.
 3. `delta = content_center − plot_center`, where `plot_center = (sw/2, sl/2)`
    (full plot center).
-4. **Move the plot:** new plot rectangle `= (delta_x, delta_y, sw, sl)` — its
-   center now equals `content_center`. Output as `plot_bounds`.
+4. **Move the plot:** new plot polygon corners are shifted by `delta` (translating the whole polygon shape). The new plot bounding box `= (delta_x, delta_y, sw, sl)` — its center now equals `content_center`. Output as `plot_bounds` (bounding box) and `plot_polygon` (shifted corners).
 5. **Move the gate point perpendicular to its edge only** — N/S gate shifts by
    `delta_y`, E/W gate shifts by `delta_x`. This keeps the gate on the moved
    boundary line without sliding *along* the edge (which would stretch the exit
@@ -485,7 +610,7 @@ lands on the content's bounding-box center.
    and the recentered gate.
 8. **All other content keeps its original coordinates** (blocks, racks, ring
    road, ring spur, buffers, pb_center — unchanged). Only `plot_bounds`,
-   `gate_point`, the gate spur's exit-line leg, and the death zone move.
+   `plot_polygon`, `gate_point`, the gate spur's exit-line leg, and the death zone move.
 
 The pre-recenter plot and gate are also output (`plot_bounds_before`,
 `gate_point_before`) and can be drawn as a faded overlay in the dashboard via the
@@ -510,6 +635,7 @@ The pre-recenter plot and gate are also output (`plot_bounds_before`,
     "water_triangle":        list[tuple],  # 3 points: RAW, Demi, WWT on rack buffers
     "gate_point":            tuple,        # (x, y) gate midpoint, recentered (§3.8)
     "gate_point_before":     tuple,        # (x, y) gate before recenter (§3.8; debug overlay)
+    "plot_polygon":          list[tuple],  # [Polygon change] B-1 plot polygon corners (the new shape)
     "plot_bounds":           tuple,        # (x0, y0, sw, sl) plot rect, recentered (§3.8)
     "plot_bounds_before":    tuple,        # (0, 0, sw, sl) plot before recenter (§3.8; debug overlay)
     "recenter_delta":        tuple,        # (dx, dy) plot/gate shift (§3.8)
@@ -643,6 +769,8 @@ Reference material (not procedural steps).
 > (`rules.py`) and is **to be re-integrated** with the Layout06 output in a later
 > step. Kept here as the rule SSoT. Layouts are scored by a **Total Penalty Score**
 > (lower = better; 0 = perfect).
+>
+> **[Polygon change]** Rules that measure **distance to the boundary** now measure the distance to the **nearest real side of the polygon** (including diagonals), rather than a simple bounding box edge.
 
 ## Available Rule Types
 
@@ -753,16 +881,20 @@ favorites → Step 2 (detail/subdivide + score) → Step 3 (rank) → export DXF
 
 ```
 Core/
+  Plot.py        # [Polygon change] new plot-shape helper
+  CADImport.py  # [Polygon change] new CAD DXF importer
   Layout06.py    # the Phase 06 engine — generate_sketch() → plain dict
   Grid.py        # 2 m occupancy grid (obstacle marking, passability)
   Pathfind.py    # A* routing (turn penalty, width-aware)
   Groups.py      # block footprints, SHAPES, colors, dimensions
 Dashboard/
-  Roads_Test.py  # Streamlit entry point (the working dashboard)
+  Streamlit.py   # Streamlit entry point (the working dashboard)
 Data/            # Plot plan requirement.xlsx (source requirements)
+tests/
+  Test_Plot.py   # [Polygon change] new automatic checks
 ```
 
-Dependency: `Roads_Test.py → Layout06.py → Grid.py, Pathfind.py` (+ `Groups.py`).
+Dependency: `Streamlit.py → Layout06.py → Grid.py, Pathfind.py` (+ `Groups.py`, `Plot.py`, `CADImport.py`).
 
 ### Recommended future module split (professionalisation path)
 

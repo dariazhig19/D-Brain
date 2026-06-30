@@ -19,57 +19,11 @@
                   "iconI18nKey": "asset:generic.documentations.changelog-icon"
                 }
               },
-              "icon": "lucide-ghost",
-              "title": "terminal:documentation"
-            }
-          },
-          {
-            "id": "1cc124c092c8927c",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
-                "viewState": {
-                  "x": 11984.34410718153,
-                  "y": 2423.608892690722,
-                  "zoom": -0.1310812104072253
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "overview"
-            }
-          },
-          {
-            "id": "e6586c9fbcfe05d7",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Road Access by Blocks.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Road Access by Blocks"
-            }
-          },
-          {
-            "id": "e86e93a64e926171",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic_한국어.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "!Scoring_Logic_한국어"
+              "icon": "file-text",
+              "title": "Changelog"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -242,20 +196,21 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "1cc124c092c8927c",
+  "active": "783316305ef77321",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/PROJECT.md.tmp.40816.95b71612aba0",
-    "01_Products/Layout_Gen_Design/Core/Layout06.py.tmp.40816.747a0f44b885",
-    "01_Products/Layout_Gen_Design/PROJECT.md.tmp.13296.671d63d6836e",
-    "01_Products/Layout_Gen_Design/PROJECT.md.tmp.13664.241d71b1af5d",
-    "01_Products/Layout_Gen_Design/Core/Layout06.py.tmp.13664.e79268945a8a",
-    "01_Products/Layout_Gen_Design/Core/Layout06.py.tmp.13664.f55a11d74ca3",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Plot.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Layout06.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Pathfind.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Grid.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/Groups.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/CADImport.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__/__init__.cpython-311.pyc",
+    "01_Products/Layout_Gen_Design/Core/__pycache__",
+    "01_Products/Layout_Gen_Design/PROJECT_Polygon.md.tmp.24788.a5ce23bac483",
+    "01_Products/Layout_Gen_Design/PROJECT.md.tmp.24788.7e67797dbea2",
+    "01_Products/Layout_Gen_Design/Dashboard/Streamlit.py.tmp.24788.98c29c8afef2",
     "!Atlas_System.md",
-    "01_Products/Layout_Gen_Design/apply_close.py",
-    "01_Products/Layout_Gen_Design/test_close.py",
-    "01_Products/Layout_Gen_Design/rewrite_md.py",
-    "01_Products/Layout_Gen_Design/rewrite_layout06.py",
-    "01_Products/Layout_Gen_Design/scratch_test.py",
     "01_Products/Layout_Gen_Design/Notes/overview.canvas",
     "01_Products/Layout_Gen_Design/Notes/!Layout_Dev_Methodology_and_UX.md",
     "implementation_plan.md",

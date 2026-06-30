@@ -116,8 +116,62 @@ def _overlaps_any(name, placed, x, y, w, h):  # → §3.5.B
     return False
 
 
-def _within_relaxed_bounds(x, y, w, h, sw, sl, tol=BOUNDARY_TOLERANCE):  # → §3.5.A
-    """Allow placement up to `tol` metres outside the plot on any side."""
+def _boom_edge_and_mid(boom, gh_rect):  # → §3.4.B (polygon)
+    """From the CAD boom line + gate house, derive the legacy ``bb_edge`` and the
+    boom midpoint ``bb_mid``.
+
+    ``bb_edge`` ∈ {N,S,E,W} = which gate-house side the boom sits on (a vertical
+    boom sits on the N or S side; a horizontal boom on the E or W side, chosen by
+    which side of the gate-house centre the boom lies). ``bb_mid`` is the boom's
+    own midpoint, so the gate spur crosses the boom exactly where it is drawn.
+    This lets the ORIGINAL gate-spur construction run unchanged on the polygon."""
+    (x0, y0), (x1, y1) = boom[0], boom[1]
+    mid = ((x0 + x1) / 2.0, (y0 + y1) / 2.0)
+    gx, gy, gw, gh = gh_rect
+    gcx, gcy = gx + gw / 2.0, gy + gh / 2.0
+    if abs(x1 - x0) <= abs(y1 - y0):          # vertical boom → N / S side
+        return ("N" if mid[1] >= gcy else "S"), mid
+    return ("E" if mid[0] >= gcx else "W"), mid   # horizontal boom → E / W side
+
+
+def _place_flare_on_polygon(plot, placed, wind_dir, pass_tol):  # → §3.5.C (polygon)
+    """Place the Flare at the leeward CORNER (vertex) of the plot polygon.
+
+    Picks the polygon vertex furthest in the leeward (downwind) direction, then
+    nudges the footprint inward toward the plot center until it fits inside and
+    clears other blocks. Returns (x, y, w, h) or None."""
+    w, h = BLOCK_FOOTPRINTS["Flare"]
+    cx, cy = plot.centroid
+
+    def leeward_score(v):
+        # higher = more leeward
+        if wind_dir == "East":  return -(v[0])   # downwind = -x
+        if wind_dir == "West":  return  (v[0])
+        if wind_dir == "North": return -(v[1])
+        if wind_dir == "South": return  (v[1])
+        return -(v[1])
+
+    for v in sorted(plot.vertices, key=leeward_score, reverse=True):
+        dx, dy = cx - v[0], cy - v[1]
+        d = math.hypot(dx, dy) or 1.0
+        ux, uy = dx / d, dy / d
+        for t in (35, 45, 55, 70, 90, 110):
+            ccx, ccy = v[0] + ux * t, v[1] + uy * t
+            x, y = snap_xy(ccx - w / 2, ccy - h / 2)
+            if (plot.contains_rect(x, y, w, h, tol=pass_tol)
+                    and not _overlaps_any("Flare", placed, x, y, w, h)):
+                return (x, y, w, h)
+    return None
+
+
+def _within_relaxed_bounds(x, y, w, h, sw, sl, tol=BOUNDARY_TOLERANCE, plot=None):  # → §3.5.A
+    """Allow placement up to `tol` metres outside the plot on any side.
+
+    Polygon migration: when `plot` (a `Core.Plot.Plot`) is given, the check runs
+    against the polygon (`plot.contains_rect`) including diagonal sides. When
+    `plot` is None this is the original rectangle test, unchanged."""
+    if plot is not None:
+        return plot.contains_rect(x, y, w, h, tol)
     return (x >= -tol and y >= -tol
             and x + w <= sw + tol and y + h <= sl + tol)
 
@@ -144,7 +198,7 @@ def place_anchor(sw, sl, name, edge, ratio, offset, jitter=0.0):  # → §3.2
 
 
 def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=None, buffer=0,  # → §3.3
-               x_bounds=None, y_bounds=None):
+               x_bounds=None, y_bounds=None, plot=None, plot_tol=0):
     """
     Try to place block using sample_fn() → (x, y).
     Tries BOTH orientations (w×h and h×w) at each sampled point.
@@ -176,6 +230,11 @@ def _try_place(sw, sl, name, placed, sample_fn, max_attempts=500, prefer_near=No
             ylo, yhi = y_bounds if y_bounds else (m, sl - h - m)
             x = max(xlo, min(x, xhi))
             y = max(ylo, min(y, yhi))
+            # Polygon migration: the buffered rectangle must also stay inside the
+            # plot polygon (diagonal sides). No-op when plot is None.
+            if plot is not None and not plot.contains_rect(
+                    x - buffer, y - buffer, w + 2 * buffer, h + 2 * buffer, tol=plot_tol):
+                continue
             if not _overlaps_any(name, placed, x, y, w, h):
                 valid.append((x, y, w, h))
         if len(valid) >= 20:
@@ -205,7 +264,8 @@ def _slide(t_start, t_extent, b_extent, inset, i, n):  # → §3.5
 
 
 def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
-                       samples_per_side=7, lateral_inset=4, target=None, boundary_tol=BOUNDARY_TOLERANCE):
+                       samples_per_side=7, lateral_inset=4, target=None, boundary_tol=BOUNDARY_TOLERANCE,
+                       plot=None):
     """Generate (x, y) candidates by snapping a block (w×h, named `name`) at
     the pair-appropriate magnet distance against each side of every real
     placed block. Honors relaxed bounds (`_within_relaxed_bounds`) and the
@@ -238,7 +298,7 @@ def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
                   for i in range(samples_per_side)]
         for x, y in sides:
             x, y = snap_xy(x, y)
-            if not _within_relaxed_bounds(x, y, w, h, sw, sl, tol=boundary_tol):
+            if not _within_relaxed_bounds(x, y, w, h, sw, sl, tol=boundary_tol, plot=plot):
                 continue
             if _overlaps_any(name, placed, x, y, w, h):
                 continue
@@ -247,7 +307,7 @@ def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
 
 
 def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
-                            step=8, boundary_tol=BOUNDARY_TOLERANCE):
+                            step=8, boundary_tol=BOUNDARY_TOLERANCE, plot=None):
     """Generate (x, y) candidates by scanning a coarse grid over the whole plot
     (not magnetized to any block). Honors relaxed bounds and the collision check.
     Used as the last-resort placement when magnetizing to every block fails."""
@@ -257,7 +317,7 @@ def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
         y = 0.0
         while y <= sl - h + 0.1:
             sx, sy = snap_xy(x, y)
-            if (_within_relaxed_bounds(sx, sy, w, h, sw, sl, tol=boundary_tol)
+            if (_within_relaxed_bounds(sx, sy, w, h, sw, sl, tol=boundary_tol, plot=plot)
                     and not _overlaps_any(name, placed, sx, sy, w, h)):
                 cands.append((sx, sy))
             y += step
@@ -266,7 +326,7 @@ def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
 
 
 def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, magnet_target=None,  # → §3.5
-                      boundary_tol=BOUNDARY_TOLERANCE):
+                      boundary_tol=BOUNDARY_TOLERANCE, plot=None):
     """Place a floated block by magnetizing to a previously placed block.
 
     Tries both orientations. Returns (x, y, w, h) or None when no candidate
@@ -282,7 +342,7 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
     valid = []
     for w, h in orientations:
         for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=magnet_target,
-                                       boundary_tol=boundary_tol):
+                                       boundary_tol=boundary_tol, plot=plot):
             if filter_fn is None or filter_fn(x, y, w, h):
                 valid.append((x, y, w, h))
 
@@ -290,7 +350,7 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
     if magnet_target is not None and not valid:
         for w, h in orientations:
             for x, y in _magnet_candidates(name, w, h, placed, sw, sl, target=None,
-                                           boundary_tol=boundary_tol):
+                                           boundary_tol=boundary_tol, plot=plot):
                 if filter_fn is None or filter_fn(x, y, w, h):
                     valid.append((x, y, w, h))
 
@@ -301,7 +361,7 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
         empty = []
         for w, h in orientations:
             empty += [(x, y, w, h) for x, y in
-                      _empty_space_candidates(name, w, h, placed, sw, sl, boundary_tol=boundary_tol)]
+                      _empty_space_candidates(name, w, h, placed, sw, sl, boundary_tol=boundary_tol, plot=plot)]
         in_zone = [c for c in empty if filter_fn is None or filter_fn(c[0], c[1], c[2], c[3])]
         valid = in_zone if in_zone else empty
 
@@ -575,7 +635,8 @@ def compute_rack_buffers(blocks):  # → §3.6.A
     }
 
 
-def mark_rack_obstacles(grid, blocks, rack_buffers, active_cases, exclude=None):  # → §3.6 (buffer-corridor routing)
+def mark_rack_obstacles(grid, blocks, rack_buffers, active_cases, exclude=None,
+                        min_inflate=0.0):  # → §3.6 (buffer-corridor routing)
     """Mark routing obstacles so a rack path is forced onto the active
     rack-buffer LINE and cannot cut through a block's footprint→buffer gap.
 
@@ -584,6 +645,10 @@ def mark_rack_obstacles(grid, blocks, rack_buffers, active_cases, exclude=None):
     travel along. Non-rack blocks (and rack blocks without an active case) keep
     plain footprint marking. `exclude` is an optional set of block names left
     completely unmarked (e.g. the Power Block for the main-rack-stepping search).
+
+    ``min_inflate`` is a floor applied to EVERY marked block (e.g. the Case 1
+    rack-buffer offset minus one cell) so the PB↔CT spine routes around every
+    block's minimum rack buffer, not just its bare footprint.
     """
     exclude = exclude or set()
     cs = grid.cell_size
@@ -596,20 +661,24 @@ def mark_rack_obstacles(grid, blocks, rack_buffers, active_cases, exclude=None):
             rect = rack_buffers[name].get(active_cases[name])
         if rect is not None:
             offset = b["x"] - rect[0]          # active rack-buffer offset
-            grid.mark_building(b, inflate_m=max(0.0, offset - cs))
+            grid.mark_building(b, inflate_m=max(min_inflate, offset - cs))
         else:
-            grid.mark_building(b, inflate_m=0)
+            grid.mark_building(b, inflate_m=min_inflate)
 
 
-def cleanup_ct_free_ends(ct_half, rack_segments):  # → §3.6.C-3
-    """Trim dangling free ends off the Cooling Tower spine half (`best_ct_half`).
+def cleanup_ct_free_ends(ct_half, rack_segments, anchor_pts=()):  # → §3.6.C-3
+    """Trim dangling free ends off a spine half (`best_ct_half`).
 
-    After all rack routing, `best_ct_half` may stick out past the points where
-    other rack segments actually connect to it. Find every junction (a point
-    where another segment meets the half), then shorten the half to span only
-    between the outermost junctions — removing the free end(s). If fewer than
-    two distinct junctions exist (so both ends are free / only a single touch),
-    the whole half is redundant → return None to prune it entirely.
+    After all rack routing, the half may stick out past the points where other
+    rack segments actually connect to it. Find every junction (a point where
+    another segment meets the half), then shorten the half to span only between
+    the outermost junctions — removing the free end(s). If fewer than two distinct
+    junctions exist (so both ends are free / only a single touch), the half is
+    redundant → return None to prune it entirely.
+
+    ``anchor_pts`` are extra points (e.g. the water-triangle connection points on
+    RAW/Demi/WWT rack buffers) that count as junctions and must be kept, so the
+    trim never disconnects a block it serves.
 
     Returns the trimmed segment, the original (unchanged) segment, or None.
     """
@@ -630,6 +699,9 @@ def cleanup_ct_free_ends(ct_half, rack_segments):  # → §3.6.C-3
                 for yy in (ay, by):
                     if min(hy0, hy1) - eps <= yy <= max(hy0, hy1) + eps:
                         js.append(yy)
+                for yy in (hy0, hy1):
+                    if min(ay, by) - eps <= yy <= max(ay, by) + eps:
+                        js.append(yy)
         else:
             if abs(ax - bx) < eps:                                  # vertical other
                 if (min(hx0, hx1) - eps <= ax <= max(hx0, hx1) + eps
@@ -639,6 +711,19 @@ def cleanup_ct_free_ends(ct_half, rack_segments):  # → §3.6.C-3
                 for xx in (ax, bx):
                     if min(hx0, hx1) - eps <= xx <= max(hx0, hx1) + eps:
                         js.append(xx)
+                for xx in (hx0, hx1):
+                    if min(ax, bx) - eps <= xx <= max(ax, bx) + eps:
+                        js.append(xx)
+
+    # Extra anchors (e.g. water-triangle connection points) lying on this half
+    # count as junctions so the trim keeps the part that reaches them.
+    for (px, py) in anchor_pts:
+        if vertical:
+            if abs(px - hx0) < eps and min(hy0, hy1) - eps <= py <= max(hy0, hy1) + eps:
+                js.append(py)
+        else:
+            if abs(py - hy0) < eps and min(hx0, hx1) - eps <= px <= max(hx0, hx1) + eps:
+                js.append(px)
 
     distinct = sorted({round(j, 3) for j in js})
     if len(distinct) < 2:
@@ -649,7 +734,163 @@ def cleanup_ct_free_ends(ct_half, rack_segments):  # → §3.6.C-3
     return [(lo, hy0), (hi, hy0)]
 
 
-def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=None, ring_spur=None):  # → §3.6.B (B-1..B-4)
+def segments_intersect(p1, p2, p3, p4):
+    def ccw(a, b, c):
+        return (c[1]-a[1])*(b[0]-a[0]) > (b[1]-a[1])*(c[0]-a[0])
+    return ccw(p1, p3, p4) != ccw(p2, p3, p4) and ccw(p1, p2, p3) != ccw(p1, p2, p4)
+
+
+def line_intersects_pb(p1, p2, pb_rect):
+    pb_x, pb_y, pb_w, pb_h = pb_rect
+    def is_inside_pb(p):
+        return pb_x <= p[0] <= pb_x + pb_w and pb_y <= p[1] <= pb_y + pb_h
+    if is_inside_pb(p1) or is_inside_pb(p2):
+        return True
+    sides = [
+        ((pb_x, pb_y), (pb_x + pb_w, pb_y)),
+        ((pb_x + pb_w, pb_y), (pb_x + pb_w, pb_y + pb_h)),
+        ((pb_x, pb_y + pb_h), (pb_x + pb_w, pb_y + pb_h)),
+        ((pb_x, pb_y), (pb_x, pb_y + pb_h))
+    ]
+    for s1, s2 in sides:
+        if segments_intersect(p1, p2, s1, s2):
+            return True
+    return False
+
+
+def closest_points_between_networks(segs_a, segs_b):
+    def get_segment_points(seg, step=2):
+        p1, p2 = seg
+        x1, y1 = p1
+        x2, y2 = p2
+        pts = [p1, p2]
+        if abs(x1 - x2) < 0.1: # Vertical
+            y_min, y_max = min(y1, y2), max(y1, y2)
+            y = snap(y_min)
+            while y <= y_max:
+                if y_min <= y <= y_max:
+                    pts.append((x1, y))
+                y += step
+        else: # Horizontal
+            x_min, x_max = min(x1, x2), max(x1, x2)
+            x = snap(x_min)
+            while x <= x_max:
+                if x_min <= x <= x_max:
+                    pts.append((x, y1))
+                x += step
+        return list(set(pts))
+
+    best_dist = float('inf')
+    best_pair = None
+    for seg_a in segs_a:
+        pts_a = get_segment_points(seg_a)
+        for seg_b in segs_b:
+            pts_b = get_segment_points(seg_b)
+            for pa in pts_a:
+                for pb in pts_b:
+                    d = abs(pa[0] - pb[0]) + abs(pa[1] - pb[1])
+                    if d < best_dist:
+                        best_dist = d
+                        best_pair = (pa, pb)
+    return best_pair
+
+
+def _remove_tiny_jogs(segments, max_jog=2.5):  # → §3.6.C-3 (clean 1-grid jogs)
+    """Remove tiny (<= max_jog) perpendicular jogs that offset two otherwise
+    collinear axis-aligned rack segments by one grid cell (an A* snapping
+    artefact, e.g. a y=101 run and a y=102 run bridged by a 1 m vertical jog).
+
+    The jog's two endpoints must each have exactly ONE other segment, both
+    perpendicular to the jog. The jog is dropped and the segment on one side is
+    shifted onto the other side's line; any segment attached at the shifted far
+    end is pulled along (only if it is perpendicular, so it just lengthens). If
+    any condition fails the jog is left untouched. Returns the cleaned list."""
+    segs = [[tuple(s[0]), tuple(s[1])] for s in segments]
+
+    def near(a, b):
+        return abs(a[0] - b[0]) < 0.6 and abs(a[1] - b[1]) < 0.6
+
+    def is_vert(s):
+        return abs(s[0][0] - s[1][0]) < abs(s[0][1] - s[1][1])
+
+    def nbrs(node, exclude):
+        out = []
+        for si in range(len(segs)):
+            if si == exclude:
+                continue
+            for e in (0, 1):
+                if near(segs[si][e], node):
+                    out.append((si, e))
+        return out
+
+    changed = True
+    guard = 0
+    while changed and guard < 100:
+        changed = False
+        guard += 1
+        for ji in range(len(segs)):
+            J = segs[ji]
+            jlen = math.hypot(J[1][0] - J[0][0], J[1][1] - J[0][1])
+            if jlen < 0.1 or jlen > max_jog:
+                continue
+            jvert = is_vert(J)
+            for a_i, b_i in ((0, 1), (1, 0)):
+                A, B = J[a_i], J[b_i]
+                an, bn = nbrs(A, ji), nbrs(B, ji)
+                if len(an) != 1 or len(bn) != 1:
+                    continue
+                bi, bend = bn[0]
+                Sb = segs[bi]
+                if is_vert(Sb) == jvert:          # B-neighbour must be perpendicular to J
+                    continue
+                dx = (A[0] - B[0]) if not jvert else 0.0
+                dy = (A[1] - B[1]) if jvert else 0.0
+                far = Sb[1 - bend]
+                far_attached, ok = [], True
+                for si in range(len(segs)):
+                    if si == bi:
+                        continue
+                    for e in (0, 1):
+                        if near(segs[si][e], far):
+                            if is_vert(segs[si]) == is_vert(Sb):   # parallel → would go diagonal
+                                ok = False
+                            far_attached.append((si, e))
+                if not ok:
+                    continue
+                # Snap: shift the whole B-side segment + pull the perpendicular(s) at its far end.
+                segs[bi] = [(Sb[0][0] + dx, Sb[0][1] + dy), (Sb[1][0] + dx, Sb[1][1] + dy)]
+                for si, e in far_attached:
+                    segs[si][e] = (segs[si][e][0] + dx, segs[si][e][1] + dy)
+                del segs[ji]
+                changed = True
+                break
+            if changed:
+                break
+    return [tuple(map(tuple, s)) for s in segs]
+
+
+def _mask_grid_to_plot(grid, plot):  # → §3.6 (polygon)
+    """Block every grid cell whose centre lies OUTSIDE the plot polygon.
+
+    Makes rack A* routing treat the area beyond a diagonal/cut edge as solid, so a
+    rack can never run outside the plot. No-op when ``plot`` is None (rectangle).
+    Vectorised: a cell is inside iff it is on the interior side of every edge."""
+    if plot is None:
+        return
+    import numpy as np
+    cs = grid.cell_size
+    xs = (np.arange(grid.ncols) + 0.5) * cs       # cell-centre x per column
+    ys = (np.arange(grid.nrows) + 0.5) * cs       # cell-centre y per row
+    inside = np.ones((grid.ncols, grid.nrows), dtype=bool)
+    for e in plot.edges:
+        nx, ny = e["normal"]
+        px, py = e["p1"]
+        d = (xs[:, None] - px) * nx + (ys[None, :] - py) * ny   # signed dist, + = interior
+        inside &= (d >= 0)
+    grid.blocked |= ~inside
+
+
+def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=None, ring_spur=None, plot=None):  # → §3.6.B (B-1..B-4)
     """Phase 06 Steps B-1 to B-4 — build PB-CT spine and candidates.
 
     Returns:
@@ -670,28 +911,28 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
         elif b["name"] == "Cooling Tower":
             ct_cx, ct_cy = b["x"] + b["width"]/2, b["y"] + b["height"]/2
 
-    def get_spine_side(rect, block_cx, block_cy):
+    def get_spine_side(rect, block_cx, block_cy, name):
         x, y, w, h = rect
-        dx = raw_cx - block_cx
-        dy = raw_cy - block_cy
+        tx, ty = (ct_cx, ct_cy) if name == "Power Block" else (pb_cx, pb_cy)
+        dx = tx - block_cx
+        dy = ty - block_cy
         
         if abs(dx) > abs(dy):
-            side1 = [(x, y), (x+w, y)]           # Bottom
-            side2 = [(x, y+h), (x+w, y+h)]       # Top
+            return [(x, y), (x, y+h)] if tx < block_cx else [(x+w, y), (x+w, y+h)]
         else:
-            side1 = [(x, y), (x, y+h)]           # Left
-            side2 = [(x+w, y), (x+w, y+h)]       # Right
-            
-        mid1 = ((side1[0][0]+side1[1][0])/2, (side1[0][1]+side1[1][1])/2)
-        mid2 = ((side2[0][0]+side2[1][0])/2, (side2[0][1]+side2[1][1])/2)
-        dist1 = (mid1[0]-raw_cx)**2 + (mid1[1]-raw_cy)**2
-        dist2 = (mid2[0]-raw_cx)**2 + (mid2[1]-raw_cy)**2
-        
-        return side1 if dist1 < dist2 else side2
+            return [(x, y), (x+w, y)] if ty < block_cy else [(x, y+h), (x+w, y+h)]
 
     def choose_case(name, rect_c1, rect_c2, cx, cy):
-        # selected side of Case 2
-        side_c2 = get_spine_side(rect_c2, cx, cy)
+        # Check all 4 sides of the Case 2 buffer rectangle against the plot boundary.
+        # If any side is within the 10.0m margin or outside, reject Case 2.
+        x, y, w, h = rect_c2
+        margin = 10.0
+        if (x < margin or (x + w) > sw - margin or
+            y < margin or (y + h) > sl - margin):
+            return "case1_rack"
+
+        # Selected side of Case 2
+        side_c2 = get_spine_side(rect_c2, cx, cy, name)
         p1, p2 = side_c2[0], side_c2[1]
         
         is_outside = False
@@ -705,7 +946,13 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             if p1[1] < 0 or p1[1] > sl or min(p1[0], p2[0]) < 0 or max(p1[0], p2[0]) > sw:
                 is_outside = True
                 
-        if dist < 10.0 or is_outside:
+        # Check if the Case 2 spine side intersects with any other block (excluding the spine target blocks themselves)
+        other_blocks = [b for b in blocks if b["name"] not in (name, "Power Block", "Cooling Tower")]
+        for b in other_blocks:
+            if line_intersects_pb(p1, p2, (b["x"], b["y"], b["width"], b["height"])):
+                return "case1_rack"
+
+        if dist < margin or is_outside:
             return "case1_rack"
         else:
             return random.choice(["case1_rack", "case2_rack"])
@@ -721,7 +968,112 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
                 active_cases[name] = choose_case("Cooling Tower", rack_buffers["Cooling Tower"]["case1_rack"], rack_buffers["Cooling Tower"]["case2_rack"], ct_cx, ct_cy)
 
     if "Power Block" not in rack_buffers or "Cooling Tower" not in rack_buffers:
-        return [], [], active_cases
+        candidate_points = []
+        raw_candidates = []
+        
+        def get_corners(rect):
+            x, y, w, h = rect
+            return [(x, y), (x+w, y), (x+w, y+h), (x, y+h)]
+
+        def is_inside(c):
+            return 0 <= c[0] <= sw and 0 <= c[1] <= sl
+
+        rect = rack_buffers.get("RAW Water Tank", {}).get(active_cases.get("RAW Water Tank"))
+        if rect:
+            corners = get_corners(rect)
+            corners = [c for c in corners if is_inside(c)]
+            ref_pt = (sw/2, sl/2)
+            corners.sort(key=lambda c: (c[0]-ref_pt[0])**2 + (c[1]-ref_pt[1])**2)
+            raw_candidates = corners[:2]
+            candidate_points.extend(raw_candidates)
+
+        demi_candidates = []
+        rect = rack_buffers.get("Demi Water Tank", {}).get(active_cases.get("Demi Water Tank"))
+        if rect:
+            corners = get_corners(rect)
+            corners = [c for c in corners if is_inside(c)]
+            ref_pt = (sw/2, sl/2)
+            corners.sort(key=lambda c: (c[0]-ref_pt[0])**2 + (c[1]-ref_pt[1])**2)
+            demi_candidates = corners[:2]
+            candidate_points.extend(demi_candidates)
+
+        wwt_pt = None
+        kept_raw = None
+        kept_demi = None
+        wwt_rect = rack_buffers.get("WT/WWT", {}).get(active_cases.get("WT/WWT"))
+        
+        if wwt_rect and candidate_points:
+            wwt_x, wwt_y, wwt_w, wwt_h = wwt_rect
+            wwt_sides = [
+                [(wwt_x, wwt_y), (wwt_x+wwt_w, wwt_y)],
+                [(wwt_x+wwt_w, wwt_y), (wwt_x+wwt_w, wwt_y+wwt_h)],
+                [(wwt_x, wwt_y+wwt_h), (wwt_x+wwt_w, wwt_y+wwt_h)],
+                [(wwt_x, wwt_y), (wwt_x, wwt_y+wwt_h)]
+            ]
+            
+            def pt_to_segment(p, s1, s2):
+                x, y = p
+                x1, y1 = s1
+                x2, y2 = s2
+                px = x2 - x1
+                py = y2 - y1
+                norm = px*px + py*py
+                u = ((x - x1) * px + (y - y1) * py) / float(norm) if norm else 0
+                if 0 <= u <= 1:
+                    proj = (x1 + u * px, y1 + u * py)
+                    return True, proj, math.hypot(x - proj[0], y - proj[1])
+                d1 = math.hypot(x - x1, y - y1)
+                d2 = math.hypot(x - x2, y - y2)
+                if d1 < d2:
+                    return False, s1, d1
+                return False, s2, d2
+
+            best_proj_dist = float('inf')
+            best_proj_pair = None
+            
+            for pt in candidate_points:
+                closest_dist = float('inf')
+                closest_proj = None
+                closest_is_perp = False
+                for s1, s2 in wwt_sides:
+                    is_perp, proj, d = pt_to_segment(pt, s1, s2)
+                    if d < closest_dist:
+                        closest_dist = d
+                        closest_proj = proj
+                        closest_is_perp = is_perp
+                if closest_is_perp and closest_dist < best_proj_dist:
+                    best_proj_dist = closest_dist
+                    best_proj_pair = (pt, closest_proj)
+                    
+            if best_proj_pair:
+                kept_source = best_proj_pair[0]
+                wwt_pt = best_proj_pair[1]
+            else:
+                wwt_corners = get_corners(wwt_rect)
+                fallback_raw_cx = raw_cx if raw_cx != 0 else sw/2
+                fallback_raw_cy = raw_cy if raw_cy != 0 else sl/2
+                wwt_pt = min(wwt_corners, key=lambda c: (c[0]-fallback_raw_cx)**2 + (c[1]-fallback_raw_cy)**2)
+                kept_source = min(candidate_points, key=lambda c: (c[0]-wwt_pt[0])**2 + (c[1]-wwt_pt[1])**2)
+                
+            def dist(p1, p2):
+                return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+
+            if kept_source in raw_candidates:
+                kept_raw = kept_source
+                if demi_candidates:
+                    kept_demi = min(demi_candidates, key=lambda c: dist(c, kept_raw))
+            else:
+                kept_demi = kept_source
+                if raw_candidates:
+                    kept_raw = min(raw_candidates, key=lambda c: dist(c, kept_demi))
+
+        water_triangle = []
+        if kept_raw: water_triangle.append(kept_raw)
+        if kept_demi: water_triangle.append(kept_demi)
+        if wwt_pt:
+            water_triangle.append(wwt_pt)
+
+        return [], candidate_points, active_cases, water_triangle
 
     pb_rect = rack_buffers["Power Block"][active_cases["Power Block"]]
     ct_rect = rack_buffers["Cooling Tower"][active_cases["Cooling Tower"]]
@@ -840,7 +1192,10 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             ox0 = max(seg_x0, tgt_x0)
             ox1 = min(seg_x1, tgt_x1)
             if ox1 >= ox0:
-                x_mid = (ox0 + ox1) / 2
+                if ox0 - 0.1 <= pb_cx <= ox1 + 0.1:
+                    x_mid = pb_cx
+                else:
+                    x_mid = (ox0 + ox1) / 2
                 return [(x_mid, y_seg), (x_mid, y_tgt)]
             else:
                 if seg_x1 < tgt_x0:
@@ -855,7 +1210,10 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             oy0 = max(seg_y0, tgt_y0)
             oy1 = min(seg_y1, tgt_y1)
             if oy1 >= oy0:
-                y_mid = (oy0 + oy1) / 2
+                if oy0 - 0.1 <= pb_cy <= oy1 + 0.1:
+                    y_mid = pb_cy
+                else:
+                    y_mid = (oy0 + oy1) / 2
                 return [(x_seg, y_mid), (x_tgt, y_mid)]
             else:
                 if seg_y1 < tgt_y0:
@@ -866,11 +1224,28 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
     pb_halves = split_segment(best_pb_side)
     ct_halves = split_segment(best_ct_side)
 
+    is_overlap = segments_overlap(best_pb_side, best_ct_side)
+    is_pb_horiz = abs(best_pb_side[0][1] - best_pb_side[1][1]) < 0.1
+
     best_pair = None
     min_d = float('inf')
     for pb_h in pb_halves:
         for ct_h in ct_halves:
             d = dist_sq(pb_h, ct_h)
+            if is_overlap:
+                if is_pb_horiz:
+                    # Horizontal sides overlap: prioritize ct_h covering pb_cx
+                    ct_x0 = min(ct_h[0][0], ct_h[1][0])
+                    ct_x1 = max(ct_h[0][0], ct_h[1][0])
+                    if ct_x0 - 0.1 <= pb_cx <= ct_x1 + 0.1:
+                        d -= 1000000.0
+                else:
+                    # Vertical sides overlap: prioritize ct_h covering pb_cy
+                    ct_y0 = min(ct_h[0][1], ct_h[1][1])
+                    ct_y1 = max(ct_h[0][1], ct_h[1][1])
+                    if ct_y0 - 0.1 <= pb_cy <= ct_y1 + 0.1:
+                        d -= 1000000.0
+
             if d < min_d:
                 min_d = d
                 best_pair = (pb_h, ct_h)
@@ -878,13 +1253,11 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
     best_pb_half, best_ct_half = best_pair
 
     # Under overlap exception:
-    is_overlap = segments_overlap(best_pb_side, best_ct_side)
     pb_case = active_cases["Power Block"]
     ct_case = active_cases["Cooling Tower"]
 
     p1a, p1b = best_pb_side
     p2a, p2b = best_ct_side
-    is_pb_horiz = abs(p1a[1] - p1b[1]) < 0.1
     is_ct_horiz = abs(p2a[1] - p2b[1]) < 0.1
 
     spine_creation_debug = {
@@ -900,6 +1273,7 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
     }
 
     spine_centerlines = [best_pb_half, best_ct_half]
+    overlap_connector = None   # straight overlap bridge, candidate for A* reroute
 
     if is_overlap and pb_case == "case1_rack" and ct_case == "case2_rack":
         # One straight perpendicular spine on the MAIN RACK axis (through PB
@@ -924,6 +1298,7 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
         spine_centerlines.append(main_rack)
         spine_creation_debug["perp_line"] = perp_line
         spine_creation_debug["main_rack"] = main_rack
+        overlap_connector = perp_line
     elif is_overlap and pb_case == "case2_rack" and ct_case == "case1_rack":
         # Mirror of the case1/case2 rule. Here PB is case2 (its active side sits
         # FAR from PB) and CT is case1 (active side close to CT), so the gap to
@@ -933,13 +1308,19 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
         # ("start") point lands ON the CT rack buffer. No separate CT connector.
         if is_pb_horiz:
             ct_buffer_y = best_ct_side[0][1]
-            main_rack = [(pb_cx, pb_cy), (pb_cx, ct_buffer_y)]
+            overlap_y = best_pb_half[0][1]
+            main_rack = [(pb_cx, pb_cy), (pb_cx, overlap_y)]
+            perp_line = [(pb_cx, overlap_y), (pb_cx, ct_buffer_y)]
         else:
             ct_buffer_x = best_ct_side[0][0]
-            main_rack = [(pb_cx, pb_cy), (ct_buffer_x, pb_cy)]
+            overlap_x = best_pb_half[0][0]
+            main_rack = [(pb_cx, pb_cy), (overlap_x, pb_cy)]
+            perp_line = [(overlap_x, pb_cy), (ct_buffer_x, pb_cy)]
+        spine_centerlines.append(perp_line)
         spine_centerlines.append(main_rack)
+        spine_creation_debug["perp_line"] = perp_line
         spine_creation_debug["main_rack"] = main_rack
-        spine_creation_debug["perp_line"] = main_rack
+        overlap_connector = perp_line
     else:
         p1, p2 = best_pb_half
         is_horiz = abs(p1[1] - p2[1]) < 0.1
@@ -959,9 +1340,35 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             connector = closest_perp_line(best_pb_half, best_ct_half)
             spine_centerlines.append(connector)
             spine_creation_debug["perp_line"] = connector
+            overlap_connector = connector
+
+    # 7b. Reroute an overlap connector that slices through a block. The overlap
+    # straight bridge (closest_perp_line) has NO obstacle avoidance, so it can cut
+    # through an intervening block (e.g. Warehouse between PB and CT). If it does,
+    # drop it and let the step-7 A* rebuild the connection around every block's
+    # Case 1 rack buffer.
+    other_blocks = [b for b in blocks if b["name"] not in ("Power Block", "Cooling Tower")]
+
+    def _seg_hits_blocks(seg):
+        for b in other_blocks:
+            if b["name"] == "Gate House":
+                rect = (b["x"], b["y"], b["width"], b["height"])
+            else:
+                rect = rack_buffers[b["name"]]["case1_rack"]
+            if line_intersects_pb(seg[0], seg[1], rect):
+                return True
+        return False
+
+    overlap_reroute = False
+    if is_overlap and overlap_connector is not None and _seg_hits_blocks(overlap_connector):
+        overlap_reroute = True
+        spine_centerlines = [s for s in spine_centerlines if s is not overlap_connector]
+        spine_creation_debug["perp_line"] = None
+        spine_creation_debug["overlap_reroute"] = True
 
     # 7. Connect PB and CT centerlines (Step B-1 rule 7)
-    if not is_overlap:
+    _n_spine_before_astar = len(spine_centerlines)
+    if (not is_overlap) or overlap_reroute:
         grid_b1 = Grid(sw, sl, cell_size=CELL_SIZE)
         grid_b2 = Grid(sw, sl, cell_size=CELL_SIZE)
 
@@ -972,14 +1379,22 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             grid_b1.blocked[:, :] = False
             grid_b2.blocked[:, :] = False
             if inflate:
-                mark_rack_obstacles(grid_b1, blocks, rack_buffers, active_cases)
+                # Floor every block at its Case 1 rack buffer so the PB↔CT spine
+                # routes around each block's minimum rack zone, not just its
+                # footprint (point: "almost every block has a min rack buffer").
+                min_buf = max(0.0, RACK_CASE1_OFFSET - CELL_SIZE)
+                mark_rack_obstacles(grid_b1, blocks, rack_buffers, active_cases,
+                                    min_inflate=min_buf)
                 mark_rack_obstacles(grid_b2, blocks, rack_buffers, active_cases,
-                                    exclude={"Power Block"})
+                                    exclude={"Power Block"}, min_inflate=min_buf)
             else:
                 for b in blocks:
                     grid_b1.mark_building(b, inflate_m=0)
                     if b["name"] != "Power Block":
                         grid_b2.mark_building(b, inflate_m=0)
+            # Re-apply the polygon mask AFTER the reset above (the reset wipes it).
+            _mask_grid_to_plot(grid_b1, plot)
+            _mask_grid_to_plot(grid_b2, plot)
 
         mark_b1_grids(inflate=True)
 
@@ -1106,7 +1521,7 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
         dist_1 = (len(path_1) - 1) * CELL_SIZE if path_1 else float('inf')
         dist_2 = (len(path_2) - 1) * CELL_SIZE if path_2 else float('inf')
 
-        # Compare and pick the shorter connection path
+        # Compare and pick the shorter connection path (original Layout06 0626 rule).
         if dist_2 < dist_1:
             path = path_2
             grid_to_use = grid_b2
@@ -1160,7 +1575,80 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
                 seg = [simplified[i], simplified[i+1]]
                 spine_centerlines.append(seg)
 
+    # Safety: if an overlap reroute found NO A* path, the connection would be
+    # left open — restore the straight connector so PB/CT stay linked.
+    if overlap_reroute and len(spine_centerlines) == _n_spine_before_astar and overlap_connector is not None:
+        spine_centerlines.append(overlap_connector)
+        spine_creation_debug["perp_line"] = overlap_connector
+        spine_creation_debug["overlap_reroute"] = "failed-restored"
+
     spine_creation_debug["spine_centerlines"] = spine_centerlines
+
+    # B-1 step 7b — intersection of the PB↔CT spine with the PB CASE 1 rack
+    # buffer. After the spine network is connected (step 7), find where it
+    # crosses the PB case1 rack-buffer rectangle boundary. If the active PB side
+    # is the case1 side it lies ON that edge (collinear → skipped); otherwise the
+    # MAIN RACK stub / connector crosses the case1 buffer where it passes through.
+    def _seg_seg_intersect(a, b, c, d):
+        (x1, y1), (x2, y2) = a, b
+        (x3, y3), (x4, y4) = c, d
+        den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        if abs(den) < 1e-9:
+            return None  # parallel or collinear (e.g. the PB half on the edge)
+        t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+        u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / den
+        if -1e-6 <= t <= 1 + 1e-6 and -1e-6 <= u <= 1 + 1e-6:
+            return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
+        return None
+
+    pb_case1_rect = rack_buffers["Power Block"]["case1_rack"]
+    bx0, by0, bw0, bh0 = pb_case1_rect
+    pb_buffer_edges = [
+        [(bx0, by0), (bx0 + bw0, by0)],
+        [(bx0 + bw0, by0), (bx0 + bw0, by0 + bh0)],
+        [(bx0 + bw0, by0 + bh0), (bx0, by0 + bh0)],
+        [(bx0, by0 + bh0), (bx0, by0)],
+    ]
+    pb_buffer_hits = []
+    for seg in spine_centerlines:
+        for e in pb_buffer_edges:
+            ip = _seg_seg_intersect(seg[0], seg[1], e[0], e[1])
+            if ip is not None and not any(
+                abs(ip[0] - q[0]) < 0.5 and abs(ip[1] - q[1]) < 0.5 for q in pb_buffer_hits
+            ):
+                pb_buffer_hits.append(ip)
+    spine_creation_debug["pb_buffer_hits"] = pb_buffer_hits
+
+    # B-1 step 7c — CUT the spine at the case1 buffer to split MAIN RACK from the
+    # PB↔CT spine. The MAIN RACK axis runs PB-centre -> active rack buffer; cut it
+    # where it crosses the case1 (6 m) buffer:
+    #   * PB-centre -> cut point  = MAIN RACK OUTPUT (the spine "inside" the PB).
+    #   * cut point  -> rest      = part of the PB↔CT spine.
+    # Geometry/connectivity are unchanged — we only add a vertex at the cut and
+    # tag the inner part. The PB↔CT connection itself still uses the 0626 A* logic
+    # built above. If the active case already IS case1 the cut lands on the rack
+    # end (degenerate leftover) and MAIN RACK == the whole stub.
+    main_rack_output = main_rack
+    cut_pt = None
+    for e in pb_buffer_edges:
+        ip = _seg_seg_intersect(main_rack[0], main_rack[1], e[0], e[1])
+        if ip is not None:
+            cut_pt = ip
+            break
+    if cut_pt is not None:
+        pbc, far = main_rack[0], main_rack[1]
+        d_near = abs(cut_pt[0] - pbc[0]) + abs(cut_pt[1] - pbc[1])
+        d_far = abs(cut_pt[0] - far[0]) + abs(cut_pt[1] - far[1])
+        main_rack_output = [pbc, cut_pt]
+        if d_near > 0.5 and d_far > 0.5:
+            # Active case is case2: replace the full stub with [inner, leftover]
+            # so the spine keeps a vertex at the cut (both parts stay drawn).
+            spine_centerlines = [s for s in spine_centerlines if s is not main_rack]
+            spine_centerlines.append([cut_pt, far])
+            spine_centerlines.append(main_rack_output)
+    spine_creation_debug["main_rack_output"] = main_rack_output
+    spine_creation_debug["spine_centerlines"] = spine_centerlines
+
     _last_debug["spine_creation"] = spine_creation_debug
 
     pb_spine_mid = ((best_pb_half[0][0] + best_pb_half[1][0])/2, (best_pb_half[0][1] + best_pb_half[1][1])/2)
@@ -1259,12 +1747,20 @@ def build_rack_spines(rack_buffers, blocks, sw, sl, ring_road=None, gate_spur=No
             if raw_candidates:
                 kept_raw = min(raw_candidates, key=lambda c: dist(c, kept_demi))
 
+        is_wwt_split = False
+        pb_block = next((b for b in blocks if b["name"] == "Power Block"), None)
+        if pb_block and wwt_pt and kept_source:
+            pb_rect = (pb_block["x"], pb_block["y"], pb_block["width"], pb_block["height"])
+            if line_intersects_pb(kept_source, wwt_pt, pb_rect):
+                is_wwt_split = True
+
     water_triangle = []
     if kept_raw: water_triangle.append(kept_raw)
     if kept_demi: water_triangle.append(kept_demi)
-    if wwt_pt: water_triangle.append(wwt_pt)
+    if wwt_pt and not is_wwt_split:
+        water_triangle.append(wwt_pt)
 
-    return spine_centerlines, candidate_points, active_cases, water_triangle
+    return spine_centerlines, candidate_points, active_cases, water_triangle, pb_buffer_hits, main_rack_output
 
 
 def build_gate_spur(site_w, site_l, gate_pt):  # → §3.4.B (simple fallback; main logic is inline in generate_sketch)
@@ -1629,7 +2125,20 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
     gis_edge="N",   gis_ratio=0.8, gis_offset=0,
     water_edge="E", water_ratio=0.2, water_offset=0,
     max_pool=300,
+    plot=None, dxf_anchors=None, dxf_gate=None, dxf_boom=None, blocks_only=False,
 ):
+    """Polygon migration parameters (all optional; None/False = legacy rectangle):
+      plot         : Core.Plot.Plot — the convex plot polygon. When given, site_w
+                     / site_l are taken from its bounding box and all containment
+                     checks run against the polygon (incl. diagonal sides).
+      dxf_anchors  : {"Gate House"/"GIS"/"RAW Water Tank": (x, y, w, h)} read from
+                     CAD. Placed at these positions each attempt, with the same
+                     per-attempt jitter as the legacy anchors (GH/RAW ±5%, GIS 0).
+      dxf_gate     : (x, y) gate point on the boundary (from the Gate circle).
+      dxf_boom     : [(x1, y1), (x2, y2)] boom barrier line (from CAD).
+      blocks_only  : stop after block placement (Power Block + anchors + floated)
+                     and return a partial result — skips spurs/racks/perimeter,
+                     which are not polygon-ready yet (later migration phases)."""
     """
     Phase 06 Steps 1.1–1.3.
 
@@ -1644,7 +2153,20 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
     """
     global _last_debug
     sw, sl = site_w, site_l
-    gate_pt = compute_gate(sw, sl, gate_side, gate_ratio)
+    if plot is not None:
+        # The plot is origin-normalised, so its bounding box is (0, 0, sw, sl).
+        sw, sl = plot.size
+    if dxf_gate is not None:
+        gate_pt = dxf_gate
+        # Derive an approximate N/S/E/W "gate side" from the gate edge's outward
+        # normal — used by the PB clamp / leeward logic. (The spur stage that
+        # truly needs it is skipped in blocks_only mode.)
+        ge = plot.nearest_edge(*gate_pt) if plot is not None else None
+        if ge is not None:
+            nx, ny = plot.edges[ge]["normal"]
+            gate_side = ("E" if -nx > 0 else "W") if abs(nx) >= abs(ny) else ("N" if -ny > 0 else "S")
+    else:
+        gate_pt = compute_gate(sw, sl, gate_side, gate_ratio)
 
     # Reset debug state for this run
     _last_debug = {
@@ -1678,15 +2200,38 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
 
         placed = {}   # name → (x, y, w, h)
 
-        # 1. Fixed anchors  [→ §3.2] — jitter ±5% of site dim around fixed position (GIS is fully fixed, no jitter)
-        for name, edge, ratio, off in [
-            ("Gate House",     gh_edge,    gh_ratio,    gh_offset),
-            ("GIS",            gis_edge,   gis_ratio,   gis_offset),
-            ("RAW Water Tank", water_edge, water_ratio, water_offset),
-        ]:
-            j = 0.0 if name == "GIS" else 0.05
-            x, y, w, h = place_anchor(sw, sl, name, edge, ratio, off, jitter=j)
-            placed[name] = (x, y, w, h)
+        # 1. Fixed anchors  [→ §3.2] — jitter per block: ONLY RAW Water Tank moves
+        # (±5% of the site). Gate House is fixed (its boom barrier is attached to
+        # it) and GIS is fixed.
+        boom_out = list(dxf_boom) if dxf_boom else []
+        if dxf_anchors is not None:
+            # Polygon mode: anchors come from CAD at absolute positions; keep RAW's
+            # jitter around its CAD position and keep it inside the plot polygon.
+            for name in ("Gate House", "GIS", "RAW Water Tank"):
+                if name not in dxf_anchors:
+                    continue
+                bx, by, w, h = dxf_anchors[name]
+                j = 0.05 if name == "RAW Water Tank" else 0.0
+                placed_xy = (bx, by)
+                if j:
+                    for _ in range(20):  # try a few jittered spots, keep one inside
+                        jx = snap(bx + random.uniform(-sw * j, sw * j))
+                        jy = snap(by + random.uniform(-sl * j, sl * j))
+                        if plot is None or plot.contains_rect(jx, jy, w, h, tol=_pass_tol):
+                            placed_xy = (jx, jy)
+                            break
+                placed[name] = (snap(placed_xy[0]), snap(placed_xy[1]), w, h)
+            # Gate House is fixed, so the boom barrier (attached to it) stays at its
+            # CAD position — no offset needed.
+        else:
+            for name, edge, ratio, off in [
+                ("Gate House",     gh_edge,    gh_ratio,    gh_offset),
+                ("GIS",            gis_edge,   gis_ratio,   gis_offset),
+                ("RAW Water Tank", water_edge, water_ratio, water_offset),
+            ]:
+                j = 0.05 if name == "RAW Water Tank" else 0.0
+                x, y, w, h = place_anchor(sw, sl, name, edge, ratio, off, jitter=j)
+                placed[name] = (x, y, w, h)
 
         # 2. Power Block  [→ §3.3]
         # Tight-site logic: if vertical clearance on each side < 60m,
@@ -1766,12 +2311,19 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 else:
                     dy = random.uniform(-sl * 0.05, sl * 0.05)
 
-            cx = (sw - pw) / 2 + dx
-            cy = (sl - ph) / 2 + dy
+            # Base center: plot polygon center when given, else rectangle center.
+            if plot is not None:
+                pcx, pcy = plot.centroid
+                cx = pcx - pw / 2 + dx
+                cy = pcy - ph / 2 + dy
+            else:
+                cx = (sw - pw) / 2 + dx
+                cy = (sl - ph) / 2 + dy
             return (max(pb_x_bounds[0], min(cx, pb_x_bounds[1])),
                     max(pb_y_bounds[0], min(cy, pb_y_bounds[1])))
         pb_result = _try_place(sw, sl, "Power Block", placed, _pb_sample, max_attempts=100,
-                               buffer=pb_buf, x_bounds=tuple(pb_x_bounds), y_bounds=tuple(pb_y_bounds))
+                               buffer=pb_buf, x_bounds=tuple(pb_x_bounds), y_bounds=tuple(pb_y_bounds),
+                               plot=plot, plot_tol=_pass_tol)
         if pb_result is None:
             _last_debug["failed_at"] = "Power Block"
             _last_debug["failed_section"] = "§3.3 Power Block"
@@ -1828,15 +2380,35 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         bb_mid = None
         exit_helper = None
         other_corner = None
+        gate_spur = []
+        ring_spur = []
+        gate_death_zone = None
+        gate_road_out = []   # immutable snapshot of the gate spur for the polygon output
+        ring_spur_out = []   # immutable snapshot of the ring spur for the polygon output
+        # Plot centre — replaces sw/2, sl/2 in the original tie-break so the
+        # exit_helper choice works on a polygon. Identical to sw/2, sl/2 for a
+        # rectangle, so the legacy path is unchanged.
+        cen_x = plot.centroid[0] if plot is not None else sw / 2
+        cen_y = plot.centroid[1] if plot is not None else sl / 2
+        # Boom edge + midpoint: in polygon mode derive them from the CAD boom line
+        # so the ORIGINAL gate-spur construction runs unchanged; otherwise use the
+        # legacy bb_edge parameter with the computed 8 m-offset midpoint.
+        bb_edge_eff = bb_edge
+        bb_mid_dxf = None
+        if blocks_only and boom_out and "Gate House" in placed:
+            bb_edge_eff, bb_mid_dxf = _boom_edge_and_mid(boom_out, placed["Gate House"])
+
         if "Gate House" in placed:
             gh_x, gh_y, gh_w, gh_h = placed["Gate House"]
             cx, cy = gh_x + gh_w / 2, gh_y + gh_h / 2
-            if bb_edge == "N":   bb_mid = (cx, gh_y + gh_h + 8)
-            elif bb_edge == "S": bb_mid = (cx, gh_y - 8)
-            elif bb_edge == "E": bb_mid = (gh_x + gh_w + 8, cy)
-            elif bb_edge == "W": bb_mid = (gh_x - 8, cy)
+            if bb_mid_dxf is not None:
+                bb_mid = bb_mid_dxf
+            elif bb_edge_eff == "N": bb_mid = (cx, gh_y + gh_h + 8)
+            elif bb_edge_eff == "S": bb_mid = (cx, gh_y - 8)
+            elif bb_edge_eff == "E": bb_mid = (gh_x + gh_w + 8, cy)
+            elif bb_edge_eff == "W": bb_mid = (gh_x - 8, cy)
 
-            if bb_edge in ("N", "S"):
+            if bb_edge_eff in ("N", "S"):
                 p1 = (gh_x - 8, bb_mid[1])
                 p2 = (gh_x + gh_w + 8, bb_mid[1])
                 min_x, max_x = min(bb_mid[0], gate_pt[0]), max(bb_mid[0], gate_pt[0])
@@ -1847,7 +2419,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 elif p2_proj and not p1_proj:
                     exit_helper, other_corner = p1, p2
                 else:
-                    if abs(p1[0] - sw/2) < abs(p2[0] - sw/2):
+                    if abs(p1[0] - cen_x) < abs(p2[0] - cen_x):
                         exit_helper, other_corner = p1, p2
                     else:
                         exit_helper, other_corner = p2, p1
@@ -1862,14 +2434,15 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 elif p2_proj and not p1_proj:
                     exit_helper, other_corner = p1, p2
                 else:
-                    if abs(p1[1] - sl/2) < abs(p2[1] - sl/2):
+                    if abs(p1[1] - cen_y) < abs(p2[1] - cen_y):
                         exit_helper, other_corner = p1, p2
                     else:
                         exit_helper, other_corner = p2, p1
 
         if bb_mid and exit_helper and other_corner:
-            # Calculate Gate Death Zone (only if gate and gate house are on the same edge)  [→ §3.4.C]
-            if gate_side == gh_edge:
+            # Calculate Gate Death Zone  [→ §3.4.C] — legacy: only when gate & gate
+            # house share an edge; polygon mode: always (gate reached across boom).
+            if blocks_only or gate_side == gh_edge:
                 gdz_x_min = min(bb_mid[0], gate_pt[0])
                 gdz_x_max = max(bb_mid[0], gate_pt[0])
                 gdz_y_min = min(bb_mid[1], gate_pt[1])
@@ -1889,14 +2462,11 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             #   - the "exit_helper_line": the perpendicular buffer edge that holds
             #     exit_helper but NOT the boom.
             # exit_helper_opp = the OTHER end of exit_helper_line (away from boom).
-            # We enter the ring spur near exit_helper_opp, run along exit_helper_line
-            # to exit_helper, then cross the boom once via gate_spur — so the spur
-            # approaches from the non-boom side and never loops the long way round.
-            if bb_edge in ("N", "S"):
-                opp_perp = (gh_y - 8) if bb_edge == "N" else (gh_y + gh_h + 8)
+            if bb_edge_eff in ("N", "S"):
+                opp_perp = (gh_y - 8) if bb_edge_eff == "N" else (gh_y + gh_h + 8)
                 exit_helper_opp = (exit_helper[0], opp_perp)
             else:
-                opp_perp = (gh_x - 8) if bb_edge == "E" else (gh_x + gh_w + 8)
+                opp_perp = (gh_x - 8) if bb_edge_eff == "E" else (gh_x + gh_w + 8)
                 exit_helper_opp = (opp_perp, exit_helper[1])
 
             # Ring start point = ring-road corner closest to exit_helper (4 corners, no midpoint)
@@ -1910,18 +2480,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             closest_corner = min(ring_corners, key=lambda c: (c[0]-ehx)**2 + (c[1]-ehy)**2)
             sx, sy = closest_corner
 
-            # Check if this corner causes a 180-degree U-turn (backtracking) at exit_helper.
-            # The direction of the final Ring Spur segment (from turn_pt to exit_helper) must align
-            # with the direction of the first Gate Spur segment (from exit_helper to bb_mid).
-            # - For N/S boom edges, the segments are horizontal:
-            #   Ring Spur: (sx, ehy) -> (ehx, ehy)  (direction: ehx - sx)
-            #   Gate Spur: (ehx, ehy) -> (bb_mid[0], ehy)  (direction: bb_mid[0] - ehx)
-            #   To avoid a U-turn, (ehx - sx) * (bb_mid[0] - ehx) must be >= 0.
-            # - For E/W boom edges, the segments are vertical:
-            #   Ring Spur: (ehx, sy) -> (ehx, ehy)  (direction: ehy - sy)
-            #   Gate Spur: (ehx, ehy) -> (ehx, bb_mid[1])  (direction: bb_mid[1] - ehy)
-            #   To avoid a U-turn, (ehy - sy) * (bb_mid[1] - ehy) must be >= 0.
-            if bb_edge in ("N", "S"):
+            # Reject the corner if it forces a 180° U-turn at exit_helper (the final
+            # ring-spur segment must align with the first gate-spur segment).
+            if bb_edge_eff in ("N", "S"):
                 is_valid = (ehx - sx) * (bb_mid[0] - ehx) >= 0
             else:
                 is_valid = (ehy - sy) * (bb_mid[1] - ehy) >= 0
@@ -1929,35 +2490,50 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             if is_valid:
                 spur_start = closest_corner
                 # Ring spur L-route (Option A): project spur_start onto exit_line
-                if bb_edge in ("N", "S"):
+                if bb_edge_eff in ("N", "S"):
                     turn_pt = (sx, ehy)
                 else:
                     turn_pt = (ehx, sy)
                 ring_spur = [spur_start, turn_pt, exit_helper]
             else:
-                # If closest corner is invalid (causes U-turn), fall back to projection of exit_helper onto Ring Road edge.
-                if bb_edge in ("N", "S"):
+                # Route A would U-turn. Two fallbacks:
+                #  (1) if exit_helper lies WITHIN the ring road's span on the spur
+                #      axis, drop a straight spur onto the nearest ring edge (clean);
+                #  (2) otherwise exit_helper is OUTSIDE the ring road — route an L
+                #      from the closest ring CORNER with a perpendicular final
+                #      approach, so the spur always starts on the ring road and never
+                #      backtracks against the gate spur.
+                if bb_edge_eff in ("N", "S"):
                     sy_proj = rymax if abs(ehy - rymax) < abs(ehy - rymin) else rymin
-                    spur_start = (ehx, sy_proj)
+                    if rxmin <= ehx <= rxmax:
+                        ring_spur = [(ehx, sy_proj), exit_helper]
+                    else:
+                        ring_spur = [closest_corner, (ehx, sy), exit_helper]
                 else:
                     sx_proj = rxmax if abs(ehx - rxmax) < abs(ehx - rxmin) else rxmin
-                    spur_start = (sx_proj, ehy)
-                # Straight 1-segment spur directly from the projected point on the Ring Road edge
-                ring_spur = [spur_start, exit_helper]
+                    if rymin <= ehy <= rymax:
+                        ring_spur = [(sx_proj, ehy), exit_helper]
+                    else:
+                        ring_spur = [closest_corner, (sx, ehy), exit_helper]
 
-            # gate_spur — KEEP original: cross the boom at bb_mid, route to gate.
-            if bb_edge in ("N", "S"):
+            # gate_spur — cross the boom at bb_mid, route to gate (perfect 90° crossing).
+            if bb_edge_eff in ("N", "S"):
                 gate_spur = [exit_helper, bb_mid, other_corner, (gate_pt[0], other_corner[1]), gate_pt]
             else:
                 gate_spur = [exit_helper, bb_mid, other_corner, (other_corner[0], gate_pt[1]), gate_pt]
-        else:
+            # Snapshot for the polygon output (the rack stage may mutate the live lists).
+            gate_road_out = list(gate_spur)
+            ring_spur_out = list(ring_spur)
+        elif not blocks_only:
             gate_death_zone = None
             gate_spur = build_gate_spur(sw, sl, gate_pt)
             ring_spur = build_ring_spur(sw, sl, ring_road, fixed_blocks_so_far, gate_pt)
+
+        # Spur exclusion zones — added BEFORE floated blocks for both paths so the
+        # floated blocks avoid the gate/ring spur corridors.
         for zone_name, line in (("_gate_spur_zone", gate_spur),
                                 ("_ring_spur_zone", ring_spur)):
-            rects = _spur_exclusion_rect(line, buffer=ROAD_BUFFER)
-            for i, rect in enumerate(rects):
+            for i, rect in enumerate(_spur_exclusion_rect(line, buffer=ROAD_BUFFER)):
                 placed[f"{zone_name}_{i}"] = rect
 
         # 4. Floated blocks — magnet placement with zone rules.  [→ §3.5]
@@ -1966,11 +2542,20 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         raw_x, raw_y, raw_w, raw_h = placed["RAW Water Tank"]
         raw_cx, raw_cy = raw_x + raw_w/2, raw_y + raw_h/2
 
-        def leeward_filter(x, y, w, h):
-            if wind_dir == "East": return x <= sw * 0.45
-            if wind_dir == "West": return x >= sw * 0.55
-            if wind_dir == "North": return y <= sl * 0.45
-            return y >= sl * 0.55
+        if plot is not None:
+            _cen_x, _cen_y = plot.centroid
+            def leeward_filter(x, y, w, h):
+                bx, by = x + w / 2, y + h / 2
+                if wind_dir == "East": return bx <= _cen_x
+                if wind_dir == "West": return bx >= _cen_x
+                if wind_dir == "North": return by <= _cen_y
+                return by >= _cen_y
+        else:
+            def leeward_filter(x, y, w, h):
+                if wind_dir == "East": return x <= sw * 0.45
+                if wind_dir == "West": return x >= sw * 0.55
+                if wind_dir == "North": return y <= sl * 0.45
+                return y >= sl * 0.55
 
         def near_raw_filter(x, y, w, h):
             cx, cy = x + w/2, y + h/2
@@ -1992,7 +2577,12 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
 
         ok = True
         for name, prefer, f_fn, m_target in floated_order:
-            if name == "Flare":
+            if name == "Flare" and plot is not None:
+                # Polygon mode: place at the leeward polygon vertex (§3.5.C).
+                pos = _place_flare_on_polygon(plot, placed, wind_dir, _pass_tol)
+                if pos is None and _pass_tol < BOUNDARY_TOLERANCE:
+                    pos = _place_flare_on_polygon(plot, placed, wind_dir, BOUNDARY_TOLERANCE)
+            elif name == "Flare":
                 # Custom corner placement for Flare (no magnetization)
                 w, h = BLOCK_FOOTPRINTS["Flare"]
                 margin = -_pass_tol
@@ -2071,7 +2661,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                                 break
             else:
                 pos = _try_magnet_place(sw, sl, name, placed, prefer_near=prefer, filter_fn=f_fn,
-                                        magnet_target=m_target, boundary_tol=_pass_tol)
+                                        magnet_target=m_target, boundary_tol=_pass_tol, plot=plot)
             if pos is None:
                 ok = False
                 _last_debug["failed_at"] = name
@@ -2094,15 +2684,19 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             if not n.startswith("_")
         ]
 
+        # Polygon migration (Phase 3): blocks-only mode returns the placed blocks
+        # on the real plot shape, skipping the not-yet-polygon-ready road/rack/
+        # perimeter stages. This is what the "Generate Layouts" button uses today.
         # 4. RACK placement — comes AFTER floated blocks  [→ §3.6]
         # BEFORE perimeter/spurs/stubs (racks are more important than roads).
         # Step A: per-block buffer rectangles for Case 1 & Case 2 layouts.
         # Steps B-1..B-5 and C (spine + connector) — implemented.
         rack_buffers = compute_rack_buffers(blocks)
-        spine_centerlines, candidate_points, active_cases, water_triangle = build_rack_spines(rack_buffers, blocks, sw, sl, ring_road, gate_spur, ring_spur)
+        spine_centerlines, candidate_points, active_cases, water_triangle, pb_buffer_hits, main_rack_output = build_rack_spines(rack_buffers, blocks, sw, sl, ring_road, gate_spur, ring_spur, plot=plot)
         pb_ct_segments = list(spine_centerlines)
         water_cluster_segments = []
         rack_segments = list(spine_centerlines)
+        pruned_rack_segments = []
 
         valid_xs = set()
         valid_ys = set()
@@ -2138,14 +2732,16 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             return (best_x, best_y)
 
         # B-5: Water cluster spine  [→ §3.6.B-5]
-        if len(water_triangle) == 3:
+        if len(water_triangle) >= 2:
             # Inflated grid forces water paths onto the rack-buffer line
             # (point 3); footprint-only grid is the per-route fallback.
             grid_b5 = Grid(sw, sl, cell_size=CELL_SIZE)
             mark_rack_obstacles(grid_b5, blocks, rack_buffers, active_cases)
+            _mask_grid_to_plot(grid_b5, plot)
             grid_b5_full = Grid(sw, sl, cell_size=CELL_SIZE)
             for b in blocks:
                 grid_b5_full.mark_building(b, inflate_m=0)
+            _mask_grid_to_plot(grid_b5_full, plot)
 
             def astar_route_on(grid, p1, p2):
                 c1 = grid.world_to_cell(*p1)
@@ -2164,20 +2760,28 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 path = astar_route_on(grid_b5, p1, p2)
                 return path if path else astar_route_on(grid_b5_full, p1, p2)
                 
-            raw_pt, demi_pt, wwt_pt = water_triangle[0], water_triangle[1], water_triangle[2]
+            if len(water_triangle) == 3:
+                raw_pt, demi_pt, wwt_pt = water_triangle[0], water_triangle[1], water_triangle[2]
+                
+                path_rd = astar_route(raw_pt, demi_pt)
+                path_rw = astar_route(raw_pt, wwt_pt)
+                path_dw = astar_route(demi_pt, wwt_pt)
+                
+                len_rd = len(path_rd) if path_rd else float('inf')
+                len_rw = len(path_rw) if path_rw else float('inf')
+                len_dw = len(path_dw) if path_dw else float('inf')
+                
+                paths = [(len_rd, path_rd), (len_rw, path_rw), (len_dw, path_dw)]
+                paths.sort(key=lambda x: x[0])
+                
+                chosen_paths = paths[:2]
+            else:
+                pt1, pt2 = water_triangle[0], water_triangle[1]
+                path_12 = astar_route(pt1, pt2)
+                len_12 = len(path_12) if path_12 else float('inf')
+                chosen_paths = [(len_12, path_12)]
             
-            path_rd = astar_route(raw_pt, demi_pt)
-            path_rw = astar_route(raw_pt, wwt_pt)
-            path_dw = astar_route(demi_pt, wwt_pt)
-            
-            len_rd = len(path_rd) if path_rd else float('inf')
-            len_rw = len(path_rw) if path_rw else float('inf')
-            len_dw = len(path_dw) if path_dw else float('inf')
-            
-            paths = [(len_rd, path_rd), (len_rw, path_rw), (len_dw, path_dw)]
-            paths.sort(key=lambda x: x[0])
-            
-            for length, path in paths[:2]:
+            for length, path in chosen_paths:
                 if length != float('inf') and path:
                     simplified = [path[0]]
                     for i in range(1, len(path)-1):
@@ -2191,11 +2795,12 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                         water_cluster_segments.append(seg)
 
         # Step C: Connect spines into one network  [→ §3.6.C-1]
-        if len(spine_centerlines) >= 2 and water_cluster_segments:
-            pb_line = [spine_centerlines[0]]
-            ct_line = [spine_centerlines[1]]
+        if water_cluster_segments:
+            pb_line = [spine_centerlines[0]] if len(spine_centerlines) >= 1 else []
+            ct_line = [spine_centerlines[1]] if len(spine_centerlines) >= 2 else []
             grid_c = Grid(sw, sl, cell_size=CELL_SIZE)
-            
+            _mask_grid_to_plot(grid_c, plot)
+
             def set_segment_blocked(p1, p2, val):
                 c1 = grid_c.world_to_cell(*p1)
                 c2 = grid_c.world_to_cell(*p2)
@@ -2246,6 +2851,35 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                         else:
                             for b in blocks:
                                 grid_c.mark_building(b, inflate_m=0)
+
+                    # Unblock the main rack corridor inside the Power Block footprint
+                    pb_block = next((b for b in blocks if b["name"] == "Power Block"), None)
+                    if pb_block:
+                        pb_x0 = pb_block["x"]
+                        pb_x1 = pb_block["x"] + pb_block["width"]
+                        pb_y0 = pb_block["y"]
+                        pb_y1 = pb_block["y"] + pb_block["height"]
+                        
+                        # Find the main rack segment starting/ending at (pb_cx, pb_cy)
+                        main_rack_seg = None
+                        for seg in spine_centerlines:
+                            p1, p2 = seg
+                            if math.hypot(p1[0] - pb_cx, p1[1] - pb_cy) < 0.1 or math.hypot(p2[0] - pb_cx, p2[1] - pb_cy) < 0.1:
+                                main_rack_seg = seg
+                                break
+                        
+                        if main_rack_seg:
+                            is_horiz = abs(main_rack_seg[0][1] - main_rack_seg[1][1]) < 0.1
+                            if is_horiz:
+                                c_y = grid_c.world_to_cell(pb_cx, pb_cy)[1]
+                                c_x0 = max(0, int(math.floor(pb_x0 / CELL_SIZE)))
+                                c_x1 = min(grid_c.ncols, int(math.ceil(pb_x1 / CELL_SIZE)))
+                                grid_c.blocked[c_x0:c_x1, c_y:c_y+1] = False
+                            else:
+                                c_x = grid_c.world_to_cell(pb_cx, pb_cy)[0]
+                                c_y0 = max(0, int(math.floor(pb_y0 / CELL_SIZE)))
+                                c_y1 = min(grid_c.nrows, int(math.ceil(pb_y1 / CELL_SIZE)))
+                                grid_c.blocked[c_x:c_x+1, c_y0:c_y1] = False
 
                     start_cells = []
                     for seg in source_segments:
@@ -2354,6 +2988,23 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                                         
                         return False
 
+                    # Build list of road cells to penalize crossing roads
+                    road_cells = set()
+                    for seg in road_segs:
+                        c1 = grid_c.world_to_cell(*seg[0])
+                        c2 = grid_c.world_to_cell(*seg[1])
+                        if c1[0] == c2[0]: # Vertical
+                            for y in range(min(c1[1], c2[1]), max(c1[1], c2[1]) + 1):
+                                road_cells.add((c1[0], y))
+                        elif c1[1] == c2[1]: # Horizontal
+                            for x in range(min(c1[0], c2[0]), max(c1[0], c2[0]) + 1):
+                                road_cells.add((x, c1[1]))
+
+                    def road_crossing_cost(from_cell, to_cell):
+                        if to_cell in road_cells:
+                            return 100.0 / CELL_SIZE
+                        return 0.0
+
                     path = astar(
                         grid_c,
                         start_cells,
@@ -2361,7 +3012,8 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                         turn_penalty=10.0,
                         width_cells=0,
                         allow_diagonal=False,
-                        forbid_move=forbid_move_hook
+                        forbid_move=forbid_move_hook,
+                        cell_cost_fn=road_crossing_cost
                     )
                     return path
 
@@ -2399,11 +3051,103 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 return None, []
 
             # 1. PB/CT spine network to water cluster spine
-            found_goal_1, new_segs_1 = route_between(spine_centerlines, water_cluster_segments)
-            water_cluster_segments.extend(new_segs_1)
+            if spine_centerlines:
+                found_goal_1, new_segs_1 = route_between(spine_centerlines, water_cluster_segments)
+                water_cluster_segments.extend(new_segs_1)
             
-            # Second connection stage removed (closest PB/CT connection only)
-            pass
+            # WWT split connection stage
+            if len(water_triangle) == 2:
+                wwt_block = next((b for b in blocks if b["name"] == "WT/WWT"), None)
+                if wwt_block:
+                    wwt_rect = rack_buffers.get("WT/WWT", {}).get(active_cases.get("WT/WWT"))
+                    if wwt_rect:
+                        wx, wy, ww, wh = wwt_rect
+                        wwt_boundary_segs = [
+                            [(wx, wy), (wx+ww, wy)],
+                            [(wx+ww, wy), (wx+ww, wy+wh)],
+                            [(wx, wy+wh), (wx+ww, wy+wh)],
+                            [(wx, wy), (wx, wy+wh)]
+                        ]
+                        target_segs = spine_centerlines if spine_centerlines else water_cluster_segments
+                        best_pair = closest_points_between_networks(wwt_boundary_segs, target_segs)
+                        if best_pair:
+                            pt_wwt, pt_target = best_pair
+                            # Align pt_wwt to pt_target in x or y if they are within 1 cell (2.0m)
+                            aligned_x = pt_target[0] if abs(pt_wwt[0] - pt_target[0]) <= 2.1 else pt_wwt[0]
+                            aligned_y = pt_target[1] if abs(pt_wwt[1] - pt_target[1]) <= 2.1 else pt_wwt[1]
+                            pt_wwt_aligned = (aligned_x, aligned_y)
+                            route_between([[pt_wwt_aligned, pt_wwt_aligned]], [[pt_target, pt_target]], prefer_geometric=True)
+
+            # Simplify zigzags in the water cluster to make them L-shaped
+            if water_cluster_segments:
+                def simplify_zigzags(segments, blocks):
+                    def hits_footprint(s):
+                        for b in blocks:
+                            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+                            if line_intersects_pb(s[0], s[1], (bx, by, bw, bh)):
+                                return True
+                        return False
+
+                    changed = True
+                    while changed:
+                        changed = False
+                        for i, seg1 in enumerate(segments):
+                            for j, seg2 in enumerate(segments):
+                                if i == j: continue
+                                for k, seg3 in enumerate(segments):
+                                    if k == i or k == j: continue
+                                    
+                                    # 1. Check V-H-V zigzag
+                                    is_v1 = abs(seg1[0][0] - seg1[1][0]) < 0.1
+                                    is_h = abs(seg2[0][1] - seg2[1][1]) < 0.1
+                                    is_v2 = abs(seg3[0][0] - seg3[1][0]) < 0.1
+                                    
+                                    if is_v1 and is_h and is_v2:
+                                        x1 = seg1[0][0]
+                                        y1, y2 = min(seg1[0][1], seg1[1][1]), max(seg1[0][1], seg1[1][1])
+                                        x_h_min, x_h_max = min(seg2[0][0], seg2[1][0]), max(seg2[0][0], seg2[1][0])
+                                        y_h = seg2[0][1]
+                                        y3_min, y3_max = min(seg3[0][1], seg3[1][1]), max(seg3[0][1], seg3[1][1])
+                                        x3 = seg3[0][0]
+                                        
+                                        if (abs(y_h - y1) < 0.1 or abs(y_h - y2) < 0.1) and (abs(y_h - y3_min) < 0.1 or abs(y_h - y3_max) < 0.1):
+                                            if abs(x_h_min - min(x1, x3)) < 0.1 and abs(x_h_max - max(x1, x3)) < 0.1:
+                                                y_other = y1 if abs(y_h - y2) < 0.1 else y2
+                                                v1_new = [(x3, y_other), (x3, y_h)]
+                                                h_new = [(x1, y_other), (x3, y_other)]
+                                                if not hits_footprint(v1_new) and not hits_footprint(h_new):
+                                                    seg1[0], seg1[1] = v1_new[0], v1_new[1]
+                                                    seg2[0], seg2[1] = h_new[0], h_new[1]
+                                                    changed = True
+                                                    break
+                                    
+                                    # 2. Check H-V-H zigzag
+                                    is_h1 = abs(seg1[0][1] - seg1[1][1]) < 0.1
+                                    is_v = abs(seg2[0][0] - seg2[1][0]) < 0.1
+                                    is_h2 = abs(seg3[0][1] - seg3[1][1]) < 0.1
+                                    
+                                    if is_h1 and is_v and is_h2:
+                                        y1 = seg1[0][1]
+                                        x1, x2 = min(seg1[0][0], seg1[1][0]), max(seg1[0][0], seg1[1][0])
+                                        y_v_min, y_v_max = min(seg2[0][1], seg2[1][1]), max(seg2[0][1], seg2[1][1])
+                                        x_v = seg2[0][0]
+                                        y3 = seg3[0][1]
+                                        x3_min, x3_max = min(seg3[0][0], seg3[1][0]), max(seg3[0][0], seg3[1][0])
+                                        
+                                        if (abs(x_v - x1) < 0.1 or abs(x_v - x2) < 0.1) and (abs(x_v - x3_min) < 0.1 or abs(x_v - x3_max) < 0.1):
+                                            if abs(y_v_min - min(y1, y3)) < 0.1 and abs(y_v_max - max(y1, y3)) < 0.1:
+                                                x_other = x1 if abs(x_v - x2) < 0.1 else x2
+                                                h1_new = [(x_other, y3), (x_v, y3)]
+                                                v_new = [(x_other, y1), (x_other, y3)]
+                                                if not hits_footprint(h1_new) and not hits_footprint(v_new):
+                                                    seg1[0], seg1[1] = h1_new[0], h1_new[1]
+                                                    seg2[0], seg2[1] = v_new[0], v_new[1]
+                                                    changed = True
+                                                    break
+                                if changed: break
+                            if changed: break
+
+                simplify_zigzags(water_cluster_segments, blocks)
 
             # Step C-2: Flare Pipe Rack  [→ §3.6.C-2]
             flare_block = next((b for b in blocks if b["name"] == "Flare"), None)
@@ -2413,31 +3157,33 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 fx0, fy0 = fx - flare_offset, fy - flare_offset
                 fx1, fy1 = fx + fw + flare_offset, fy + fh + flare_offset
                 
+                # Clamp to plot boundary to keep paths strictly within the plot
+                fx0_clamped = max(0.0, min(sw, fx0))
+                fx1_clamped = max(0.0, min(sw, fx1))
+                fy0_clamped = max(0.0, min(sl, fy0))
+                fy1_clamped = max(0.0, min(sl, fy1))
+                
                 def touches_flare(segments):
                     for p1, p2 in segments:
                         sxmin, sxmax = min(p1[0], p2[0]), max(p1[0], p2[0])
                         symin, symax = min(p1[1], p2[1]), max(p1[1], p2[1])
-                        if sxmax < fx0 or sxmin > fx1: continue
-                        if symax < fy0 or symin > fy1: continue
+                        if sxmax < fx0_clamped or sxmin > fx1_clamped: continue
+                        if symax < fy0_clamped or symin > fy1_clamped: continue
                         return True
                     return False
 
                 if not touches_flare(rack_segments):
                     flare_boundary_segs = [
-                        [(fx0, fy0), (fx1, fy0)], # Bottom
-                        [(fx1, fy0), (fx1, fy1)], # Right
-                        [(fx0, fy1), (fx1, fy1)], # Top
-                        [(fx0, fy0), (fx0, fy1)]  # Left
+                        [(fx0_clamped, fy0_clamped), (fx1_clamped, fy0_clamped)], # Bottom
+                        [(fx1_clamped, fy0_clamped), (fx1_clamped, fy1_clamped)], # Right
+                        [(fx0_clamped, fy1_clamped), (fx1_clamped, fy1_clamped)], # Top
+                        [(fx0_clamped, fy0_clamped), (fx0_clamped, fy1_clamped)]  # Left
                     ]
                     
-                    # Target segments: rack segments excluding segments that touch pb_center
-                    target_segs = []
-                    for seg in rack_segments:
-                        p1, p2 = seg
-                        d1 = math.hypot(p1[0] - pb_cx, p1[1] - pb_cy)
-                        d2 = math.hypot(p2[0] - pb_cx, p2[1] - pb_cy)
-                        if d1 > 0.1 and d2 > 0.1:
-                            target_segs.append(seg)
+                    # Target = the WHOLE rack network (spine + water cluster +
+                    # connectors AND the main rack at the PB centre) so the Flare
+                    # attaches to the NEAREST existing rack — no segments excluded.
+                    target_segs = list(rack_segments or spine_centerlines or water_cluster_segments)
                             
                     route_between(flare_boundary_segs, target_segs, prefer_geometric=True)
 
@@ -2445,23 +3191,368 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 rack_buffers["Flare"] = {"case1_rack": (fx0, fy0, fw + 2 * flare_offset, fh + 2 * flare_offset)}
 
             # Step C-3: Clean up the rack network  [→ §3.6.C-3]
+            pb_half = spine_centerlines[0] if len(spine_centerlines) >= 1 else None
+            ct_half = spine_centerlines[1] if len(spine_centerlines) >= 2 else None
+
+            # Build original graph to find and preserve critical PB-CT connection path
+            pb_rect = rack_buffers.get("Power Block", {}).get(active_cases.get("Power Block"))
+            ct_rect = rack_buffers.get("Cooling Tower", {}).get(active_cases.get("Cooling Tower"))
+            
+            orig_rack_segments = list(rack_segments)
+            orig_spine_centerlines = list(spine_centerlines)
+            orig_water_cluster_segments = list(water_cluster_segments)
+            
+            def to_tuple_seg(seg):
+                if seg is None: return None
+                p1 = (round(seg[0][0], 3), round(seg[0][1], 3))
+                p2 = (round(seg[1][0], 3), round(seg[1][1], 3))
+                return (p1, p2) if p1 < p2 else (p2, p1)
+
+            # Helper to check if a point lies on a segment
+            def pt_on_seg(p, seg):
+                (x1, y1), (x2, y2) = seg
+                x, y = p
+                if abs(x1 - x2) < 0.1: # Vertical
+                    return abs(x - x1) < 0.1 and min(y1, y2) - 0.1 <= y <= max(y1, y2) + 0.1
+                else: # Horizontal
+                    return abs(y - y1) < 0.1 and min(x1, x2) - 0.1 <= x <= max(x1, x2) + 0.1
+
+            critical_segments = set()
+            if pb_rect and ct_rect:
+                import networkx as nx
+                G_orig = nx.Graph()
+                for seg in rack_segments:
+                    p1 = (round(seg[0][0], 3), round(seg[0][1], 3))
+                    p2 = (round(seg[1][0], 3), round(seg[1][1], 3))
+                    G_orig.add_edge(p1, p2, original=seg)
+
+                pb_nodes_orig = [(round(pt[0], 3), round(pt[1], 3)) for pt in pb_half] if pb_half else []
+                ct_nodes_orig = [(round(pt[0], 3), round(pt[1], 3)) for pt in ct_half] if ct_half else []
+
+                if pb_nodes_orig and ct_nodes_orig:
+                    best_path = None
+                    min_len = float('inf')
+                    for u in pb_nodes_orig:
+                        for v in ct_nodes_orig:
+                            if u in G_orig and v in G_orig:
+                                if nx.has_path(G_orig, u, v):
+                                    path = nx.shortest_path(G_orig, source=u, target=v)
+                                    if len(path) < min_len:
+                                        min_len = len(path)
+                                        best_path = path
+                    if best_path:
+                        for i in range(len(best_path) - 1):
+                            edge_data = G_orig.get_edge_data(best_path[i], best_path[i+1])
+                            if edge_data:
+                                critical_segments.add(to_tuple_seg(edge_data["original"]))
+
             # 1) Trim Cooling Tower spine free ends.
-            if len(spine_centerlines) >= 2:
-                ct_half = spine_centerlines[1]
+            if ct_half is not None and ct_half in spine_centerlines:
                 trimmed = cleanup_ct_free_ends(ct_half, rack_segments)
                 if trimmed is None:
-                    rack_segments = [s for s in rack_segments if s is not ct_half]
-                    spine_centerlines = [s for s in spine_centerlines if s is not ct_half]
+                    if to_tuple_seg(ct_half) not in critical_segments:
+                        rack_segments = [s for s in rack_segments if s is not ct_half]
+                        spine_centerlines = [s for s in spine_centerlines if s is not ct_half]
+                        # Also prune any perpendicular connectors to this pruned spine
+                        to_prune_conn = []
+                        for seg in list(spine_centerlines):
+                            if seg is not pb_half:
+                                is_ct_vertical = abs(ct_half[0][0] - ct_half[1][0]) < 0.1
+                                is_seg_vertical = abs(seg[0][0] - seg[1][0]) < 0.1
+                                if is_ct_vertical != is_seg_vertical:
+                                    if pt_on_seg(seg[0], ct_half) or pt_on_seg(seg[1], ct_half):
+                                        # Protect main rack and bridge to pb_half
+                                        is_main_rack = pt_on_seg((pb_cx, pb_cy), seg)
+                                        is_bridge = (pb_half is not None) and (pt_on_seg(seg[0], pb_half) or pt_on_seg(seg[1], pb_half))
+                                        if not is_main_rack and not is_bridge:
+                                            if to_tuple_seg(seg) not in critical_segments:
+                                                to_prune_conn.append(seg)
+                        for seg in to_prune_conn:
+                            if seg in rack_segments: rack_segments.remove(seg)
+                            if seg in spine_centerlines: spine_centerlines.remove(seg)
+                            if seg in water_cluster_segments: water_cluster_segments.remove(seg)
                 elif trimmed != ct_half:
                     rack_segments = [trimmed if s is ct_half else s for s in rack_segments]
                     spine_centerlines = [trimmed if s is ct_half else s for s in spine_centerlines]
 
+            # 1b) Trim Power Block spine free ends.
+            if pb_half is not None and pb_half in spine_centerlines:
+                trimmed = cleanup_ct_free_ends(pb_half, rack_segments)
+                if trimmed is None:
+                    if to_tuple_seg(pb_half) not in critical_segments:
+                        rack_segments = [s for s in rack_segments if s is not pb_half]
+                        spine_centerlines = [s for s in spine_centerlines if s is not pb_half]
+                        # Also prune any perpendicular connectors to this pruned spine
+                        to_prune_conn = []
+                        for seg in list(spine_centerlines):
+                            if seg is not ct_half:
+                                is_pb_vertical = abs(pb_half[0][0] - pb_half[1][0]) < 0.1
+                                is_seg_vertical = abs(seg[0][0] - seg[1][0]) < 0.1
+                                if is_pb_vertical != is_seg_vertical:
+                                    if pt_on_seg(seg[0], pb_half) or pt_on_seg(seg[1], pb_half):
+                                        # Protect main rack and bridge to ct_half
+                                        is_main_rack = pt_on_seg((pb_cx, pb_cy), seg)
+                                        is_bridge = (ct_half is not None) and (pt_on_seg(seg[0], ct_half) or pt_on_seg(seg[1], ct_half))
+                                        if not is_main_rack and not is_bridge:
+                                            if to_tuple_seg(seg) not in critical_segments:
+                                                to_prune_conn.append(seg)
+                        for seg in to_prune_conn:
+                            if seg in rack_segments: rack_segments.remove(seg)
+                            if seg in spine_centerlines: spine_centerlines.remove(seg)
+                            if seg in water_cluster_segments: water_cluster_segments.remove(seg)
+                elif trimmed != pb_half:
+                    rack_segments = [trimmed if s is pb_half else s for s in rack_segments]
+                    spine_centerlines = [trimmed if s is pb_half else s for s in spine_centerlines]
+
+            # 1c) Trim Water-cluster spine free ends. A water leaf often overshoots
+            # ALONG a tank's rack-buffer edge to the far corner even though the rest
+            # of the trunk already touches that buffer. We trim each water segment
+            # back to its real JUNCTIONS, and keep the trim only if the network
+            # STILL TOUCHES every water rack-buffer rectangle it touched before
+            # (so RAW/Demi/WWT never get disconnected — touch anywhere on the
+            # buffer counts, not just the original corner point).
+            def _seg_touches_buffer(seg, rect, eps=1.0):
+                (x0, y0), (x1, y1) = seg
+                rx0, ry0, rw, rh = rect
+                rx1, ry1 = rx0 + rw, ry0 + rh
+                if abs(y0 - y1) < 0.1:                       # horizontal segment
+                    y = y0; a, b = min(x0, x1), max(x0, x1)
+                    for ey in (ry0, ry1):                    # lies on top/bottom edge
+                        if abs(y - ey) < eps and max(a, rx0) <= min(b, rx1) + eps:
+                            return True
+                    for ex in (rx0, rx1):                    # crosses left/right edge
+                        if a - eps <= ex <= b + eps and ry0 - eps <= y <= ry1 + eps:
+                            return True
+                elif abs(x0 - x1) < 0.1:                     # vertical segment
+                    x = x0; a, b = min(y0, y1), max(y0, y1)
+                    for ex in (rx0, rx1):
+                        if abs(x - ex) < eps and max(a, ry0) <= min(b, ry1) + eps:
+                            return True
+                    for ey in (ry0, ry1):
+                        if a - eps <= ey <= b + eps and rx0 - eps <= x <= rx1 + eps:
+                            return True
+                return False
+
+            water_rects = {}
+            for n in ("RAW Water Tank", "Demi Water Tank", "WT/WWT"):
+                rect = rack_buffers.get(n, {}).get(active_cases.get(n))
+                if rect:
+                    water_rects[n] = rect
+
+            if water_rects and water_cluster_segments:
+                def _buffers_touched(segs):
+                    return {n for n, rect in water_rects.items()
+                            if any(_seg_touches_buffer(s, rect) for s in segs)}
+
+                before_touch = _buffers_touched(rack_segments)
+                for wseg in list(water_cluster_segments):
+                    if not any(s is wseg for s in rack_segments):
+                        continue
+                    trimmed = cleanup_ct_free_ends(wseg, rack_segments)   # trim to junctions
+                    if trimmed is None or trimmed == wseg:
+                        continue
+                    cand_rack = [trimmed if s is wseg else s for s in rack_segments]
+                    if before_touch <= _buffers_touched(cand_rack):
+                        rack_segments = cand_rack
+                        water_cluster_segments = [trimmed if s is wseg else s for s in water_cluster_segments]
+
             # 2) Prune stub segments shorter than MIN_RACK_SEG_LEN.
-            def _seg_len(s):
-                return math.hypot(s[0][0] - s[1][0], s[0][1] - s[1][1])
-            rack_segments = [s for s in rack_segments if _seg_len(s) >= MIN_RACK_SEG_LEN]
-            spine_centerlines = [s for s in spine_centerlines if _seg_len(s) >= MIN_RACK_SEG_LEN]
-            water_cluster_segments = [s for s in water_cluster_segments if _seg_len(s) >= MIN_RACK_SEG_LEN]
+            # We only prune segments that are shorter than MIN_RACK_SEG_LEN AND
+            # have at least one endpoint of degree 1 (dead end) in the rack network.
+            # We do this iteratively until no more stubs can be pruned.
+            import networkx as nx
+            while True:
+                G = nx.Graph()
+                for seg in rack_segments:
+                    p1 = (round(seg[0][0], 3), round(seg[0][1], 3))
+                    p2 = (round(seg[1][0], 3), round(seg[1][1], 3))
+                    G.add_edge(p1, p2, original=seg)
+                
+                to_prune = None
+                for u, v, data in G.edges(data=True):
+                    seg = data["original"]
+                    length = math.hypot(seg[0][0] - seg[1][0], seg[0][1] - seg[1][1])
+                    if length < MIN_RACK_SEG_LEN:
+                        # Prune if either endpoint is a leaf (degree 1) in the graph
+                        if G.degree(u) == 1 or G.degree(v) == 1:
+                            if to_tuple_seg(seg) not in critical_segments:
+                                to_prune = seg
+                                break
+                if to_prune is not None:
+                    rack_segments.remove(to_prune)
+                    if to_prune in spine_centerlines:
+                        spine_centerlines.remove(to_prune)
+                    if to_prune in water_cluster_segments:
+                        water_cluster_segments.remove(to_prune)
+                else:
+                    break
+
+            # Verify connection between Cooling Tower and Power Block
+            if pb_rect and ct_rect:
+                G_after = nx.Graph()
+                for seg in rack_segments:
+                    p1 = (round(seg[0][0], 3), round(seg[0][1], 3))
+                    p2 = (round(seg[1][0], 3), round(seg[1][1], 3))
+                    G_after.add_edge(p1, p2, original=seg)
+                
+                pb_nodes_after = [(round(pt[0], 3), round(pt[1], 3)) for pt in pb_half] if pb_half else []
+                ct_nodes_after = [(round(pt[0], 3), round(pt[1], 3)) for pt in ct_half] if ct_half else []
+                
+                has_conn = False
+                if pb_nodes_after and ct_nodes_after:
+                    for u in pb_nodes_after:
+                        for v in ct_nodes_after:
+                            if u in G_after and v in G_after:
+                                if nx.has_path(G_after, u, v):
+                                    has_conn = True
+                                    break
+                        if has_conn:
+                            break
+                
+                if not has_conn and critical_segments:
+                    for seg in orig_rack_segments:
+                        if to_tuple_seg(seg) in critical_segments:
+                            if seg not in rack_segments:
+                                rack_segments.append(seg)
+                            if seg in orig_spine_centerlines and seg not in spine_centerlines:
+                                spine_centerlines.append(seg)
+                            if seg in orig_water_cluster_segments and seg not in water_cluster_segments:
+                                water_cluster_segments.append(seg)
+
+            # Track pruned segments
+            for seg in orig_rack_segments:
+                if seg not in rack_segments and seg not in pruned_rack_segments:
+                    pruned_rack_segments.append(seg)
+
+        # Clean tiny 1-grid jogs (A* snapping artefacts) from the rack network,
+        # e.g. a y=101 run and y=102 run bridged by a 1 m vertical jog in the
+        # PB↔CT spine connection — snap them collinear.
+        rack_segments = _remove_tiny_jogs(rack_segments)
+
+        # Polygon migration (Phase 6): blocks + ring road + gate road + the full
+        # pipe-rack network. Perimeter / access roads (Phases 7-8) still use
+        # rectangle/edge logic, so they are skipped — but Phase 9 RECENTER runs
+        # here on the polygon.
+        if blocks_only:
+            # -----------------------------------------------------------------
+            # Step 12 — Recenter  [→ §3.8]  (Phase 9: move the whole POLYGON)
+            # Content (blocks/roads/racks) stays put; the plot polygon + gate
+            # slide by `delta` so the plot center lands on the content bbox
+            # center. Before: a rectangle slid. Now: every polygon corner moves.
+            # -----------------------------------------------------------------
+            def _content_pts():
+                for b in blocks:
+                    yield (b["x"], b["y"])
+                    yield (b["x"] + b["width"], b["y"] + b["height"])
+                for poly in (ring_road, gate_road_out, ring_spur_out, boom_out):
+                    if poly:
+                        for p in poly:
+                            yield (p[0], p[1])
+                for segs in (rack_segments, water_cluster_segments):
+                    if segs:
+                        for s in segs:
+                            yield (s[0][0], s[0][1])
+                            yield (s[1][0], s[1][1])
+
+            # Plot center = polygon bbox center (== (sw/2, sl/2) for the
+            # origin-normalised plot, but computed directly so it stays correct
+            # if the plot isn't normalised).
+            if plot is not None:
+                _pminx, _pminy, _pmaxx, _pmaxy = plot.bbox
+                _plot_cx, _plot_cy = (_pminx + _pmaxx) / 2.0, (_pminy + _pmaxy) / 2.0
+            else:
+                _plot_cx, _plot_cy = sw / 2.0, sl / 2.0
+
+            _cpts = list(_content_pts())
+            if _cpts:
+                _minx = min(p[0] for p in _cpts); _maxx = max(p[0] for p in _cpts)
+                _miny = min(p[1] for p in _cpts); _maxy = max(p[1] for p in _cpts)
+                _ccx, _ccy = (_minx + _maxx) / 2.0, (_miny + _maxy) / 2.0
+                recenter_delta = (_ccx - _plot_cx, _ccy - _plot_cy)
+            else:
+                recenter_delta = (0.0, 0.0)
+            _dx, _dy = recenter_delta
+
+            plot_polygon_before = list(plot.vertices) if plot is not None else None
+            _plot_rec = plot.translate(_dx, _dy) if plot is not None else None
+            plot_polygon_out = list(_plot_rec.vertices) if _plot_rec is not None else None
+
+            # The gate moves only PERPENDICULAR to its boundary edge so it stays on
+            # the moved edge line without sliding ALONG it (which would stretch the
+            # exit road and detach it from the fixed gate house). For a diagonal
+            # edge this is the true perpendicular component of `delta`.
+            gate_pt_before = gate_pt
+            gate_pt_rec = gate_pt
+            if plot is not None and gate_pt is not None:
+                _e = plot.edges[plot.nearest_edge(gate_pt[0], gate_pt[1])]
+                _ux, _uy = _e["dir"]
+                _along = _dx * _ux + _dy * _uy
+                gate_pt_rec = (gate_pt[0] + _dx - _along * _ux,
+                               gate_pt[1] + _dy - _along * _uy)
+
+            # Rebuild the gate spur's final L so it reaches the recentered gate;
+            # the boom crossing (exit_helper → bb_mid → other_corner) stays fixed.
+            def _same_pt(a, b):
+                return abs(a[0] - b[0]) < 0.5 and abs(a[1] - b[1]) < 0.5
+            gate_spur_rec = list(gate_road_out) if gate_road_out else gate_road_out
+            if (gate_road_out and len(gate_road_out) >= 3 and gate_pt is not None
+                    and _same_pt(gate_road_out[-1], gate_pt)):
+                oc = gate_road_out[-3]
+                l_old = gate_road_out[-2]
+                ng = gate_pt_rec
+                if abs(l_old[1] - oc[1]) < 0.5:      # boom L shares other_corner's y
+                    l_new = (ng[0], oc[1])
+                else:                                 # shares other_corner's x
+                    l_new = (oc[0], ng[1])
+                gate_spur_rec = list(gate_road_out[:-2]) + [l_new, ng]
+            elif (gate_road_out and gate_pt is not None
+                  and _same_pt(gate_road_out[0], gate_pt)):
+                gate_spur_rec = [gate_pt_rec] + list(gate_road_out[1:])
+
+            # Death zone between the fixed bb_mid and the recentered gate.
+            gate_death_zone_rec = gate_death_zone
+            if gate_death_zone is not None and bb_mid is not None and gate_pt_rec is not None:
+                _gx0, _gx1 = min(bb_mid[0], gate_pt_rec[0]), max(bb_mid[0], gate_pt_rec[0])
+                _gy0, _gy1 = min(bb_mid[1], gate_pt_rec[1]), max(bb_mid[1], gate_pt_rec[1])
+                if _gx1 - _gx0 < 1: _gx0 -= 1; _gx1 += 1
+                if _gy1 - _gy0 < 1: _gy0 -= 1; _gy1 += 1
+                gate_death_zone_rec = (_gx0, _gy0, _gx1 - _gx0, _gy1 - _gy0)
+
+            _last_debug["failed_at"] = None
+            _last_debug["failed_section"] = None
+            _last_debug["boundary_tol_used"] = _pass_tol
+            _last_debug["boundary_pass_label"] = _pass_label
+            _last_debug["recenter_delta"] = recenter_delta
+            return {
+                "blocks":          blocks,
+                "boom_barrier":    boom_out,
+                "ring_road":       ring_road,
+                "gate_spur":       gate_spur_rec,
+                "ring_spur":       ring_spur_out,
+                "gate_death_zone": gate_death_zone_rec,
+                "gate_point":      gate_pt_rec,
+                "gate_point_before": gate_pt_before,
+                "pb_center":       (pb_cx, pb_cy),
+                "rack_buffers":    rack_buffers,
+                "rack_segments":   rack_segments,
+                "spine_centerlines": spine_centerlines,
+                "pb_buffer_hits":  pb_buffer_hits,
+                "main_rack_output": main_rack_output,
+                "water_cluster_segments": water_cluster_segments,
+                "pruned_rack_segments": pruned_rack_segments,
+                "water_triangle":  water_triangle,
+                "rack_candidates": candidate_points,
+                "active_rack_cases": active_cases,
+                "plot_polygon":    plot_polygon_out,
+                "plot_polygon_before": plot_polygon_before,
+                "plot_bounds":     (_dx, _dy, sw, sl),
+                "plot_bounds_before": (0.0, 0.0, sw, sl),
+                "recenter_delta":  recenter_delta,
+                "blocks_only":     True,
+                "cell_size":       CELL_SIZE,
+                "boundary_tol_used":   _pass_tol,
+                "boundary_pass_label": _pass_label,
+            }
 
         computed_buffers = compute_unsnapped_buffers(placed)
         perimeter_segments_raw = []
@@ -2586,10 +3677,13 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             "ring_spur":       ring_spur,
             "rack_buffers":    rack_buffers,
             "rack_segments":   rack_segments,
+            "pruned_rack_segments": pruned_rack_segments,
             "rack_candidates": candidate_points,
             "active_rack_cases": active_cases,
             "water_triangle":  water_triangle,
             "spine_centerlines": spine_centerlines,
+            "pb_buffer_hits":  pb_buffer_hits,
+            "main_rack_output": main_rack_output,
             "water_cluster_segments": water_cluster_segments,
             "gate_point":      gate_pt_recentered,
             "gate_point_before": gate_pt,

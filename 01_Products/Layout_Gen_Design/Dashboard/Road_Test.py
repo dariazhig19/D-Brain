@@ -5,7 +5,7 @@ Run with:
 """
 
 import streamlit as st
-import sys, os, random
+import sys, os, random, time, threading, traceback
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
@@ -404,29 +404,66 @@ if True:  # Phase 06 — Sketch roads
     # it falls back to the legacy full rectangle sketch.
     _has_poly = bool(plot_import and plot_import.get("plot_polygon"))
     N_LAYOUTS = st.sidebar.number_input("Layouts to generate", 1, 30, 10)
+    gen_timeout = st.sidebar.number_input("Per-layout timeout (s)", 5, 300, 40,
+                                          help="If one layout takes longer than this it is skipped and flagged — catches a hung/looping seed.")
     if st.button("Generate Layouts", type="primary", use_container_width=True):
         sketches = []
+        gen_log = []
         if _has_poly:
             p = Plot(plot_import["plot_polygon"])
             params = p.size
+
+            # Run ONE generate_sketch in a worker thread so a hung/looping seed
+            # can be skipped via a join-timeout (the synchronous call would
+            # otherwise freeze the whole app — this is the "stopped at 9" bug).
+            # The worker calls NO st.* functions, so it's Streamlit-safe.
+            def _gen_one(seed):
+                holder = {}
+                def _w():
+                    try:
+                        if fix_seed and seed is not None:
+                            random.seed(seed)
+                        holder["s"] = generate_sketch(
+                            p.size[0], p.size[1], wind_dir,
+                            plot=p,
+                            dxf_anchors=plot_import.get("anchors") or {},
+                            dxf_gate=plot_import.get("gate_point"),
+                            dxf_boom=plot_import.get("boom_barrier"),
+                            blocks_only=True,
+                        )
+                    except Exception:
+                        holder["err"] = traceback.format_exc()
+                th = threading.Thread(target=_w, daemon=True)
+                th.start()
+                th.join(int(gen_timeout))
+                return holder, th.is_alive()
+
             prog = st.progress(0.0, text=f"Generating {N_LAYOUTS} layouts…")
+            status = st.empty()
+            log_box = st.empty()
             for i in range(int(N_LAYOUTS)):
                 # Vary the seed per layout so each is distinct yet reproducible
-                # when "Fix seed" is on; otherwise rely on the engine's own jitter.
-                if fix_seed:
-                    random.seed(int(seed_val) + i)
-                s = generate_sketch(
-                    p.size[0], p.size[1], wind_dir,
-                    plot=p,
-                    dxf_anchors=plot_import.get("anchors") or {},
-                    dxf_gate=plot_import.get("gate_point"),
-                    dxf_boom=plot_import.get("boom_barrier"),
-                    blocks_only=True,
-                )
-                if s is not None:
-                    sketches.append(s)
+                # when "Fix seed" is on; otherwise rely on the engine's jitter.
+                seed = int(seed_val) + i if fix_seed else None
+                status.info(f"▶ Layout {i+1}/{int(N_LAYOUTS)} (seed={seed}) — generating…")
+                t0 = time.time()
+                holder, timed_out = _gen_one(seed)
+                secs = time.time() - t0
+                dbg = getattr(Core.Layout06, "_last_debug", {}) or {}
+                if timed_out:
+                    gen_log.append(f"#{i+1:>2} ⏱ TIMEOUT >{int(gen_timeout)}s (seed={seed}) — hung/looping seed, skipped")
+                elif "err" in holder:
+                    last = holder["err"].strip().splitlines()[-1]
+                    gen_log.append(f"#{i+1:>2} ✗ ERROR (seed={seed}, {secs:.1f}s): {last}")
+                elif holder.get("s") is None:
+                    gen_log.append(f"#{i+1:>2} ✗ no-fit (seed={seed}, {secs:.1f}s, "
+                                   f"attempts={dbg.get('total_attempts','?')}, failed_at={dbg.get('failed_at','?')})")
+                else:
+                    sketches.append(holder["s"])
+                    gen_log.append(f"#{i+1:>2} ✓ ok (seed={seed}, {secs:.1f}s, {len(holder['s']['blocks'])} blocks)")
                 prog.progress((i + 1) / int(N_LAYOUTS), text=f"Generating layouts… {i+1}/{int(N_LAYOUTS)}")
-            prog.empty()
+                log_box.code("\n".join(gen_log), language="text")
+            prog.empty(); status.empty()
         else:
             if fix_seed:
                 random.seed(int(seed_val))
@@ -442,8 +479,9 @@ if True:  # Phase 06 — Sketch roads
             params = (site_width, site_length)
             if s is not None:
                 sketches = [s]
+        st.session_state["gen_log06"] = gen_log
         if not sketches:
-            st.error("Could not place all blocks — try changing the plot or wind.")
+            st.error("No layout placed — see the generation log below for timeouts/failures.")
             st.session_state["sketches06"] = None
             st.session_state["sketch06"] = None
         else:
@@ -452,6 +490,17 @@ if True:  # Phase 06 — Sketch roads
             st.session_state["params06"] = params
 
     sketch = st.session_state.get("sketch06")
+
+    # Generation debugger — per-layout timing / timeouts / failures.
+    _gen_log = st.session_state.get("gen_log06")
+    if _gen_log:
+        n_ok = sum(1 for ln in _gen_log if "✓" in ln)
+        n_to = sum(1 for ln in _gen_log if "TIMEOUT" in ln)
+        n_bad = len(_gen_log) - n_ok
+        title = f"🔬 Generation log — {n_ok} ok / {n_bad} failed" + (f" ({n_to} timeout)" if n_to else "")
+        with st.expander(title, expanded=bool(n_bad)):
+            st.code("\n".join(_gen_log), language="text")
+
     if sketch is None:
         dbg = Core.Layout06._last_debug
         if dbg:

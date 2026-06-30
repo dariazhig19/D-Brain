@@ -109,7 +109,7 @@ verification.
 | 04 | 12 groups, generic rule engine, rule network | ✅ Done |
 | 05 | Advanced routing & sequential placement | ✅ Done |
 | **06** | **Grid-first generative layout (current)** | 🔄 In progress |
-| **P** | **Polygon plot migration** | 🔄 Phase 0 done — see the PLAN |
+| **P** | **Polygon plot migration** | ✅ Done |
 
 The working engine is [`Core/Step01.py`](Core/Step01.py), driven by the
 [`Dashboard/WebDashboard01.py`](Dashboard/WebDashboard01.py) Streamlit app.

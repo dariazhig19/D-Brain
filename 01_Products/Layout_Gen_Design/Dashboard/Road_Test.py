@@ -1,7 +1,7 @@
 """Streamlit dashboard — Phase 06 layout + road/rack sketch.
 
 Run with:
-    streamlit run 01_Products/Layout_Gen_Design/Dashboard/Streamlit.py
+    streamlit run 01_Products/Layout_Gen_Design/Dashboard/Road_Test.py
 """
 
 import streamlit as st

@@ -36,13 +36,13 @@ Open PowerShell in the directory where your project is located, and run the Stre
 ### Option A: From Repository Root
 If you are running the program from the repository root directory, run:
 ```powershell
-.venv\Scripts\streamlit run 01_Products/Layout_Gen_Design/Dashboard/Streamlit.py
+.venv\Scripts\streamlit run 01_Products/Layout_Gen_Design/Dashboard/Road_Test.py
 ```
 
 ### Option B: From `Layout_Gen_Design` Directory Root
 If you or a coworker are running the program directly from the `Layout_Gen_Design` folder (e.g. after copying/unzipping the folder), run:
 ```powershell
-.venv\Scripts\streamlit run Dashboard/Streamlit.py
+.venv\Scripts\streamlit run Dashboard/Road_Test.py
 ```
 
 Streamlit will automatically open a tab in your web browser (usually at `http://localhost:8501`) displaying the interactive layout generator.

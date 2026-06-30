@@ -45,14 +45,14 @@ lives**. Run the command from the same folder that contains the `.venv`.
 Run from the repo root (the folder that holds `.venv`):
 ```powershell
 cd e:\SKEE_LAYOUT\GitHub\D-Brain
-.venv\Scripts\streamlit run 01_Products/Layout_Gen_Design/Dashboard/Road_Test.py
+.venv\Scripts\streamlit run 01_Products/Layout_Gen_Design/Dashboard/WebDashboard01.py
 ```
 
 ### Option B: From `Layout_Gen_Design` Directory Root
 Only works if a `.venv` was created **inside** the `Layout_Gen_Design` folder
 (e.g. a coworker copied/unzipped just that folder and made its own venv there):
 ```powershell
-.venv\Scripts\streamlit run Dashboard/Road_Test.py
+.venv\Scripts\streamlit run Dashboard/WebDashboard01.py
 ```
 
 Streamlit will automatically open a tab in your web browser (usually at `http://localhost:8501`) displaying the interactive layout generator.

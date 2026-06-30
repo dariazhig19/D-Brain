@@ -31,16 +31,26 @@ Follow these steps to configure your environment:
 
 ## Launch the Dashboard
 
-Open PowerShell in the directory where your project is located, and run the Streamlit command corresponding to your folder structure:
+Open PowerShell and run the Streamlit command that matches **where your `.venv`
+lives**. Run the command from the same folder that contains the `.venv`.
 
-### Option A: From Repository Root
-If you are running the program from the repository root directory, run:
+> [!IMPORTANT]
+> In **this repository** the virtual environment is at the **repo root**
+> (`D-Brain\.venv`) — there is **no** `.venv` inside `Layout_Gen_Design`.
+> So use **Option A**. (Running `.venv\Scripts\streamlit …` from inside
+> `Layout_Gen_Design` fails with *"module .venv could not be loaded"* because
+> there is no `.venv` there.)
+
+### Option A: From Repository Root  ← use this for this repo
+Run from the repo root (the folder that holds `.venv`):
 ```powershell
+cd e:\SKEE_LAYOUT\GitHub\D-Brain
 .venv\Scripts\streamlit run 01_Products/Layout_Gen_Design/Dashboard/Road_Test.py
 ```
 
 ### Option B: From `Layout_Gen_Design` Directory Root
-If you or a coworker are running the program directly from the `Layout_Gen_Design` folder (e.g. after copying/unzipping the folder), run:
+Only works if a `.venv` was created **inside** the `Layout_Gen_Design` folder
+(e.g. a coworker copied/unzipped just that folder and made its own venv there):
 ```powershell
 .venv\Scripts\streamlit run Dashboard/Road_Test.py
 ```

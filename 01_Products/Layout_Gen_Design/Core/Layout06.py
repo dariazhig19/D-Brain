@@ -23,6 +23,9 @@ PERIMETER_SETBACK = 5    # perimeter road outer edge from plot boundary ← conf
 PERIMETER_ROAD_W  = 8    # perimeter road width
 PERIMETER_CL_DIST = PERIMETER_SETBACK + PERIMETER_ROAD_W / 2   # 9m from boundary
 
+_time_budget = 25.0
+_t_start = 0.0
+
 # ── Rack constants (Phase 06 — § 1.2-RACK) ─────────────────────────────
 # Single rack type, 6m wide, connects 5 process blocks. See !Scoring_Logic.md.
 RACK_BLOCKS = frozenset({
@@ -2198,12 +2201,14 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
     # Wall-clock safety cap: no seed may run forever. If the budget is exceeded
     # we stop trying and return None (a "no-fit" result) instead of spinning —
     # this is what prevents a hung/looping seed from pinning a CPU core.
+    global _t_start, _time_budget
     _t_start = time.time()
+    _time_budget = time_budget
 
     for _attempt in range(max_pool * len(_PASS_TOLS)):
-        if time_budget and (time.time() - _t_start) > time_budget:
+        if _time_budget and (time.time() - _t_start) > _time_budget:
             _last_debug["timed_out"] = True
-            _last_debug["failed_section"] = f"time budget {time_budget:.0f}s exceeded"
+            _last_debug["failed_section"] = f"time budget {_time_budget:.0f}s exceeded"
             break
         _pass_tol, _pass_label = _PASS_TOLS[_attempt // max_pool]
         _last_debug["total_attempts"] += 1
@@ -3101,7 +3106,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
 
                     changed = True
                     while changed:
-                        if time_budget and (time.time() - _t_start) > time_budget:
+                        if _time_budget and (time.time() - _t_start) > _time_budget:
                             break
                         changed = False
                         for i, seg1 in enumerate(segments):
@@ -3375,7 +3380,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             # We do this iteratively until no more stubs can be pruned.
             import networkx as nx
             while True:
-                if time_budget and (time.time() - _t_start) > time_budget:
+                if _time_budget and (time.time() - _t_start) > _time_budget:
                     break
                 G = nx.Graph()
                 for seg in rack_segments:

@@ -1,7 +1,7 @@
 # PowerPlan AI — Layout_Gen_Design
 
 > **Single source of truth for this project.** Consolidates the former Product
-> Vision, the full Phase 06 structured plan, the methodology/UX guide, and the
+> Vision, the full Stage 1 structured plan, the methodology/UX guide, and the
 > rule reference. Older phase notes and the previous (Phase 03–05) code pipeline
 > live under [`_Archive/`](_Archive/) for history; they are **not** part of the
 > working system.
@@ -108,8 +108,8 @@ verification.
 | 03 | Engineering Rules (penalty scoring engine) | ✅ Done |
 | 04 | 12 groups, generic rule engine, rule network | ✅ Done |
 | 05 | Advanced routing & sequential placement | ✅ Done |
-| **06** | **Grid-first generative layout (current)** | 🔄 In progress |
-| **P** | **Polygon plot migration** | ✅ Done |
+| 06 | Grid-first generative layout (current) | ✅ Done |
+| P | Polygon plot migration | ✅ Done |
 
 The working engine is [`Core/Step01.py`](Core/Step01.py), driven by the
 [`Dashboard/WebDashboard01.py`](Dashboard/WebDashboard01.py) Streamlit app.
@@ -128,13 +128,13 @@ engine retries with relaxing bounds:
 - **Pass 3 (tight):** allow select blocks up to 10 m past the boundary (`boundary_tol = +10`).
 - **[Polygon change]** This "inside / outside" check is now done against the **polygon** (including diagonal sides), not the rectangle.
 
-**Multi-stage refinement** — Step 1 mass-generates large-block layouts (user picks
-3 favorites); Step 2 details/subdivides; Step 3 ranks & exports. Every step pairs a
+**Multi-stage refinement** — Stage 1 mass-generates large-block layouts (user picks
+3 favorites); Stage 2 details/subdivides; Stage 3 ranks & exports. Every stage pairs a
 layout **image** with a rule **score** for decision support.
 
 ---
 
-# PART II — PHASE 06 TECHNICAL SPEC
+# PART II — STAGE 1 TECHNICAL SPEC
 
 > Complete grid-first generative-layout reference. **Replaces** Phase 05
 > (continuous float coordinates + entrance-based A* routing).
@@ -670,7 +670,7 @@ All roads are **sketch roads** — centerlines only (lines). No physical width r
 
 ## §6. Key Differences from Phase 05
 
-| Aspect              | Phase 05                              | Phase 06                                          |
+| Aspect              | Phase 05                              | Stage 1                                           |
 |---------------------|---------------------------------------|---------------------------------------------------|
 | Coordinate system   | Continuous float (metres)             | Snapped to 2m grid                                |
 | Road creation       | A* from gate to each building entrance| Blocks placed first; road network built around block buffers |
@@ -700,7 +700,7 @@ RACK_CASE1_OFFSET  = 6    # rack CL: Case 1 (block → rack → road)
 RACK_CASE2_OFFSET  = 22   # rack CL: Case 2 (block → road → rack)
 ```
 
-> The values above are quoted from the original Phase 06 plan. The live engine
+> The values above are quoted from the original Stage 1 plan. The live engine
 > (`Core/Step01.py`) is the runtime authority — where it differs (e.g.
 > `PB_RING_OFFSET = 16`, `ROAD_W_RACK_OFFSET = 16`, `B2B_W_RACK_OFFSET = 30`,
 > `RACK_CASE1_OFFSET = 8`, `RACK_CASE2_OFFSET = 24`), the engine value wins.
@@ -882,7 +882,7 @@ favorites → Step 2 (detail/subdivide + score) → Step 3 (rank) → export DXF
 Core/
   Plot.py        # [Polygon change] new plot-shape helper
   CADImport.py  # [Polygon change] new CAD DXF importer
-  Step01.py      # the Phase 06 engine — generate_sketch() → plain dict
+  Step01.py      # the Stage 1 engine — generate_sketch() → plain dict
   Grid.py        # 2 m occupancy grid (obstacle marking, passability)
   Pathfind.py    # A* routing (turn penalty, width-aware)
   Groups.py      # block footprints, SHAPES, colors, dimensions

@@ -12,20 +12,20 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 import importlib
-import Core.Groups, Core.Grid, Core.Pathfind, Core.Step01
+import Core.Groups, Core.Grid, Core.Pathfind, Core.Stage01
 import Core.Plot, Core.CADImport
 importlib.reload(Core.Grid)
 importlib.reload(Core.Pathfind)
 importlib.reload(Core.Groups)
-importlib.reload(Core.Step01)
+importlib.reload(Core.Stage01)
 importlib.reload(Core.Plot)
 importlib.reload(Core.CADImport)
 
 Plot = Core.Plot.Plot
 SHAPES = Core.Groups.SHAPES
-generate_sketch = Core.Step01.generate_sketch
-CELL_SIZE = Core.Step01.CELL_SIZE
-ROAD_BUFFER = Core.Step01.ROAD_BUFFER
+generate_sketch = Core.Stage01.generate_sketch
+CELL_SIZE = Core.Stage01.CELL_SIZE
+ROAD_BUFFER = Core.Stage01.ROAD_BUFFER
 
 @st.cache_data
 def cached_load_plot_dxf(path, mtime):
@@ -454,7 +454,7 @@ if True:  # Phase 06 — Sketch roads
                 t0 = time.time()
                 holder, timed_out = _gen_one(seed)
                 secs = time.time() - t0
-                dbg = getattr(Core.Step01, "_last_debug", {}) or {}
+                dbg = getattr(Core.Stage01, "_last_debug", {}) or {}
                 if timed_out:
                     gen_log.append(f"#{i+1:>2} ⏱ TIMEOUT >{int(gen_timeout)}s (seed={seed}) — hung/looping seed, skipped")
                 elif "err" in holder:
@@ -509,7 +509,7 @@ if True:  # Phase 06 — Sketch roads
             st.code("\n".join(_gen_log), language="text")
 
     if sketch is None:
-        dbg = Core.Step01._last_debug
+        dbg = Core.Stage01._last_debug
         if dbg:
             st.error("Could not place all blocks — try changing site size or parameters.")
             st.markdown("#### Placement debug")
@@ -526,7 +526,7 @@ if True:  # Phase 06 — Sketch roads
                 st.dataframe(fc_rows, use_container_width=True, hide_index=True)
 
             last_placed = dbg.get("last_placed", {})
-            ALL_BLOCKS = list(Core.Step01.BLOCK_FOOTPRINTS.keys())
+            ALL_BLOCKS = list(Core.Stage01.BLOCK_FOOTPRINTS.keys())
             st.markdown("**Last attempt — block placement status:**")
             status_rows = []
             for bname in ALL_BLOCKS:
@@ -699,8 +699,8 @@ if True:  # Phase 06 — Sketch roads
         if show_buffer:
             legended_buffers = set()
             for b in blocks:
-                is_rack = b["name"] in Core.Step01.RACK_BLOCKS
-                snap_buf = Core.Step01.ROAD_W_RACK_OFFSET if is_rack else Core.Step01.ROAD_BUFFER
+                is_rack = b["name"] in Core.Stage01.RACK_BLOCKS
+                snap_buf = Core.Stage01.ROAD_W_RACK_OFFSET if is_rack else Core.Stage01.ROAD_BUFFER
                 color = '#2980b9' if is_rack else '#34495e'
                 lbl = f'§3.5.B {snap_buf}m road buffer'
                 xs = [b["x"] - snap_buf, b["x"] + b["width"] + snap_buf,
@@ -720,13 +720,13 @@ if True:  # Phase 06 — Sketch roads
             active_cases = sketch.get("active_rack_cases") or {}
             legended_rack = set()
             case_style = {
-                "case1_rack": ('#00b894', f'Case 1 rack buffer ({Core.Step01.RACK_CASE1_OFFSET} m)'),
-                "case2_rack": ('#8e44ad', f'Case 2 rack buffer ({Core.Step01.RACK_CASE2_OFFSET} m)'),
+                "case1_rack": ('#00b894', f'Case 1 rack buffer ({Core.Stage01.RACK_CASE1_OFFSET} m)'),
+                "case2_rack": ('#8e44ad', f'Case 2 rack buffer ({Core.Stage01.RACK_CASE2_OFFSET} m)'),
             }
             # Standard rack blocks show BOTH cases; these extra blocks show only
             # their Case 1 (8 m) rack buffer.
             case1_only = ("GIS", "Warehouse", "Admin Building", "Flare")
-            rack_block_names = list(Core.Step01.RACK_BLOCKS) if hasattr(Core.Step01, "RACK_BLOCKS") else list(rack_buffers)
+            rack_block_names = list(Core.Stage01.RACK_BLOCKS) if hasattr(Core.Stage01, "RACK_BLOCKS") else list(rack_buffers)
             draw_names = list(dict.fromkeys(list(rack_block_names) + list(case1_only)))
             for name in draw_names:
                 cases = rack_buffers.get(name) or {}
@@ -874,8 +874,8 @@ if True:  # Phase 06 — Sketch roads
     if show_buffer:
         legended_buffers = set()
         for b in blocks:
-            is_rack = b["name"] in Core.Step01.RACK_BLOCKS
-            snap_buf = Core.Step01.ROAD_W_RACK_OFFSET if is_rack else Core.Step01.ROAD_BUFFER
+            is_rack = b["name"] in Core.Stage01.RACK_BLOCKS
+            snap_buf = Core.Stage01.ROAD_W_RACK_OFFSET if is_rack else Core.Stage01.ROAD_BUFFER
             color = '#2980b9' if is_rack else '#34495e'
             lbl = f'§3.5.B {snap_buf}m road snap buffer'
             
@@ -1027,7 +1027,7 @@ if True:  # Phase 06 — Sketch roads
     plt.close(fig)
 
     # Placement pass banner — shown below the layout
-    _dbg = Core.Step01._last_debug
+    _dbg = Core.Stage01._last_debug
     _tol_label = _dbg.get("boundary_pass_label", "")
     if _tol_label:
         if "pass 1" in _tol_label:
@@ -1039,7 +1039,7 @@ if True:  # Phase 06 — Sketch roads
 
     # §3.7.E debug expander
     with st.expander("§3.3 Debug — PB gate-side stop line"):
-        gc = Core.Step01._last_debug.get("pb_gate_check")
+        gc = Core.Stage01._last_debug.get("pb_gate_check")
         if gc:
             st.json(gc)
             ne = gc.get("gh_near_edge (closest to center)")
@@ -1059,7 +1059,7 @@ if True:  # Phase 06 — Sketch roads
             st.warning("no pb_gate_check in debug")
 
     with st.expander("§3.6.B Debug — PB-CT Spine Creation"):
-        sc = Core.Step01._last_debug.get("spine_creation")
+        sc = Core.Stage01._last_debug.get("spine_creation")
         if sc:
             st.write(f"**Power Block Case:** `{sc.get('pb_case')}`")
             st.write(f"**Cooling Tower Case:** `{sc.get('ct_case')}`")

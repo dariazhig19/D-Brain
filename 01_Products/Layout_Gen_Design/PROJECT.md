@@ -128,10 +128,12 @@ engine retries with relaxing bounds:
 - **Pass 3 (tight):** allow select blocks up to 10 m past the boundary (`boundary_tol = +10`).
 - **[Polygon change]** This "inside / outside" check is now done against the **polygon** (including diagonal sides), not the rectangle.
 
-**Multi-stage refinement** — Stage 1 mass-generates large-block layouts (user picks
-3 favorites); Stage 2 details/subdivides; Stage 3 ranks & exports. Every stage pairs a
-layout **image** with a rule **score** for decision support.
+**Multi-stage refinement** — A four-stage interactive generative system (Generate & Refine modes) where every stage pairs a layout **image** with a rule **score** for decision support:
 
+- **Stage 1 (Generate Mode):** Automatically generates 100+ layout alternatives focusing on core large blocks. User selects the top 3 favorites to refine.
+- **Stage 2 (Refine Mode – Detailing):** Places remaining small blocks based on the 3 selected layouts and subdivides large blocks into detailed individual buildings. User selects the top 3 detailed layouts.
+- **Stage 3 (Refine Mode – Variation):** Generates slightly mutated, similar variations of the selected layouts from Stage 2 without adding new elements. User finalizes the top 1~3 layouts.
+- **Stage 4 (Final Export):** Verifies all constraints and outputs the final 1~3 layouts as CAD drawings (DXF).
 ---
 
 # PART II — STAGE 1 TECHNICAL SPEC
@@ -140,14 +142,7 @@ layout **image** with a rule **score** for decision support.
 > (continuous float coordinates + entrance-based A* routing).
 > **Status:** UI transitioning to the 4-step interactive wizard (Generate & Refine modes).
 
-## §0. Core Concept
 
-Four-step interactive generative system (Generate & Refine modes).
-
-- **Step 1 (Generate Mode):** Automatically generates 100+ layout alternatives focusing on core large blocks. User selects the top 3 favorites to refine.
-- **Step 2 (Refine Mode – Detailing):** Places remaining small blocks based on the 3 selected layouts and subdivides large blocks into detailed individual buildings. User selects the top 3 detailed layouts.
-- **Step 3 (Refine Mode – Variation):** Generates slightly mutated, similar variations of the selected layouts from Step 2 without adding new elements. User finalizes the top 1~3 layouts.
-- **Step 4 (Final Export):** Verifies all constraints and outputs the final 1~3 layouts as CAD drawings (DXF).
 
 **Principle:** Blocks are placed *before* the pipe rack and road networks. The rack and road networks are then built around the placed blocks. Racks are more important than roads — placed before perimeter/spurs/stubs so roads route around rack corridors.
 

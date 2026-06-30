@@ -487,6 +487,57 @@ if True:  # Phase 06 — Sketch roads
             st.info("Load a plot DXF (or use the rectangle fallback), then click **Generate Layouts**.")
         st.stop()
 
+    # ── Gallery of all generated layouts (thumbnails) ───────────────────────
+    # When several layouts were generated, show a compact thumbnail of each and
+    # let the user pick one to inspect in full detail (the detailed renderer
+    # below draws whichever `sketch` is selected here).
+    sketches = st.session_state.get("sketches06") or ([sketch] if sketch else [])
+    if len(sketches) > 1 and sketches[0].get("blocks_only"):
+        st.markdown(f"### {len(sketches)} layouts · wind {wind_dir}")
+
+        def _thumb(sk):
+            poly = sk.get("plot_polygon")
+            fig, ax = plt.subplots(figsize=(5.2, 3.4), dpi=90)
+            if poly:
+                vx = [v[0] for v in poly] + [poly[0][0]]
+                vy = [v[1] for v in poly] + [poly[0][1]]
+                ax.fill(vx, vy, color="#f0f8ff", zorder=0)
+                ax.plot(vx, vy, color="black", lw=1.0, zorder=1)
+            for seg in sk.get("rack_segments") or []:
+                ax.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]],
+                        color='#d35400', lw=3, solid_capstyle='round', alpha=0.9, zorder=3)
+            for b in sk["blocks"]:
+                bcx, bcy = b["x"] + b["width"] / 2, b["y"] + b["height"] / 2
+                if b["name"] in ("RAW Water Tank", "Flare"):
+                    ax.add_patch(mpatches.Circle((bcx, bcy), min(b["width"], b["height"]) / 2,
+                                                 facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
+                else:
+                    ax.add_patch(mpatches.Rectangle((b["x"], b["y"]), b["width"], b["height"],
+                                                    facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
+            gpt = sk.get("gate_point")
+            if gpt:
+                ax.plot(*gpt, "o", color='#c0392b', markersize=6, zorder=3)
+            ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+            return fig
+
+        cols_per_row = 2
+        for i in range(0, len(sketches), cols_per_row):
+            row = st.columns(cols_per_row)
+            for j, col in enumerate(row):
+                idx = i + j
+                if idx >= len(sketches):
+                    break
+                with col:
+                    st.caption(f"**Layout {idx+1}** · {sketches[idx].get('boundary_pass_label', '')}")
+                    f = _thumb(sketches[idx])
+                    st.pyplot(f)
+                    plt.close(f)
+
+        st.divider()
+        pick = st.selectbox("Inspect layout # (full detail below)",
+                            list(range(1, len(sketches) + 1)), index=0)
+        sketch = sketches[pick - 1]
+
     # ── Current version renderer (polygon, blocks only) ─────────────────────
     # When the layout was generated on the plot polygon we draw it here and stop;
     # the legacy full-sketch renderer below only runs for the rectangle fallback.

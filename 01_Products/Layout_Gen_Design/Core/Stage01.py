@@ -3478,7 +3478,9 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 _plot_cx, _plot_cy = sw / 2.0, sl / 2.0
 
             _cpts = list(_content_pts())
-            if _cpts:
+            if plot is not None:
+                recenter_delta = (0.0, 0.0)
+            elif _cpts:
                 _minx = min(p[0] for p in _cpts); _maxx = max(p[0] for p in _cpts)
                 _miny = min(p[1] for p in _cpts); _maxy = max(p[1] for p in _cpts)
                 _ccx, _ccy = (_minx + _maxx) / 2.0, (_miny + _maxy) / 2.0

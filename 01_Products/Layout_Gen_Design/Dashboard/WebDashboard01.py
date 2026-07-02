@@ -563,9 +563,7 @@ if True:  # Phase 06 — Sketch roads
                 vy = [v[1] for v in poly] + [poly[0][1]]
                 ax.fill(vx, vy, color="#f0f8ff", zorder=0)
                 ax.plot(vx, vy, color="black", lw=1.0, zorder=1)
-            for seg in sk.get("rack_segments") or []:
-                ax.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]],
-                        color='#d35400', lw=6, solid_capstyle='round', alpha=0.9, zorder=3)
+            draw_network_squared(ax, sk.get("rack_segments") or [], width=6, color='#d35400', zorder=3)
             for b in sk["blocks"]:
                 bcx, bcy = b["x"] + b["width"] / 2, b["y"] + b["height"] / 2
                 if b["name"] in ("RAW Water Tank", "Flare"):
@@ -685,11 +683,9 @@ if True:  # Phase 06 — Sketch roads
                                        label='§3.4.B Gate Road', is_closed=False)
 
         # Pipe rack network (§3.6) — 6 m orange centerlines.
-        if show_rack_b1 and sketch.get("rack_segments"):
-            for seg in sketch["rack_segments"]:
-                ax.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]],
-                        color='#d35400', lw=6, solid_capstyle='round', alpha=0.9, zorder=3.5)
-            ax.plot([], [], color='#d35400', lw=6, label='§3.6 Pipe Rack')
+        if show_rack_b1:
+            draw_network_squared(ax, sketch.get("rack_segments", []), width=6, color='#d35400', zorder=3.5,
+                                 label='§3.6 Pipe Rack')
 
         # Spine debug visualizer — raw PB↔CT spine (green) + water cluster (cyan),
         # dashed with endpoint dots, like the legacy renderer.

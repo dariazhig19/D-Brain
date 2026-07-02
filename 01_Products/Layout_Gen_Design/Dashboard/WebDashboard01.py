@@ -497,6 +497,18 @@ if True:  # Phase 06 — Sketch roads
             st.session_state["sketches06"] = None
             st.session_state["sketch06"] = None
         else:
+            # Sort layouts by score (total penalty score ascending)
+            def get_sketch_score(sk):
+                blocks = sk["blocks"]
+                racks_data = [{"name": "Pipe Rack", "segments": sk.get("rack_segments", [])}]
+                gate_pt = sk.get("gate_point")
+                poly = sk.get("plot_polygon")
+                curr_sw = params[0] if params else site_width
+                curr_sl = params[1] if params else site_length
+                res = evaluate_all_v2(blocks, racks_data, curr_sw, curr_sl, wind_dir, gate_point=gate_pt, plot=poly)
+                return res["total_penalty"]
+            sketches.sort(key=get_sketch_score)
+            
             st.session_state["sketches06"] = sketches
             st.session_state["sketch06"] = sketches[0]
             st.session_state["params06"] = params
@@ -597,6 +609,17 @@ if True:  # Phase 06 — Sketch roads
                 spine.set_linewidth(0.8)
             return fig
 
+        def get_sketch_score(sk):
+            blocks = sk["blocks"]
+            racks_data = [{"name": "Pipe Rack", "segments": sk.get("rack_segments", [])}]
+            gate_pt = sk.get("gate_point")
+            poly = sk.get("plot_polygon")
+            curr_params = st.session_state.get("params06")
+            curr_sw = curr_params[0] if curr_params else site_width
+            curr_sl = curr_params[1] if curr_params else site_length
+            res = evaluate_all_v2(blocks, racks_data, curr_sw, curr_sl, wind_dir, gate_point=gate_pt, plot=poly)
+            return res["total_penalty"]
+
         cols_per_row = 2
         for i in range(0, len(sketches), cols_per_row):
             row = st.columns(cols_per_row)
@@ -605,15 +628,18 @@ if True:  # Phase 06 — Sketch roads
                 if idx >= len(sketches):
                     break
                 with col:
-                    st.caption(f"**Layout {idx+1}** · {sketches[idx].get('boundary_pass_label', '')}")
+                    score = get_sketch_score(sketches[idx])
+                    st.caption(f"**Layout {idx+1}** · Score: {score:,.0f} pts · {sketches[idx].get('boundary_pass_label', '')}")
                     f = _thumb(sketches[idx])
                     st.pyplot(f)
                     plt.close(f)
 
         st.divider()
-        pick = st.selectbox("Inspect layout # (full detail below)",
-                            list(range(1, len(sketches) + 1)), index=0)
-        sketch = sketches[pick - 1]
+        options = [f"Layout {idx+1} (Score: {get_sketch_score(sk):,.0f} pts)" for idx, sk in enumerate(sketches)]
+        pick_str = st.selectbox("Inspect layout # (full detail below)", options, index=0)
+        pick_idx = options.index(pick_str)
+        pick = pick_idx + 1
+        sketch = sketches[pick_idx]
 
     # ── Current version renderer (polygon, blocks only) ─────────────────────
     # When the layout was generated on the plot polygon we draw it here and stop;
@@ -793,14 +819,9 @@ if True:  # Phase 06 — Sketch roads
             spine.set_linewidth(0.8)
         if show_legend:
             ax.legend(loc="upper right", fontsize=7)
-        ax.set_title(f"Layout on {len(poly) if poly else 4}-sided plot · wind {wind_dir}")
         st.pyplot(fig)
 
-        st.dataframe(
-            [{"Block": b["name"], "x": round(b["x"], 1), "y": round(b["y"], 1),
-              "w": round(b["width"], 1), "h": round(b["height"], 1), "rotated": b.get("rotated", False)}
-             for b in blocks],
-            use_container_width=True, hide_index=True)
+        # Block coordinates table removed per user request
 
         # ── Detailed Rule Breakdown ─────────────────────────────────────────────
         st.divider()
@@ -817,7 +838,7 @@ if True:  # Phase 06 — Sketch roads
             score_rows.append({
                 "Rule ID": r["id"],
                 "Rule Name": r["name"],
-                "Status": "✅ PASS" if r["passed"] else "❌ FAIL",
+                "Status": "✅ PASS" if r["passed"] else "⚠️ WARNING",
                 "Measured": r["measured"],
                 "Threshold": r["threshold"],
                 "Penalty": f"{r['penalty']:,.0f} pts",

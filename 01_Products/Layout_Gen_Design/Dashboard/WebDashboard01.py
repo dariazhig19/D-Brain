@@ -340,6 +340,7 @@ wind_dir = st.sidebar.selectbox("Wind Direction",
 _PROJ_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _REPO_DIR = os.path.abspath(os.path.join(_PROJ_DIR, "..", ".."))
 _DXF_CANDIDATES = [
+    os.path.join(_PROJ_DIR, "Data", "Plot.dxf"),
     os.path.join(_PROJ_DIR, "Data", "sample_plot.dxf"),
     os.path.join(_REPO_DIR, "Plot.dxf"),
 ]

@@ -141,19 +141,40 @@ def _boom_edge_and_mid(boom, gh_rect):  # → §3.4.B (polygon)
 def _place_flare_on_polygon(plot, placed, wind_dir, pass_tol):  # → §3.5.C (polygon)
     """Place the Flare at the leeward CORNER (vertex) of the plot polygon.
 
-    Picks the polygon vertex furthest in the leeward (downwind) direction, then
+    Picks the polygon vertex furthest in the leeward (downwind) direction, breaking
+    ties by choosing the vertex furthest from the Admin Building's preferred area, then
     nudges the footprint inward toward the plot center until it fits inside and
     clears other blocks. Returns (x, y, w, h) or None."""
     w, h = BLOCK_FOOTPRINTS["Flare"]
     cx, cy = plot.centroid
 
+    # Compute a reference point for the Admin Building/Gate area to maximize distance from
+    ref_pt = None
+    gh = placed.get("Gate House")
+    pb = placed.get("Power Block")
+    if gh and pb:
+        gh_cx, gh_cy = gh[0] + gh[2]/2.0, gh[1] + gh[3]/2.0
+        pb_cx, pb_cy = pb[0] + pb[2]/2.0, pb[1] + pb[3]/2.0
+        ref_pt = ((gh_cx + pb_cx) / 2.0, (gh_cy + pb_cy) / 2.0)
+    elif gh:
+        ref_pt = (gh[0] + gh[2]/2.0, gh[1] + gh[3]/2.0)
+    elif pb:
+        ref_pt = (pb[0] + pb[2]/2.0, pb[1] + pb[3]/2.0)
+
     def leeward_score(v):
         # higher = more leeward
-        if wind_dir == "East":  return -(v[0])   # downwind = -x
-        if wind_dir == "West":  return  (v[0])
-        if wind_dir == "North": return -(v[1])
-        if wind_dir == "South": return  (v[1])
-        return -(v[1])
+        if wind_dir == "East":    val = -(v[0])   # downwind = -x
+        elif wind_dir == "West":  val =  (v[0])
+        elif wind_dir == "North": val = -(v[1])
+        elif wind_dir == "South": val =  (v[1])
+        else: val = -(v[1])
+        
+        dist = 0.0
+        if ref_pt:
+            dist = math.hypot(v[0] - ref_pt[0], v[1] - ref_pt[1])
+            
+        # Return tuple: (leeward_val, distance_to_admin_area)
+        return (val, dist)
 
     for v in sorted(plot.vertices, key=leeward_score, reverse=True):
         dx, dy = cx - v[0], cy - v[1]

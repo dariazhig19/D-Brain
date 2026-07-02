@@ -3086,6 +3086,32 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                         seg = [simplified[i], simplified[i+1]]
                         rack_segments.append(seg)
                         new_segs.append(seg)
+                    
+                    # Align new segments with existing target segments to avoid 1m jogs
+                    for seg in new_segs:
+                        p1, p2 = seg
+                        is_horiz = abs(p1[1] - p2[1]) < 0.1
+                        if is_horiz:
+                            for eseg in target_segments:
+                                ep1, ep2 = eseg
+                                if abs(ep1[1] - ep2[1]) < 0.1: # horizontal
+                                    if abs(p1[1] - ep1[1]) <= 3.0:
+                                        p1 = (p1[0], ep1[1])
+                                        p2 = (p2[0], ep1[1])
+                                        seg[0] = p1
+                                        seg[1] = p2
+                                        break
+                        else:
+                            for eseg in target_segments:
+                                ep1, ep2 = eseg
+                                if abs(ep1[0] - ep2[0]) < 0.1: # vertical
+                                    if abs(p1[0] - ep1[0]) <= 3.0:
+                                        p1 = (ep1[0], p1[1])
+                                        p2 = (ep1[0], p2[1])
+                                        seg[0] = p1
+                                        seg[1] = p2
+                                        break
+                                        
                     return path[-1], new_segs
                 return None, []
 

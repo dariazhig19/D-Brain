@@ -794,15 +794,18 @@ if True:  # Phase 06 — Sketch roads
         col_p.metric("Passing", f"{passing} / {len(scoring['results'])}")
         col_f.metric("Failing", str(failing))
 
+        score_rows = []
         for r in scoring["results"]:
-            status_icon = "✅ PASS" if r["passed"] else "❌ FAIL"
-            penalty_str = f"{r['penalty']:,.0f} pts"
-            label = f"{status_icon} **{r['id']}** — {r['name']}  |  Penalty: **{penalty_str}**"
-            with st.expander(label, expanded=not r["passed"]):
-                col_m, col_t, col_c = st.columns(3)
-                col_m.markdown(f"**Measured**\n\n{r['measured']}")
-                col_t.markdown(f"**Threshold**\n\n{r['threshold']}")
-                col_c.markdown(f"**Calculation**\n\n{r['calc']}")
+            score_rows.append({
+                "Rule ID": r["id"],
+                "Rule Name": r["name"],
+                "Status": "✅ PASS" if r["passed"] else "❌ FAIL",
+                "Measured": r["measured"],
+                "Threshold": r["threshold"],
+                "Penalty": f"{r['penalty']:,.0f} pts",
+                "Calculation": r["calc"]
+            })
+        st.dataframe(score_rows, use_container_width=True, hide_index=True)
 
         # ── DXF Export ─────────────────────────────────────────────────────────
         st.divider()

@@ -562,7 +562,7 @@ if True:  # Phase 06 — Sketch roads
                 vx = [v[0] for v in poly] + [poly[0][0]]
                 vy = [v[1] for v in poly] + [poly[0][1]]
                 ax.fill(vx, vy, color="#f0f8ff", zorder=0)
-                ax.plot(vx, vy, color="#7f8c8d", lw=1.0, zorder=1)
+                ax.plot(vx, vy, color="black", lw=1.0, zorder=1)
             for seg in sk.get("rack_segments") or []:
                 ax.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]],
                         color='#d35400', lw=6, solid_capstyle='round', alpha=0.9, zorder=3)
@@ -570,10 +570,10 @@ if True:  # Phase 06 — Sketch roads
                 bcx, bcy = b["x"] + b["width"] / 2, b["y"] + b["height"] / 2
                 if b["name"] in ("RAW Water Tank", "Flare"):
                     ax.add_patch(mpatches.Circle((bcx, bcy), min(b["width"], b["height"]) / 2,
-                                                 facecolor=b["color"], edgecolor='#7f8c8d', alpha=0.85, zorder=2))
+                                                 facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
                 else:
                     ax.add_patch(mpatches.Rectangle((b["x"], b["y"]), b["width"], b["height"],
-                                                    facecolor=b["color"], edgecolor='#7f8c8d', alpha=0.85, zorder=2))
+                                                    facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
             # Draw road on previews
             ring_road = sk.get("ring_road")
             if ring_road:
@@ -593,6 +593,9 @@ if True:  # Phase 06 — Sketch roads
             if gpt:
                 ax.plot(*gpt, "o", color='#c0392b', markersize=6, zorder=3)
             ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+            for spine in ax.spines.values():
+                spine.set_color('#cccccc')
+                spine.set_linewidth(0.8)
             return fig
 
         cols_per_row = 2
@@ -645,7 +648,7 @@ if True:  # Phase 06 — Sketch roads
             vx = [v[0] for v in poly] + [poly[0][0]]
             vy = [v[1] for v in poly] + [poly[0][1]]
             ax.fill(vx, vy, color="#f0f8ff", zorder=0)
-            ax.plot(vx, vy, color="#7f8c8d", lw=1.2, zorder=1, label="Plot boundary")
+            ax.plot(vx, vy, color="black", lw=1.2, zorder=1, label="Plot boundary")
             allx = [v[0] for v in poly] + ([v[0] for v in poly_before] if poly_before else [])
             ally = [v[1] for v in poly] + ([v[1] for v in poly_before] if poly_before else [])
             sw_b, sl_b = max(allx), max(ally)
@@ -772,10 +775,10 @@ if True:  # Phase 06 — Sketch roads
             bcx, bcy = b["x"] + b["width"] / 2, b["y"] + b["height"] / 2
             if b["name"] in ("RAW Water Tank", "Flare"):
                 ax.add_patch(mpatches.Circle((bcx, bcy), min(b["width"], b["height"]) / 2,
-                                             facecolor=b["color"], edgecolor='#7f8c8d', alpha=0.85, zorder=2))
+                                             facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
             else:
                 ax.add_patch(mpatches.Rectangle((b["x"], b["y"]), b["width"], b["height"],
-                                                facecolor=b["color"], edgecolor='#7f8c8d', alpha=0.85, zorder=2))
+                                                facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
             ax.text(bcx, bcy, b["name"], ha="center", va="center", fontsize=7, zorder=2.5)
 
         gpt = sketch.get("gate_point")
@@ -788,6 +791,9 @@ if True:  # Phase 06 — Sketch roads
 
         ax.set_aspect("equal")
         ax.set_xticks([]); ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_color('#cccccc')
+            spine.set_linewidth(0.8)
         if show_legend:
             ax.legend(loc="upper right", fontsize=7)
         ax.set_title(f"Layout on {len(poly) if poly else 4}-sided plot · wind {wind_dir}")

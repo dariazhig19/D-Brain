@@ -93,6 +93,10 @@ def export_to_dxf(layout, site_width, site_length, plot=None):
     doc = ezdxf.new(dxfversion="R2010")
     doc.header["$INSUNITS"] = 6   # 6 = metres
 
+    if plot is not None and not hasattr(plot, "vertices"):
+        from Core.Plot import Plot
+        plot = Plot(plot)
+
     # Register linetypes
     if "DASHED" not in doc.linetypes:
         doc.linetypes.add("DASHED", pattern=[0.5, -0.25])

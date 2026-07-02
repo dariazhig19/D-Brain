@@ -500,6 +500,9 @@ def evaluate_all_v2(groups, racks, site_width, site_length, wind_dir, gate_point
     """
     Run all rules from the RULES data list.
     """
+    if plot is not None and not hasattr(plot, "centroid"):
+        from Core.Plot import Plot
+        plot = Plot(plot)
     by_name = {g["name"]: g for g in groups}
     results = []
 

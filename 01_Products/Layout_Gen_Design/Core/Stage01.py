@@ -161,6 +161,14 @@ def _place_flare_on_polygon(plot, placed, wind_dir, pass_tol):  # → §3.5.C (p
     elif pb:
         ref_pt = (pb[0] + pb[2]/2.0, pb[1] + pb[3]/2.0)
 
+    def is_leeward(v):
+        cx, cy = plot.centroid
+        if wind_dir == "East":  return v[0] <= cx
+        if wind_dir == "West":  return v[0] >= cx
+        if wind_dir == "North": return v[1] <= cy
+        if wind_dir == "South": return v[1] >= cy
+        return True
+
     def leeward_score(v):
         # higher = more leeward
         if wind_dir == "East":    val = -(v[0])   # downwind = -x
@@ -173,8 +181,8 @@ def _place_flare_on_polygon(plot, placed, wind_dir, pass_tol):  # → §3.5.C (p
         if ref_pt:
             dist = math.hypot(v[0] - ref_pt[0], v[1] - ref_pt[1])
             
-        # Return tuple: (leeward_val, distance_to_admin_area)
-        return (val, dist)
+        # Return tuple: (is_leeward, distance_to_admin_area, leeward_val)
+        return (is_leeward(v), dist, val)
 
     for v in sorted(plot.vertices, key=leeward_score, reverse=True):
         dx, dy = cx - v[0], cy - v[1]

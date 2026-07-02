@@ -77,6 +77,147 @@ def _add_label(msp, text, cx, cy, height, layer):
     ).set_placement((cx, cy), align=TextEntityAlignment.MIDDLE_CENTER)
 
 
+def merge_segments_to_paths(segments):
+    """
+    Given a list of segments [(p1, p2), ...],
+    merge them into a list of continuous paths (each a list of points).
+    """
+    from collections import defaultdict
+    adj = defaultdict(list)
+    for p1, p2 in segments:
+        p1_t = (round(p1[0], 2), round(p1[1], 2))
+        p2_t = (round(p2[0], 2), round(p2[1], 2))
+        if p1_t == p2_t:
+            continue
+        adj[p1_t].append(p2_t)
+        adj[p2_t].append(p1_t)
+        
+    visited_edges = set()
+    paths = []
+    
+    # 1. Start from endpoints (degree 1)
+    endpoints = [v for v, neighbors in adj.items() if len(neighbors) == 1]
+    for start in endpoints:
+        if not adj[start]:
+            continue
+        curr = start
+        path = [curr]
+        while True:
+            next_pt = None
+            for nxt in adj[curr]:
+                edge = (min(curr, nxt), max(curr, nxt))
+                if edge not in visited_edges:
+                    next_pt = nxt
+                    visited_edges.add(edge)
+                    break
+            if next_pt is None:
+                break
+            curr = next_pt
+            path.append(curr)
+        if len(path) > 1:
+            paths.append(path)
+            
+    # 2. Trace remaining closed loops (degree >= 2)
+    for start in list(adj.keys()):
+        has_unvisited = False
+        for nxt in adj[start]:
+            edge = (min(start, nxt), max(start, nxt))
+            if edge not in visited_edges:
+                has_unvisited = True
+                break
+        if not has_unvisited:
+            continue
+            
+        curr = start
+        path = [curr]
+        while True:
+            next_pt = None
+            for nxt in adj[curr]:
+                edge = (min(curr, nxt), max(curr, nxt))
+                if edge not in visited_edges:
+                    next_pt = nxt
+                    visited_edges.add(edge)
+                    break
+            if next_pt is None:
+                break
+            curr = next_pt
+            path.append(curr)
+        if len(path) > 1:
+            paths.append(path)
+            
+    return paths
+
+
+def offset_polyline(vertices, d, closed=False):
+    """
+    Offset a list of vertices representing an axis-aligned polyline
+    by distance d on both sides. Returns (left_polyline, right_polyline).
+    Handles corners correctly using normal bisectors.
+    """
+    n = len(vertices)
+    if n < 2:
+        return list(vertices), list(vertices)
+        
+    left_pts = []
+    right_pts = []
+    
+    for i in range(n):
+        P_curr = vertices[i]
+        
+        # Determine incoming direction
+        if i == 0:
+            if closed:
+                v_in = (P_curr[0] - vertices[-1][0], P_curr[1] - vertices[-1][1])
+            else:
+                v_in = None
+        else:
+            v_in = (P_curr[0] - vertices[i-1][0], P_curr[1] - vertices[i-1][1])
+            
+        # Determine outgoing direction
+        if i == n - 1:
+            if closed:
+                v_out = (vertices[0][0] - P_curr[0], vertices[0][1] - P_curr[1])
+            else:
+                v_out = None
+        else:
+            v_out = (vertices[i+1][0] - P_curr[0], vertices[i+1][1] - P_curr[1])
+            
+        # Compute normal vectors
+        n_in = None
+        if v_in:
+            len_in = (v_in[0]**2 + v_in[1]**2)**0.5
+            if len_in > 0.001:
+                u_in = (v_in[0]/len_in, v_in[1]/len_in)
+                n_in = (-u_in[1], u_in[0])
+                
+        n_out = None
+        if v_out:
+            len_out = (v_out[0]**2 + v_out[1]**2)**0.5
+            if len_out > 0.001:
+                u_out = (v_out[0]/len_out, v_out[1]/len_out)
+                n_out = (-u_out[1], u_out[0])
+                
+        # Combine normals
+        if n_in and n_out:
+            cross = n_in[0]*n_out[1] - n_in[1]*n_out[0]
+            if abs(cross) < 0.01:
+                n_comb = n_in
+            else:
+                # Orthogonal turn corner bisector offset vector
+                n_comb = (n_in[0] + n_out[0], n_in[1] + n_out[1])
+        elif n_in:
+            n_comb = n_in
+        elif n_out:
+            n_comb = n_out
+        else:
+            n_comb = (0, 0)
+            
+        left_pts.append((P_curr[0] + d * n_comb[0], P_curr[1] + d * n_comb[1]))
+        right_pts.append((P_curr[0] - d * n_comb[0], P_curr[1] - d * n_comb[1]))
+        
+    return left_pts, right_pts
+
+
 def export_to_dxf(layout, site_width, site_length, plot=None):
     """
     Convert a layout dict to a DXF binary stream.
@@ -122,13 +263,21 @@ def export_to_dxf(layout, site_width, site_length, plot=None):
         _add_label(msp, f"Site  {site_width:.0f} x {site_length:.0f} m",
                    site_width / 2, site_length + 6, 3.0, "LABELS")
 
-    # ── 2. Roads ────────────────────────────────────────────────────────────
+    # ── 2. Roads (offset 4m on both sides for 8m road width) ─────────────────
     if "ring_road" in layout and layout["ring_road"]:
-        _add_closed_polyline(msp, layout["ring_road"], "ROAD")
+        l_road, r_road = offset_polyline(layout["ring_road"], d=4.0, closed=True)
+        _add_closed_polyline(msp, l_road, "ROAD")
+        _add_closed_polyline(msp, r_road, "ROAD")
+        
     if "gate_spur" in layout and layout["gate_spur"]:
-        msp.add_lwpolyline(layout["gate_spur"], close=False, dxfattribs={"layer": "ROAD"})
+        l_gate, r_gate = offset_polyline(layout["gate_spur"], d=4.0, closed=False)
+        msp.add_lwpolyline(l_gate, close=False, dxfattribs={"layer": "ROAD"})
+        msp.add_lwpolyline(r_gate, close=False, dxfattribs={"layer": "ROAD"})
+        
     if "ring_spur" in layout and layout["ring_spur"]:
-        msp.add_lwpolyline(layout["ring_spur"], close=False, dxfattribs={"layer": "ROAD"})
+        l_ring, r_ring = offset_polyline(layout["ring_spur"], d=4.0, closed=False)
+        msp.add_lwpolyline(l_ring, close=False, dxfattribs={"layer": "ROAD"})
+        msp.add_lwpolyline(r_ring, close=False, dxfattribs={"layer": "ROAD"})
 
     # ── 3. Building Groups ──────────────────────────────────────────────────
     for group in layout["groups"]:
@@ -169,13 +318,20 @@ def export_to_dxf(layout, site_width, site_length, plot=None):
             dxfattribs={"layer": "DIMENSIONS"},
         ).render()
 
-    # ── 4. Polyline Racks ───────────────────────────────────────────────────
+    # ── 4. Polyline Racks (offset 3m on both sides for 6m rack width) ────────
     for rack in layout.get("racks", []):
         layer = RACK_LAYER_MAP.get(rack["name"], "PIPE_RACK")
-        for p1, p2 in rack.get("segments", []):
-            x1, y1 = p1
-            x2, y2 = p2
-            msp.add_line((x1, y1), (x2, y2), dxfattribs={"layer": layer})
+        paths = merge_segments_to_paths(rack.get("segments", []))
+        for path in paths:
+            is_closed_loop = len(path) > 2 and path[0] == path[-1]
+            if is_closed_loop:
+                l_rack, r_rack = offset_polyline(path[:-1], d=3.0, closed=True)
+                msp.add_lwpolyline(l_rack, close=True, dxfattribs={"layer": layer})
+                msp.add_lwpolyline(r_rack, close=True, dxfattribs={"layer": layer})
+            else:
+                l_rack, r_rack = offset_polyline(path, d=3.0, closed=False)
+                msp.add_lwpolyline(l_rack, close=False, dxfattribs={"layer": layer})
+                msp.add_lwpolyline(r_rack, close=False, dxfattribs={"layer": layer})
 
     # ── 5. Score annotation ─────────────────────────────────────────────────
     if "scoring" in layout and layout["scoring"]:

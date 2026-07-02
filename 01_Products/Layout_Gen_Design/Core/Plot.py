@@ -125,25 +125,58 @@ class Plot:
         return (cx / (6 * a), cy / (6 * a))
 
     # ── Containment ──────────────────────────────────────────────────────
+    @staticmethod
+    def _point_to_segment_dist(x, y, p1, p2):
+        x1, y1 = p1
+        x2, y2 = p2
+        dx, dy = x2 - x1, y2 - y1
+        l2 = dx*dx + dy*dy
+        if l2 < 1e-9:
+            return math.hypot(x - x1, y - y1)
+        t = ((x - x1) * dx + (y - y1) * dy) / l2
+        t = max(0.0, min(1.0, t))
+        px = x1 + t * dx
+        py = y1 + t * dy
+        return math.hypot(x - px, y - py)
+
+    def _dist_to_boundary(self, x, y):
+        n = len(self.vertices)
+        return min(self._point_to_segment_dist(x, y, self.vertices[i], self.vertices[(i+1)%n]) for i in range(n))
+
     def _edge_signed_dist(self, edge, x, y):
         nx, ny = edge["normal"]
         px, py = edge["p1"]
         return (x - px) * nx + (y - py) * ny  # >0 interior side
 
     def contains_point(self, x, y, tol=0.0):
-        """True if (x, y) is inside the polygon expanded outward by ``tol`` metres."""
-        for e in self.edges:
-            if self._edge_signed_dist(e, x, y) < -tol:
-                return False
-        return True
+        """True if (x, y) is inside the polygon expanded outward by ``tol`` metres.
+        Uses general raycasting to support both convex and concave polygons correctly."""
+        n = len(self.vertices)
+        inside = False
+        p1x, p1y = self.vertices[0]
+        for i in range(n + 1):
+            p2x, p2y = self.vertices[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+            
+        if abs(tol) < 1e-9:
+            return inside
+            
+        d = self._dist_to_boundary(x, y)
+        if tol > 0.0:
+            return inside or (d <= tol)
+        else:
+            return inside and (d >= -tol)
 
     def contains_rect(self, x, y, w, h, tol=0.0):
         """True if the AABB [x, x+w] × [y, y+h] is inside the polygon (+tol).
-
-        For a convex polygon, a rectangle is fully inside iff all four corners
-        are inside. This is the drop-in replacement for the legacy
-        ``_within_relaxed_bounds(x, y, w, h, sw, sl, tol)``.
-        """
+        A rectangle is fully inside iff all four corners are inside."""
         return (self.contains_point(x,     y,     tol) and
                 self.contains_point(x + w, y,     tol) and
                 self.contains_point(x + w, y + h, tol) and
@@ -151,12 +184,23 @@ class Plot:
 
     def signed_dist_to_boundary(self, x, y):
         """Min signed distance from a point to the boundary.
-
-        Positive inside (distance to nearest edge), negative outside. For convex
-        polygons this is exact for interior points and a safe lower bound
-        otherwise.
-        """
-        return min(self._edge_signed_dist(e, x, y) for e in self.edges)
+        Positive inside, negative outside. Correctly supports concave polygons."""
+        n = len(self.vertices)
+        inside = False
+        p1x, p1y = self.vertices[0]
+        for i in range(n + 1):
+            p2x, p2y = self.vertices[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+            
+        d = self._dist_to_boundary(x, y)
+        return d if inside else -d
 
     # ── Edge addressing (anchors / gate fallback) ────────────────────────
     def edge_point(self, idx, ratio, offset=0.0):

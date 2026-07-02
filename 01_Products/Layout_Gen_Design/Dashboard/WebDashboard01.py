@@ -402,9 +402,9 @@ if True:  # Phase 06 — Sketch roads
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
-    show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=True)
+    show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=False)
     show_before_recenter = st.sidebar.checkbox("§3.8 — Plot + gate before recenter", value=False)
-    show_legend   = st.sidebar.checkbox("Legend", value=True)
+    show_legend   = st.sidebar.checkbox("Legend", value=False)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
     seed_val      = st.sidebar.number_input("Seed", 0, 10000, 42, disabled=not fix_seed)
 
@@ -574,6 +574,21 @@ if True:  # Phase 06 — Sketch roads
                 else:
                     ax.add_patch(mpatches.Rectangle((b["x"], b["y"]), b["width"], b["height"],
                                                     facecolor=b["color"], edgecolor='black', alpha=0.85, zorder=2))
+            # Draw road on previews
+            ring_road = sk.get("ring_road")
+            if ring_road:
+                draw_road_with_fillets(ax, ring_road, width=8, color='#7f8c8d',
+                                       fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=True)
+            gs = sk.get("gate_spur") or []
+            rs = sk.get("ring_spur") or []
+            if gs and rs:
+                combined_spur = list(rs) + list(gs)[1:]
+                draw_road_with_fillets(ax, combined_spur, width=8, color='#7f8c8d',
+                                       fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+            elif gs:
+                draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d',
+                                       fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+
             gpt = sk.get("gate_point")
             if gpt:
                 ax.plot(*gpt, "o", color='#c0392b', markersize=6, zorder=3)

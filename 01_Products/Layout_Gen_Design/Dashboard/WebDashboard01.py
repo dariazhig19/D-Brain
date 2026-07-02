@@ -13,19 +13,23 @@ import matplotlib.patches as mpatches
 
 import importlib
 import Core.Groups, Core.Grid, Core.Pathfind, Core.Stage01
-import Core.Plot, Core.CADImport
+import Core.Plot, Core.CADImport, Core.Rules, Core.Exporter
 importlib.reload(Core.Grid)
 importlib.reload(Core.Pathfind)
 importlib.reload(Core.Groups)
 importlib.reload(Core.Stage01)
 importlib.reload(Core.Plot)
 importlib.reload(Core.CADImport)
+importlib.reload(Core.Rules)
+importlib.reload(Core.Exporter)
 
 Plot = Core.Plot.Plot
 SHAPES = Core.Groups.SHAPES
 generate_sketch = Core.Stage01.generate_sketch
 CELL_SIZE = Core.Stage01.CELL_SIZE
 ROAD_BUFFER = Core.Stage01.ROAD_BUFFER
+evaluate_all_v2 = Core.Rules.evaluate_all_v2
+export_to_dxf = Core.Exporter.export_to_dxf
 
 @st.cache_data
 def cached_load_plot_dxf(path, mtime):
@@ -633,6 +637,10 @@ if True:  # Phase 06 — Sketch roads
         else:
             sw_b, sl_b = st.session_state.get("params06", (site_width, site_length))
 
+        racks_data = [{"name": "Pipe Rack", "segments": sketch.get("rack_segments", [])}]
+        gate_pt = sketch.get("gate_point")
+        scoring = evaluate_all_v2(blocks, racks_data, sw_b, sl_b, wind_dir, gate_point=gate_pt, plot=poly)
+
         if show_grid:
             cs = CELL_SIZE
             for i in range(int(sw_b // cs) + 1):
@@ -775,6 +783,54 @@ if True:  # Phase 06 — Sketch roads
               "w": round(b["width"], 1), "h": round(b["height"], 1), "rotated": b.get("rotated", False)}
              for b in blocks],
             use_container_width=True, hide_index=True)
+
+        # ── Detailed Rule Breakdown ─────────────────────────────────────────────
+        st.divider()
+        st.markdown("#### Detailed Rule Breakdown")
+        col_s, col_p, col_f = st.columns(3)
+        passing = sum(1 for r in scoring["results"] if r["passed"])
+        failing = len(scoring["results"]) - passing
+        col_s.metric("Total Penalty Score", f"{scoring['total_penalty']:,.0f} pts")
+        col_p.metric("Passing", f"{passing} / {len(scoring['results'])}")
+        col_f.metric("Failing", str(failing))
+
+        for r in scoring["results"]:
+            status_icon = "✅ PASS" if r["passed"] else "❌ FAIL"
+            penalty_str = f"{r['penalty']:,.0f} pts"
+            label = f"{status_icon} **{r['id']}** — {r['name']}  |  Penalty: **{penalty_str}**"
+            with st.expander(label, expanded=not r["passed"]):
+                col_m, col_t, col_c = st.columns(3)
+                col_m.markdown(f"**Measured**\n\n{r['measured']}")
+                col_t.markdown(f"**Threshold**\n\n{r['threshold']}")
+                col_c.markdown(f"**Calculation**\n\n{r['calc']}")
+
+        # ── DXF Export ─────────────────────────────────────────────────────────
+        st.divider()
+        st.markdown("#### Export to CAD")
+        st.caption("Exports the selected layout as a **DXF file** containing all polygon boundaries, building outlines, road centerlines, and labels on separate named layers.")
+        _, export_col, _ = st.columns([2, 3, 2])
+        with export_col:
+            try:
+                layout_for_export = {
+                    "groups": sketch["blocks"],
+                    "racks": racks_data,
+                    "scoring": scoring,
+                    "ring_road": sketch.get("ring_road"),
+                    "gate_spur": sketch.get("gate_spur"),
+                    "ring_spur": sketch.get("ring_spur"),
+                }
+                dxf_stream = export_to_dxf(layout_for_export, sw_b, sl_b, plot=poly)
+                filename = f"PowerPlan_Layout_{pick:02d}_{int(scoring['total_penalty'])}pts.dxf"
+                st.download_button(
+                    label="Download DXF",
+                    data=dxf_stream,
+                    file_name=filename,
+                    mime="application/dxf",
+                    use_container_width=True,
+                    type="primary",
+                )
+            except Exception as e:
+                st.error(f"DXF export failed: {e}")
 
         # ── Debug output (copy & send if something looks wrong) ─────────────
         def _fmt_pts(pts, n=0):

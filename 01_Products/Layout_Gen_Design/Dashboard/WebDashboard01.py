@@ -868,7 +868,7 @@ if True:  # Phase 06 — Sketch roads
                     label="Download DXF",
                     data=dxf_stream,
                     file_name=filename,
-                    mime="application/dxf",
+                    mime="image/vnd.dxf",  # registered MIME type -> Streamlit maps it to .dxf
                     use_container_width=True,
                     type="primary",
                 )

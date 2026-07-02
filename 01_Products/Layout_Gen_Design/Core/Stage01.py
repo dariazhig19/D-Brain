@@ -3511,13 +3511,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                 _minx = min(p[0] for p in _cpts); _maxx = max(p[0] for p in _cpts)
                 _miny = min(p[1] for p in _cpts); _maxy = max(p[1] for p in _cpts)
                 _ccx, _ccy = (_minx + _maxx) / 2.0, (_miny + _maxy) / 2.0
-                if plot is not None:
-                    # Snap delta to 2m grid cell size to keep blocks grid-aligned
-                    _dx = snap(_ccx - _plot_cx)
-                    _dy = snap(_ccy - _plot_cy)
-                    recenter_delta = (_dx, _dy)
-                else:
-                    recenter_delta = (_ccx - _plot_cx, _ccy - _plot_cy)
+                recenter_delta = (_ccx - _plot_cx, _ccy - _plot_cy)
             else:
                 recenter_delta = (0.0, 0.0)
             _dx, _dy = recenter_delta
@@ -3526,41 +3520,13 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             _plot_rec = plot.translate(_dx, _dy) if plot is not None else None
             plot_polygon_out = list(_plot_rec.vertices) if _plot_rec is not None else None
 
-            # Shift all content coordinates by _dx, _dy in polygon mode so everything stays perfectly aligned
-            if plot is not None and (_dx != 0.0 or _dy != 0.0):
-                for b in blocks:
-                    b["x"] = snap(b["x"] + _dx)
-                    b["y"] = snap(b["y"] + _dy)
-                if boom_out:
-                    boom_out = [(p[0] + _dx, p[1] + _dy) for p in boom_out]
-                if ring_road:
-                    ring_road = [(p[0] + _dx, p[1] + _dy) for p in ring_road]
-                if gate_road_out:
-                    gate_road_out = [(p[0] + _dx, p[1] + _dy) for p in gate_road_out]
-                if ring_spur_out:
-                    ring_spur_out = [(p[0] + _dx, p[1] + _dy) for p in ring_spur_out]
-                if rack_segments:
-                    rack_segments = [((s[0][0] + _dx, s[0][1] + _dy), (s[1][0] + _dx, s[1][1] + _dy)) for s in rack_segments]
-                if water_cluster_segments:
-                    water_cluster_segments = [((s[0][0] + _dx, s[0][1] + _dy), (s[1][0] + _dx, s[1][1] + _dy)) for s in water_cluster_segments]
-                if pruned_rack_segments:
-                    pruned_rack_segments = [((s[0][0] + _dx, s[0][1] + _dy), (s[1][0] + _dx, s[1][1] + _dy)) for s in pruned_rack_segments]
-                if water_triangle:
-                    water_triangle = [(p[0] + _dx, p[1] + _dy) for p in water_triangle]
-                if spine_centerlines:
-                    spine_centerlines = [((s[0][0] + _dx, s[0][1] + _dy), (s[1][0] + _dx, s[1][1] + _dy)) for s in spine_centerlines]
-                if main_rack_output:
-                    main_rack_output = ((main_rack_output[0][0] + _dx, main_rack_output[0][1] + _dy),
-                                        (main_rack_output[1][0] + _dx, main_rack_output[1][1] + _dy))
-                if gate_pt is not None:
-                    gate_pt = (gate_pt[0] + _dx, gate_pt[1] + _dy)
-
+            # The gate moves only PERPENDICULAR to its boundary edge so it stays on
+            # the moved edge line without sliding ALONG it (which would stretch the
+            # exit road and detach it from the fixed gate house). For a diagonal
+            # edge this is the true perpendicular component of `delta`.
             gate_pt_before = gate_pt
             gate_pt_rec = gate_pt
             if plot is not None and gate_pt is not None:
-                # Since the gate point was already translated as part of the content shift, gate_pt_rec is gate_pt
-                gate_pt_rec = gate_pt
-            elif gate_pt is not None:
                 _e = plot.edges[plot.nearest_edge(gate_pt[0], gate_pt[1])]
                 _ux, _uy = _e["dir"]
                 _along = _dx * _ux + _dy * _uy

@@ -514,6 +514,7 @@ if True:  # Phase 06 — Sketch roads
             st.session_state["params06"] = params
 
     sketch = st.session_state.get("sketch06")
+    pick = 1
 
     # Generation debugger — per-layout timing / timeouts / failures.
     _gen_log = st.session_state.get("gen_log06")

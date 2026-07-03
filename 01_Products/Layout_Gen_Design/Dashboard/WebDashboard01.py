@@ -392,18 +392,18 @@ with st.sidebar.expander("Rectangle fallback (no DXF)", expanded=plot_import is 
 st.sidebar.divider()
 
 if True:  # Phase 06 — Sketch roads
-    st.title("Phase 06 — Block + Road Sketch")
-    st.markdown("Reference: [Phase 06 Plan](file:///x:/CST%EB%B3%B8%EB%B6%80%20%28%EA%B5%AC%20%EA%B8%B0%EC%88%A0%EC%A7%80%EC%9B%90%EB%B6%80%20%ED%8F%B4%EB%8D%94%29/15.%20%EB%8B%A4%EB%A6%AC%EC%95%84/D-Brain/00_Input/Phase_06_Plan.md)")
-    st.caption("Steps 1.1–1.5: blocks · ring road + spurs · rack network")
+    st.title("Stage 01")
+    
+    st.caption("Placing blocks · ring road + spurs · rack network")
 
-    st.sidebar.header("Phase 06 Settings")
+    st.sidebar.header("Stage 01 Settings")
     show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
     show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=False)
     show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
-    show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=False)
+    show_spine_debug  = st.sidebar.checkbox("§3.6.B — Show Spine Debug Visualizer", value=False)
     show_before_recenter = st.sidebar.checkbox("§3.8 — Plot + gate before recenter", value=False)
     show_legend   = st.sidebar.checkbox("Legend", value=False)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)

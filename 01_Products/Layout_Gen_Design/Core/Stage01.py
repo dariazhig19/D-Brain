@@ -3771,20 +3771,26 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
             # (a) Stub pattern: a long leg parallel to the target road line a
             #     few cells away, ending in a tiny stub onto the connection
             #     point. Slide the offset leg onto the connection point's line.
-            if len(path) >= 4:
+            #     ITERATE: an A* tail can be a staircase of small steps — each
+            #     slide exposes the next stub, so repeat until stable.
+            for _a_iter in range(8):
+                if len(path) < 4:
+                    break
                 pD, pC, pB = path[-1], path[-2], path[-3]
                 stub = math.hypot(pD[0] - pC[0], pD[1] - pC[1])
-                if 0.1 < stub <= tol:
-                    stub_horizontal = abs(pD[1] - pC[1]) <= abs(pD[0] - pC[0])
-                    cand = None
-                    if stub_horizontal and abs(pC[0] - pB[0]) < 0.1:
-                        # vertical leg offset from x=pD.x — slide onto pD's line
-                        cand = path[:-3] + [(pD[0], pB[1]), pD]
-                    elif not stub_horizontal and abs(pC[1] - pB[1]) < 0.1:
-                        # horizontal leg offset from y=pD.y — slide onto pD's line
-                        cand = path[:-3] + [(pB[0], pD[1]), pD]
-                    if cand is not None and _tail_clears(cand):
-                        path[:] = cand
+                if not (0.1 < stub <= tol):
+                    break
+                stub_horizontal = abs(pD[1] - pC[1]) <= abs(pD[0] - pC[0])
+                cand = None
+                if stub_horizontal and abs(pC[0] - pB[0]) < 0.1:
+                    # vertical leg offset from x=pD.x — slide onto pD's line
+                    cand = path[:-3] + [(pD[0], pB[1]), pD]
+                elif not stub_horizontal and abs(pC[1] - pB[1]) < 0.1:
+                    # horizontal leg offset from y=pD.y — slide onto pD's line
+                    cand = path[:-3] + [(pB[0], pD[1]), pD]
+                if cand is None or not _tail_clears(cand):
+                    break
+                path[:] = cand
             # (b) Offset-terminal pattern: the final leg runs parallel to a
             #     network road line (ring road edge, ring spur leg, an earlier
             #     access road, ...) a cell or two beside it, its terminal

@@ -249,8 +249,9 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "d9df2daeee9f0ecb",
+  "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.dc559c8fd052",
     "01_Products/Layout_Gen_Design/PROJECT.md",
     "PlotForge/tools/mcp_server.py",
     "PlotForge/tools/import_xlsx.py",
@@ -298,7 +299,6 @@
     "01_Products/Layout_Gen_Design/Pipeline/Phase_05/Phase 05 Notes.md",
     "04_Reports/Daily/Daily_Report_20260513.md",
     "01_Products/Layout_Gen_Design/Notes/Daily_Report_20260513.md",
-    "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "04_Reports/Daily/Daily_Report_20260429.md"
+    "01_Products/Layout_Gen_Design/Core/!Core_Context.md"
   ]
 }

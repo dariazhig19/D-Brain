@@ -367,6 +367,15 @@ def _boundary_offset_candidates(name, w, h, placed, sw, sl, plot, gap,  # → §
                 continue
             if _overlaps_any(name, placed, x, y, w, h):
                 continue
+            # The WHOLE buffer must respect the gap (near corners the buffer
+            # can poke out through the ADJACENT slanted edge even though this
+            # edge's distance is exact) — allow 2 m slack.
+            bx0, by0 = x - b_off, y - b_off
+            bx1, by1 = x + w + b_off, y + h + b_off
+            bd = min(plot.signed_dist_to_boundary(px, py)
+                     for px, py in ((bx0, by0), (bx1, by0), (bx0, by1), (bx1, by1)))
+            if bd < gap - 2.0:
+                continue
             cands.append((x, y))
     return cands
 

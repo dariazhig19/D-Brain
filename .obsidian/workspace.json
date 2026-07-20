@@ -251,6 +251,8 @@
   },
   "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.64e4f462c4e5",
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.6418961f2a6f",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.dc559c8fd052",
     "01_Products/Layout_Gen_Design/PROJECT.md",
     "PlotForge/tools/mcp_server.py",
@@ -261,8 +263,6 @@
     "PlotForge/src/units.js",
     "PlotForge/src/state.js",
     "PlotForge/src/render.js",
-    "PlotForge/src/grid.js",
-    "PlotForge/src/geometry.js",
     "PlotForge/README.md",
     "PlotForge/PLAN.md",
     "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",

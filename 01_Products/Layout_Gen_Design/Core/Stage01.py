@@ -3502,12 +3502,19 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         for b in blocks:
             grid_roads.mark_building(b, inflate_m=2.0)
 
-        # if plot is not None:
-        #     inside_mask = plot.cell_inside_mask(grid_roads.ncols, grid_roads.nrows, grid_roads.cell_size)
-        #     for i in range(grid_roads.ncols):
-        #         for j in range(grid_roads.nrows):
-        #             if not inside_mask[i][j]:
-        #                 grid_roads.blocked[i, j] = True
+        # Keep A* INSIDE the plot: cells whose center is clearly outside the
+        # temporary boundary (> 1 m out) are blocked. Without this, a route
+        # can cheat along the outside of a slanted edge (cheaper than paying
+        # buffer penalties inside) and the Part-3 boundary trim then leaves
+        # disconnected fragments — e.g. a corridor between two blocks exists
+        # inside but the road ran outside instead.
+        if plot is not None:
+            for i in range(grid_roads.ncols):
+                for j in range(grid_roads.nrows):
+                    if not grid_roads.blocked[i, j]:
+                        cx, cy = grid_roads.cell_to_world(i, j)
+                        if not plot.contains_point(cx, cy, tol=1.0):
+                            grid_roads.blocked[i, j] = True
 
         # Block grid cells within the forbidden zone
         if forbidden_zone_bbox is not None:
@@ -4446,7 +4453,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                               (abs(opp_dir[1]) > 0 and abs(_ldx) < 0.1 and abs(_ldy) > 0.1))
                 _shared = (abs(_a0[0] - path2_snapped[0][0]) < 0.1 and
                            abs(_a0[1] - path2_snapped[0][1]) < 0.1)
-                if _along_opp and _shared and _stub_len <= 20.0:
+                if _along_opp and _shared:
                     _junction = _a1
                     _q2 = path2_snapped[1]
                     if abs(opp_dir[0]) > 0:

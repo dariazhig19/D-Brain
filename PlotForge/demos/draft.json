@@ -1,0 +1,895 @@
+{
+  "schemaVersion": 2,
+  "site": null,
+  "cellSize": 2,
+  "maxCoverage": null,
+  "roadNetwork": [],
+  "roadPattern": "loop",
+  "entryCell": null,
+  "buildingTypes": [
+    {
+      "id": "t_1",
+      "name": "GAS TURBINE BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 1
+    },
+    {
+      "id": "t_2",
+      "name": "STEAM TURBINE BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 2
+    },
+    {
+      "id": "t_3",
+      "name": "HRSG BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 3
+    },
+    {
+      "id": "t_4",
+      "name": "CONTROL BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 4
+    },
+    {
+      "id": "t_5",
+      "name": "MAIN STACK",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 5
+    },
+    {
+      "id": "t_6",
+      "name": "GAS TURBINE GENERATOR STEP-UP TRANSFORMER",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 6
+    },
+    {
+      "id": "t_7",
+      "name": "UNIT. AUX. TRANSFORMER",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 7
+    },
+    {
+      "id": "t_8",
+      "name": "STEAM TURBINE GENERATOR STEP-UP TRANSFORMER",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 8
+    },
+    {
+      "id": "t_9",
+      "name": "345kV CABLE TUNNEL",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 9
+    },
+    {
+      "id": "t_10",
+      "name": "345kV GIS",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 10
+    },
+    {
+      "id": "t_11",
+      "name": "345kV GIS CONTROL BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 11
+    },
+    {
+      "id": "t_12",
+      "name": "COOLING TOWER",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 12
+    },
+    {
+      "id": "t_13",
+      "name": "COOLING WATER PUMP STRUCTURE",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 13
+    },
+    {
+      "id": "t_14",
+      "name": "COOLING TOWER ELECTRICAL BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 14
+    },
+    {
+      "id": "t_15",
+      "name": "FUEL GAS(LNG) GOVERNOR STATION(BY SK GAS)",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 15
+    },
+    {
+      "id": "t_16",
+      "name": "FUEL GAS FINAL FILTER & PREHEATERING STATION",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 16
+    },
+    {
+      "id": "t_17",
+      "name": "LPG HEATER & VAPORIZER & BUFFER SYSTEM AREA",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 17
+    },
+    {
+      "id": "t_18",
+      "name": "LPG SURGE DRUM",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 18
+    },
+    {
+      "id": "t_19",
+      "name": "FLARE STACK",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 19
+    },
+    {
+      "id": "t_21",
+      "name": "WATER & WASTE WATER TREATMENT BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 21
+    },
+    {
+      "id": "t_22",
+      "name": "CHEMICAL STORAGE TANK FOR WT/WWT",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 22
+    },
+    {
+      "id": "t_23",
+      "name": "CLARIFIER FOR WWT",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 23
+    },
+    {
+      "id": "t_24",
+      "name": "CLARIFIER FOR RW",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 24
+    },
+    {
+      "id": "t_25",
+      "name": "RAW WATER STORAGE TANK",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 25
+    },
+    {
+      "id": "t_26",
+      "name": "DEMI. WATER STORAGE TANK",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 26
+    },
+    {
+      "id": "t_27",
+      "name": "POTABLE WATER STORAGE TANK",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 27
+    },
+    {
+      "id": "t_28",
+      "name": "ADMINISTRATION BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 28
+    },
+    {
+      "id": "t_29",
+      "name": "GATE HOUSE",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 29
+    },
+    {
+      "id": "t_30",
+      "name": "MACHINE SHOP & WAREHOUSE",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 30
+    },
+    {
+      "id": "t_31",
+      "name": "AUX. & LPG HOT WATER BOILER BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 31
+    },
+    {
+      "id": "t_32",
+      "name": "MAIN PIPE RACK",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 32
+    },
+    {
+      "id": "t_33",
+      "name": "FUEL GAS PIPE RACK",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 33
+    },
+    {
+      "id": "t_34",
+      "name": "UTILITY PIPE RACK",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 34
+    },
+    {
+      "id": "t_35",
+      "name": "N2 GAS STORAGE TANK AREA",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 35
+    },
+    {
+      "id": "t_36",
+      "name": "CPP REGENERATION PLANT",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 36
+    },
+    {
+      "id": "t_37",
+      "name": "AQUEOUS AMMONIA STORAGE SHELTER",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 37
+    },
+    {
+      "id": "t_38",
+      "name": "YELLOW PLUME REDUCING AGENT STORAGE",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 38
+    },
+    {
+      "id": "t_39",
+      "name": "SCR VAPORIZER AND FAN",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 39
+    },
+    {
+      "id": "t_40",
+      "name": "OIL & WASTE STORAGE BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 40
+    },
+    {
+      "id": "t_41",
+      "name": "PARKING AREA",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 41
+    },
+    {
+      "id": "t_43",
+      "name": "COOLING WATER CONDUIT",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 43
+    },
+    {
+      "id": "t_44",
+      "name": "BOILER FEED WATER PUMP AREA",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 44
+    },
+    {
+      "id": "t_45",
+      "name": "TRANSMISSION TOWER",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 45
+    },
+    {
+      "id": "t_46",
+      "name": "COOLING TOWER CHEMICAL INJECTION HOUSE",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 46
+    },
+    {
+      "id": "t_47",
+      "name": "EDG BUILDING",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 47
+    },
+    {
+      "id": "t_48",
+      "name": "FLARE K.O DRUM",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 48
+    },
+    {
+      "id": "t_49",
+      "name": "RAW WATER BUFFER POND",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 49
+    },
+    {
+      "id": "t_50",
+      "name": "N2 GAS GENERATOR FOR FLARE SYSTEM",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 50
+    },
+    {
+      "id": "t_51",
+      "name": "FIRE FIGHTING GAS SUPPLY BUILDING FOR GAS TURBINE BUILDING #1",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 51
+    },
+    {
+      "id": "t_52",
+      "name": "FIRE FIGHTING GAS SUPPLY BUILDING FOR GAS TURBINE BUILDING #2",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 52
+    },
+    {
+      "id": "t_53",
+      "name": "LNG FILTER/SEPARATER",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 53
+    },
+    {
+      "id": "t_54",
+      "name": "RAW WATER SUPPLY PUMP",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 54
+    },
+    {
+      "id": "t_55",
+      "name": "FIRE WATER PUMP HOUSE",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 55
+    },
+    {
+      "id": "t_56",
+      "name": "SEE TRANSFORMER FOR GT",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 56
+    },
+    {
+      "id": "t_57",
+      "name": "SFC TRANSFORMER FOR GT",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 57
+    },
+    {
+      "id": "t_58",
+      "name": "SEE TRANSFORMER FOR ST",
+      "w": 2,
+      "h": 2,
+      "color": "#4db6ac",
+      "_legendNo": 58
+    },
+    {
+      "id": "t_59",
+      "name": "CEMS",
+      "w": 2,
+      "h": 2,
+      "color": "#f06292",
+      "_legendNo": 59
+    },
+    {
+      "id": "t_60",
+      "name": "CO/THC ANALYZER SYSTEM",
+      "w": 2,
+      "h": 2,
+      "color": "#a1887f",
+      "_legendNo": 60
+    },
+    {
+      "id": "t_62",
+      "name": "WT/WWT PUMP ROOM",
+      "w": 2,
+      "h": 2,
+      "color": "#90a4ae",
+      "_legendNo": 62
+    },
+    {
+      "id": "t_63",
+      "name": "LPG METERING SKID",
+      "w": 2,
+      "h": 2,
+      "color": "#dce775",
+      "_legendNo": 63
+    },
+    {
+      "id": "t_64",
+      "name": "TMS SHELTER",
+      "w": 2,
+      "h": 2,
+      "color": "#e57373",
+      "_legendNo": 64
+    },
+    {
+      "id": "t_65",
+      "name": "GAS PRESSURE REGULATING SYSTEM",
+      "w": 2,
+      "h": 2,
+      "color": "#64b5f6",
+      "_legendNo": 65
+    },
+    {
+      "id": "t_66",
+      "name": "SLUDGE TRANSFER PUMPS",
+      "w": 2,
+      "h": 2,
+      "color": "#81c784",
+      "_legendNo": 66
+    },
+    {
+      "id": "t_67",
+      "name": "WATCH TOWER #1",
+      "w": 2,
+      "h": 2,
+      "color": "#ffb74d",
+      "_legendNo": 67
+    },
+    {
+      "id": "t_68",
+      "name": "WATCH TOWER #2",
+      "w": 2,
+      "h": 2,
+      "color": "#ba68c8",
+      "_legendNo": 68
+    }
+  ],
+  "rules": [],
+  "sequence": [],
+  "alternatives": [],
+  "activeAltId": null,
+  "_blockDrafts": [
+    {
+      "name": "Pipe rack",
+      "memberTypeIds": [],
+      "requirementText": "1. 따로 언급되지 않은 Rack은 6m 폭으로 적용\n2. Rack과 각 Block은 최소 2.5m 이격\n3. Rack과 Road는 최초 2m 이격",
+      "skipped": false,
+      "_todoRules": [
+        "거리범위 min 후보 (m값 추출) [2.5m]"
+      ]
+    },
+    {
+      "name": "Road",
+      "memberTypeIds": [],
+      "requirementText": "1. 부지 내 외곽 소방도로 배치\n- 부지 경계선으로부터 안쪽 (5m) 이격\n-  ROAD 폭 : (8m) 양방향, RADIUS : (center line 기준 18m)\n-  내부 빈 공간이 생기더라도 최대한 STRAIGHT 로 구성\n- PACKAGE 성 ITEM 과는 MAINTENANCE 를 위한 추가 ACEESS 도로 형성\n- 건물에 진입도로 형성\n- 도로와 내부 Equipment/Building 은 min. (3m) 이격\n- 도로와 내부 Pipe Rack 은 min. (2m) 이격\n2. Power block 주변을 두르는 내곽 소방도로 배치\n3. Access road 폭 6m",
+      "skipped": false,
+      "_todoRules": [
+        "nearRoad(basis:fence) 후보",
+        "둘레도로(ringRoad) 후보",
+        "corridor 폭 (m값 추출) [6m]"
+      ]
+    },
+    {
+      "name": "Power block",
+      "memberTypeIds": [
+        "t_1",
+        "t_2",
+        "t_3",
+        "t_5",
+        "t_6",
+        "t_7",
+        "t_8",
+        "t_39",
+        "t_44",
+        "t_51",
+        "t_52",
+        "t_56",
+        "t_57",
+        "t_58",
+        "t_59",
+        "t_60"
+      ],
+      "requirementText": "1. 중앙에 배치\n2. 주변을 두르는 Road 배치\n3. Pipe rack 연결\n4. 기존 내부 Layout 고정하여 배치",
+      "skipped": false,
+      "_todoRules": [
+        "centerOf 후보",
+        "둘레도로(ringRoad) 후보"
+      ]
+    },
+    {
+      "name": "Control room",
+      "memberTypeIds": [
+        "t_4"
+      ],
+      "requirementText": "1. Power block에 붙여서 배치\n2. 바람방향을 등지고 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보",
+        "windSide(down) 후보",
+        "windSide(up) 후보"
+      ]
+    },
+    {
+      "name": "Cable tunnel",
+      "memberTypeIds": [
+        "t_9"
+      ],
+      "requirementText": "폭 3m, 직선으로 구성하고 30/45/60도 방향전환 가능",
+      "skipped": false,
+      "_todoRules": [
+        "corridor 폭 (m값 추출) [3m]"
+      ]
+    },
+    {
+      "name": "GIS",
+      "memberTypeIds": [
+        "t_10",
+        "t_11"
+      ],
+      "requirementText": "1. Power block의 Transformer에 가깝게 배치하고 UG Cable Tunnel 연결\n2. 주변을 두르는 Road 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보",
+        "둘레도로(ringRoad) 후보"
+      ]
+    },
+    {
+      "name": "Cooling tower",
+      "memberTypeIds": [
+        "t_12",
+        "t_13",
+        "t_14",
+        "t_46"
+      ],
+      "requirementText": "1. Block 끝 부분에 Pipe rack 연결\n2. 바람 방향에 배치",
+      "skipped": false,
+      "_todoRules": [
+        "windSide(down) 후보"
+      ]
+    },
+    {
+      "name": "Governor station",
+      "memberTypeIds": [
+        "t_15"
+      ],
+      "requirementText": "프로젝트 부지 외 설치되었으므로 고려하지 않음 (PJT별 상이)",
+      "skipped": true,
+      "_todoRules": []
+    },
+    {
+      "name": "LPG/Metering",
+      "memberTypeIds": [
+        "t_16",
+        "t_17",
+        "t_18",
+        "t_33",
+        "t_50",
+        "t_63"
+      ],
+      "requirementText": "1. 공급위치에 따라 Fence 주변으로 User가 위치 지정\n2. Pipe rack 폭 6m",
+      "skipped": false,
+      "_todoRules": [
+        "nearRoad(basis:fence) 후보",
+        "수동 배치/앵커 후보",
+        "corridor 폭 (m값 추출) [6m]"
+      ]
+    },
+    {
+      "name": "Flare",
+      "memberTypeIds": [
+        "t_19",
+        "t_48"
+      ],
+      "requirementText": "1. Stack은 바람 방향의 가장 외곽 지역에 배치\n2. 두 설비는 폭 2m Pipe rack으로 연결 (사이의 다른 P/R 이 있으면 해당 Rack 사용)\n3. K.O Drum은 Stack과 Power block의 중간에 배치",
+      "skipped": false,
+      "_todoRules": [
+        "windSide(down) 후보",
+        "between 후보",
+        "nearRoad(basis:fence) 후보",
+        "corridor 폭 (m값 추출) [2m]"
+      ]
+    },
+    {
+      "name": "WT/WWT",
+      "memberTypeIds": [
+        "t_21",
+        "t_22",
+        "t_23",
+        "t_24",
+        "t_62",
+        "t_66"
+      ],
+      "requirementText": "1. Water systme과 붙여서 배치\n2. Pipe rack 폭 6m\n3. 바람 방향에 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보",
+        "windSide(down) 후보",
+        "corridor 폭 (m값 추출) [6m]"
+      ]
+    },
+    {
+      "name": "Water",
+      "memberTypeIds": [
+        "t_25",
+        "t_26",
+        "t_27",
+        "t_54",
+        "t_55"
+      ],
+      "requirementText": "1. 공급위치에 따라 Fence 주변으로 User가 위치 지정\n2. Pipe rack 폭 6m",
+      "skipped": false,
+      "_todoRules": [
+        "nearRoad(basis:fence) 후보",
+        "수동 배치/앵커 후보",
+        "corridor 폭 (m값 추출) [6m]"
+      ]
+    },
+    {
+      "name": "Admin building",
+      "memberTypeIds": [
+        "t_28"
+      ],
+      "requirementText": "1. 발전 설비와 20m 이격하여 배치, 50대 규모 주차장\n2. Gate와 100m 이내 배치, Cooling tower와 50m 이상 이격\n3. 바람방향을 등지고 배치",
+      "skipped": false,
+      "_todoRules": [
+        "거리범위 min 후보 (m값 추출) [20m]",
+        "거리범위 max 후보 (m값 추출) [100m]",
+        "windSide(down) 후보",
+        "windSide(up) 후보"
+      ]
+    },
+    {
+      "name": "Gate",
+      "memberTypeIds": [
+        "t_29",
+        "t_41"
+      ],
+      "requirementText": "1. User가 위치 지정, Main 입구에 배치\n2. 진입로, 10대 규모 주차장",
+      "skipped": false,
+      "_todoRules": [
+        "수동 배치/앵커 후보"
+      ]
+    },
+    {
+      "name": "Ware house",
+      "memberTypeIds": [
+        "t_30"
+      ],
+      "requirementText": "1. 주변을 두르는 Road 배치, 100대 규모 주차장\n2. 바람방향을 등지고 배치",
+      "skipped": false,
+      "_todoRules": [
+        "windSide(down) 후보",
+        "windSide(up) 후보",
+        "둘레도로(ringRoad) 후보"
+      ]
+    },
+    {
+      "name": "AUX/LPG Boiler",
+      "memberTypeIds": [
+        "t_31",
+        "t_64",
+        "t_65"
+      ],
+      "requirementText": "Power block과 LPG/Metering에 가까이 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보"
+      ]
+    },
+    {
+      "name": "Main rack",
+      "memberTypeIds": [
+        "t_32"
+      ],
+      "requirementText": "폭 8m",
+      "skipped": false,
+      "_todoRules": [
+        "corridor 폭 (m값 추출) [8m]"
+      ]
+    },
+    {
+      "name": "Utility rack",
+      "memberTypeIds": [
+        "t_34"
+      ],
+      "requirementText": "폭 6m",
+      "skipped": false,
+      "_todoRules": [
+        "corridor 폭 (m값 추출) [6m]"
+      ]
+    },
+    {
+      "name": "N2 tank",
+      "memberTypeIds": [
+        "t_35"
+      ],
+      "requirementText": "Size가 작기에 우선은 배치하지 않음",
+      "skipped": true,
+      "_todoRules": []
+    },
+    {
+      "name": "CPP regen.",
+      "memberTypeIds": [
+        "t_36"
+      ],
+      "requirementText": "Power block에 붙여서 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보"
+      ]
+    },
+    {
+      "name": "Chemical shelter",
+      "memberTypeIds": [
+        "t_37",
+        "t_38"
+      ],
+      "requirementText": "Power block의 HRSG와 가까이 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보"
+      ]
+    },
+    {
+      "name": "Oil storage",
+      "memberTypeIds": [
+        "t_40"
+      ],
+      "requirementText": "Road와 수평 길이방향으로 배치",
+      "skipped": false,
+      "_todoRules": []
+    },
+    {
+      "name": "Main CW UG",
+      "memberTypeIds": [
+        "t_43"
+      ],
+      "requirementText": "폭 8m (Road와 Power block의 Steam turbine building 사이 12m 확보)",
+      "skipped": false,
+      "_todoRules": [
+        "corridor 폭 (m값 추출) [8m]"
+      ]
+    },
+    {
+      "name": "TR tower",
+      "memberTypeIds": [
+        "t_45"
+      ],
+      "requirementText": "GIS와 가까우면서 Fence 주변으로 배치",
+      "skipped": false,
+      "_todoRules": [
+        "nearRoad(basis:fence) 후보"
+      ]
+    },
+    {
+      "name": "EDG",
+      "memberTypeIds": [
+        "t_47"
+      ],
+      "requirementText": "Power block에 붙여서 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보"
+      ]
+    },
+    {
+      "name": "RW pond",
+      "memberTypeIds": [
+        "t_49"
+      ],
+      "requirementText": "Raw water Tie-in 위치 및 Fence 주변에 가까이 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보",
+        "nearRoad(basis:fence) 후보"
+      ]
+    },
+    {
+      "name": "LNG filter",
+      "memberTypeIds": [
+        "t_53"
+      ],
+      "requirementText": "LNG Tie-in 위치 및 Fence 주변에 가까이 배치",
+      "skipped": false,
+      "_todoRules": [
+        "distanceTo(max) 후보",
+        "nearRoad(basis:fence) 후보"
+      ]
+    },
+    {
+      "name": "Watch tower",
+      "memberTypeIds": [
+        "t_67",
+        "t_68"
+      ],
+      "requirementText": "PJT 별 상이하므로 우선은 배치하지 않음",
+      "skipped": true,
+      "_todoRules": []
+    }
+  ],
+  "_note": "초안: 치수(w/h)와 rules는 요구문장(requirementText)을 보고 사람이 완성할 것. _todoRules는 키워드 힌트일 뿐 검증된 번역이 아님."
+}

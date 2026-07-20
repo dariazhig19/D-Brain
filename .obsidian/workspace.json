@@ -16,17 +16,14 @@
                 "id": "b1cf4bd6b5fd7f7e",
                 "type": "leaf",
                 "state": {
-                  "type": "canvas",
+                  "type": "markdown",
                   "state": {
-                    "file": "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
-                    "viewState": {
-                      "x": 52.944860265255784,
-                      "y": 2348.0961002027734,
-                      "zoom": -0.13108121040722553
-                    }
+                    "file": "01_Products/Layout_Gen_Design/PROJECT.md",
+                    "mode": "source",
+                    "source": false
                   },
-                  "icon": "lucide-layout-dashboard",
-                  "title": "overview"
+                  "icon": "lucide-file",
+                  "title": "PROJECT"
                 }
               }
             ]
@@ -252,19 +249,21 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "b1cf4bd6b5fd7f7e",
+  "active": "97507ae756d1fe13",
   "lastOpenFiles": [
-    "01_Products/Layout_Gen_Design/Data/saved0fa6368.tmp",
-    "01_Products/Layout_Gen_Design/Data/save65744282.tmp",
-    "01_Products/Layout_Gen_Design/Data/save2d0020ed.tmp",
-    "01_Products/Layout_Gen_Design/Data/savefdb3d3b5.tmp",
-    "01_Products/Layout_Gen_Design/Data/save327ab238.tmp",
-    "01_Products/Layout_Gen_Design/Data/save573dc2f0.tmp",
-    "01_Products/Layout_Gen_Design/Data/save6a595aab.tmp",
-    "01_Products/Layout_Gen_Design/Data/save62dd3cae.tmp",
-    "01_Products/Layout_Gen_Design/Data/save735fa126.tmp",
-    "01_Products/Layout_Gen_Design/Data/save0b426dd3.tmp",
-    "01_Products/Layout_Gen_Design/Data/savee52d0876.tmp",
+    "PlotForge/tools/mcp_server.py",
+    "PlotForge/tools/import_xlsx.py",
+    "PlotForge/tools",
+    "PlotForge/tests/selftest.js",
+    "PlotForge/tests",
+    "PlotForge/src/units.js",
+    "PlotForge/src/state.js",
+    "PlotForge/src/render.js",
+    "PlotForge/src/grid.js",
+    "PlotForge/src/geometry.js",
+    "PlotForge/src/export.js",
+    "PlotForge/README.md",
+    "PlotForge/PLAN.md",
     "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",
     "!Atlas_System.md",
     "01_Products/Layout_Gen_Design/Notes/overview.canvas",
@@ -300,8 +299,6 @@
     "04_Reports/Daily/Daily_Report_20260513.md",
     "01_Products/Layout_Gen_Design/Notes/Daily_Report_20260513.md",
     "01_Products/Layout_Gen_Design/Core/!Core_Context.md",
-    "04_Reports/Daily/Daily_Report_20260429.md",
-    "04_Reports/Daily/Daily_Report_20260428.md",
-    "01_Products/Layout_Gen_Design/Notes/!Scoring_Logic.md"
+    "04_Reports/Daily/Daily_Report_20260429.md"
   ]
 }

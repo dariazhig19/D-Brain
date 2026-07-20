@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlotForge — Site Layout Automation (대지 배치 자동화)</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">🏗️ PlotForge <small style="color:#5a6b7a;font-weight:400">Site Layout</small></div>
+    <div class="tools">
+      <button data-tool="select" class="tool active">선택/이동</button>
+      <button data-tool="drawSite" class="tool">대지 그리기</button>
+      <button id="finishSite" class="ghost" hidden>대지 완성 ✓</button>
+      <button id="groupBtn" class="ghost" hidden>블록으로 묶기</button>
+      <button id="ungroupBtn" class="ghost" hidden>블록 해제</button>
+      <label class="inline">셀 크기(m/셀)
+        <input id="cellSize" type="number" min="0.5" value="10" step="0.5" />
+      </label>
+      <label class="inline">건폐율≤
+        <input id="maxCoverage" type="number" min="1" max="100" step="1" placeholder="–" title="비우면 제한 없음" />%
+      </label>
+      <label class="inline">풍향
+        <select id="windDir" title="바람이 불어오는 방위 (풍향 규칙의 기준)">
+          <option value="">없음</option>
+          <option value="0">N</option><option value="45">NE</option>
+          <option value="90">E</option><option value="135">SE</option>
+          <option value="180">S</option><option value="225">SW</option>
+          <option value="270">W</option><option value="315">NW</option>
+        </select>
+      </label>
+      <span class="sep"></span>
+      <button id="autoPlace">자동 배치 (대안 생성)</button>
+      <select id="roadPattern" title="도로망 패턴">
+        <option value="comb">빗살형</option>
+        <option value="grid">격자형</option>
+        <option value="loop">루프형</option>
+      </select>
+      <label class="inline" title="도로 폭(m). 비우면 1셀">폭
+        <input id="roadWidthM" type="number" min="0" step="1" placeholder="–" style="width:44px" />m
+      </label>
+      <label class="inline" title="루프형: 경계에서 안쪽 이격(m). 비우면 자동">링
+        <input id="ringOffsetM" type="number" min="0" step="1" placeholder="–" style="width:44px" />m
+      </label>
+      <button data-tool="entry" class="tool" title="캔버스에서 대지 경계 클릭">진입점</button>
+      <button data-tool="anchor" class="tool" title="Tie-in/Gate 등 기준점 지정 — 캔버스 클릭">앵커</button>
+      <button id="roadNet">도로망 생성</button>
+      <button id="genRoads">도로 생성</button>
+      <span class="sep"></span>
+      <select id="corKind" title="선형 요소 종류">
+        <option value="rack">파이프랙</option>
+        <option value="tunnel">케이블터널</option>
+        <option value="conduit">도관(CW)</option>
+      </select>
+      <label class="inline">폭 <input id="corWidthM" type="number" min="1" step="1" value="6" style="width:44px" />m</label>
+      <button data-tool="corridor" class="tool" title="캔버스 클릭으로 경유점, 더블클릭/완성으로 확정">선형 그리기</button>
+      <button id="finishCorridor" class="ghost" hidden>선형 완성 ✓</button>
+      <span class="sep"></span>
+      <label class="file-btn">DXF 불러오기
+        <input id="dxfInput" type="file" accept=".dxf" hidden />
+      </label>
+      <span class="sep"></span>
+      <button id="undoBtn" title="Ctrl+Z">↩ 되돌리기</button>
+      <button id="redoBtn" title="Ctrl+Y">↪ 다시</button>
+      <button id="saveJson">저장</button>
+      <label class="file-btn">불러오기
+        <input id="loadJson" type="file" accept=".json" hidden />
+      </label>
+      <button id="exportPng">PNG</button>
+      <button id="exportDxf">DXF</button>
+      <button id="loadDemo" title="LNG 복합화력 Plot Plan 예제 시나리오">데모</button>
+      <button id="mcpSync" title="Claude(MCP) 라이브 브리지 — BimOn-PlotForge MCP 서버가 실행 중이면 자동 접속됩니다. 연결되면 Claude가 조작한 내용이 실시간 반영됩니다 (되돌리기 Ctrl+Z). 클릭 시 재접속.">🔗 Claude 대기…</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="stage"><canvas id="canvas"></canvas>
+      <div id="hint">「대지 그리기」로 클릭하며 경계를 그린 뒤 <b>대지 완성</b>을 누르세요. 또는 DXF를 불러오세요.</div>
+    </div>
+
+    <aside id="panel">
+      <nav id="tabs">
+        <button class="tab active" data-tab="alts">대안</button>
+        <button class="tab" data-tab="bldgs">건물·순서</button>
+        <button class="tab" data-tab="rules">규칙</button>
+        <button class="tab" data-tab="feas">검증</button>
+      </nav>
+
+      <section class="pane" data-pane="alts">
+        <h3>대안 <button id="addAlt" class="mini">+ 추가</button></h3>
+        <div id="altList" class="list"></div>
+      </section>
+
+      <section class="pane" data-pane="bldgs" hidden>
+        <h3>건물 타입 <button id="addType" class="mini">+ 추가</button></h3>
+        <form id="typeForm" class="form" hidden>
+          <div class="row">
+            <input id="tf-name" type="text" placeholder="이름" required style="flex:1" />
+            <input id="tf-w" type="number" min="1" value="2" title="가로 셀" />
+            <span>×</span>
+            <input id="tf-h" type="number" min="1" value="2" title="세로 셀" />
+            <select id="tf-cat" title="클리어런스 카테고리">
+              <option value="building">건물</option>
+              <option value="equipment">장비</option>
+            </select>
+          </div>
+          <div class="row">
+            <button type="submit" class="mini primary">추가</button>
+            <button type="button" class="mini" data-cancel>취소</button>
+          </div>
+        </form>
+        <div id="typeList" class="list"></div>
+        <h3 style="margin-top:16px">배치 순서</h3>
+        <div id="seqList" class="list"></div>
+        <h3 style="margin-top:16px">앵커 (기준점)</h3>
+        <div id="anchorList" class="list muted">「앵커」 도구로 캔버스를 클릭해 Tie-in/Gate 지점을 지정하세요.</div>
+        <h3 style="margin-top:16px">선형 요소 (랙/터널/도관)</h3>
+        <div class="form">
+          <div class="row">
+            <select id="rt-from" class="small" title="출발 타입"></select>
+            <span>→</span>
+            <select id="rt-to" class="small" title="도착 타입"></select>
+            <button id="rt-run" class="mini primary" type="button" title="툴바의 종류·폭 사용">라우팅</button>
+          </div>
+          <small class="muted">활성 대안의 배치를 잇는 경로를 자동 생성 (종류·폭은 툴바 설정, 도로는 횡단 가능)</small>
+        </div>
+        <div id="corridorList" class="list muted">「선형 그리기」 도구로 경유점을 클릭해 추가하세요.</div>
+      </section>
+
+      <section class="pane" data-pane="rules" hidden>
+        <h3>배치 규칙 <button id="addRule" class="mini primary">+ 새 규칙</button></h3>
+        <div id="ruleList" class="list"></div>
+        <h3 style="margin-top:16px">클리어런스 매트릭스 <small class="muted">(카테고리 간 최소 이격)</small></h3>
+        <div class="form">
+          <div class="row">
+            <select id="cl-a" class="small"></select>
+            <span>↔</span>
+            <select id="cl-b" class="small"></select>
+            <input id="cl-m" type="number" min="0" step="0.5" value="3" style="width:56px" />m
+            <button id="cl-add" class="mini primary" type="button">추가</button>
+          </div>
+        </div>
+        <div id="clearList" class="list muted">예: 도로 ↔ 장비 3m — 한 줄로 전 타입에 적용됩니다.</div>
+      </section>
+
+      <section class="pane" data-pane="feas" hidden>
+        <h3>배치 가능성 검증</h3>
+        <div id="feasList" class="list muted">건물을 배치하면 남은 건물들의 배치 가능 여부가 표시됩니다.</div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- 규칙 편집 모달 -->
+  <div id="ruleModal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <b id="rm-title">새 배치 규칙</b>
+        <button class="mini" id="rm-close">✕ 닫기</button>
+      </div>
+      <form id="rm-form">
+        <div class="rm-grid">
+          <label>대상 건물</label>
+          <select id="rm-type"></select>
+
+          <label>규칙 종류</label>
+          <select id="rm-kind"></select>
+        </div>
+        <p id="rm-desc" class="rm-desc"></p>
+
+        <div class="rm-grid">
+          <label data-row="target">기준 건물</label>
+          <select id="rm-target" data-row="target"></select>
+
+          <label data-row="basis">기준</label>
+          <select id="rm-basis" data-row="basis">
+            <option value="any">경계+도로 (기본)</option>
+            <option value="road">도로만</option>
+            <option value="fence">대지 경계만</option>
+          </select>
+
+          <label data-row="gap"><span id="rm-gap-label">거리(m)</span></label>
+          <input id="rm-gap" type="number" min="0" step="0.5" value="" data-row="gap" />
+
+          <label data-row="minmax"><span id="rm-minmax-label">최소~최대</span></label>
+          <div class="row" data-row="minmax">
+            <input id="rm-min" type="number" min="0" step="0.5" value="0" style="width:70px" />
+            <span>~</span>
+            <input id="rm-max" type="number" min="0" step="0.5" placeholder="무제한" style="width:70px" />
+            <small class="muted">(최대 빈칸 = 무제한)</small>
+          </div>
+
+          <label data-row="dir">방향</label>
+          <select id="rm-dir" data-row="dir">
+            <option value="S">남 (아래)</option><option value="N">북 (위)</option>
+            <option value="E">동 (오른쪽)</option><option value="W">서 (왼쪽)</option>
+          </select>
+
+          <label data-row="side">바람 기준</label>
+          <select id="rm-side" data-row="side">
+            <option value="down">불어가는 쪽 (다운윈드) — Cooling tower/Flare</option>
+            <option value="up">거스르는 쪽 (업윈드) — Control/Admin/창고</option>
+          </select>
+
+          <label data-row="target2">기준 건물 2</label>
+          <select id="rm-target2" data-row="target2"></select>
+
+          <label data-row="anchor">앵커</label>
+          <select id="rm-anchor" data-row="anchor"></select>
+
+          <label data-row="axis">정렬 축</label>
+          <select id="rm-axis" data-row="axis">
+            <option value="row">같은 행 (가로 정렬)</option>
+            <option value="col">같은 열 (세로 정렬)</option>
+          </select>
+
+          <label>강도</label>
+          <div class="row">
+            <select id="rm-mode">
+              <option value="hard">hard — 반드시 만족 (위반 배치 불가)</option>
+              <option value="soft">soft — 선호 (점수 가점)</option>
+            </select>
+            <span data-row="weight">가중치 <input id="rm-weight" type="number" min="1" max="100" value="20" style="width:60px" /></span>
+          </div>
+        </div>
+
+        <p class="rm-preview" id="rm-preview"></p>
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="mini" id="rm-cancel">취소</button>
+          <button type="submit" class="mini primary" id="rm-save">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

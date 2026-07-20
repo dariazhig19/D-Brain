@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "BimOn-PlotForge": {
+      "command": "python",
+      "args": ["tools/mcp_server.py"]
+    }
+  }
+}

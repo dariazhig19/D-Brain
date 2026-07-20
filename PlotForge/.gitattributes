@@ -1,0 +1,2 @@
+# 배치 파일은 반드시 CRLF 유지 — LF로 정규화되면 cmd가 줄을 잘못 파싱해 실행이 깨진다.
+*.bat text eol=crlf

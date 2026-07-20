@@ -1,0 +1,25 @@
+# 런타임 작업/테스트 상태 (사용자별 — 저장소에 불필요, MCP 서버가 런타임에 생성)
+mcp-project.json
+mcp-project.json.tmp
+*.tmp
+
+# 원본 요구사항: 비공개(private) 저장소이므로 포함(백업 목적).
+# ⚠ 공개(public)로 전환 시에는 아래 두 파일을 반드시 다시 제외할 것.
+#   Plot plan requirement.xlsx  — 실제 EPC 요구사항 원본
+#   demos/draft.json            — 위 xlsx에서 추출한 시설물명·요구문장
+~$*.xlsx
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+
+# 런처가 첫 실행 때 코드로 생성하는 트레이 아이콘
+plotforge.ico
+
+# 로컬 전용 설정
+.claude/settings.local.json
+
+# OS/에디터
+Thumbs.db
+.DS_Store
+*.swp

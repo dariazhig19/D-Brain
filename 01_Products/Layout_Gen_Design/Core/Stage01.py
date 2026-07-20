@@ -400,6 +400,28 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
 
     if not valid:
         return None
+    if name == "Cooling Tower":
+        # §3.5 CT boundary preference: CT prefers sitting with its ROAD
+        # BUFFER ~4 m from the (temporary) plot boundary; `prefer_near`
+        # (closeness to PB) is only the tiebreak.
+        b_off = 16.0 if name in RACK_BLOCKS else 8.0
+        CT_BOUNDARY_GAP = 4.0
+
+        def _ct_key(v):
+            x, y, w, h = v
+            corners = ((x - b_off, y - b_off), (x + w + b_off, y - b_off),
+                       (x - b_off, y + h + b_off), (x + w + b_off, y + h + b_off))
+            if plot is not None:
+                gap = min(plot.signed_dist_to_boundary(px, py) for px, py in corners)
+            else:
+                gap = min(x - b_off, y - b_off,
+                          sw - (x + w + b_off), sl - (y + h + b_off))
+            d_pref = ((x + w / 2 - prefer_near[0]) ** 2 + (y + h / 2 - prefer_near[1]) ** 2
+                      if prefer_near is not None else 0.0)
+            return (abs(gap - CT_BOUNDARY_GAP), d_pref)
+
+        valid.sort(key=_ct_key)
+        return random.choice(valid[:max(1, len(valid) // 10)])
     if prefer_near is not None:
         cx, cy = prefer_near
         valid.sort(key=lambda v: (v[0] + v[2] / 2 - cx) ** 2

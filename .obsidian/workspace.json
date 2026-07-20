@@ -251,6 +251,8 @@
   },
   "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.9915b6be85bf",
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.0bd29238411f",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.64e4f462c4e5",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.6418961f2a6f",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.dc559c8fd052",
@@ -261,8 +263,6 @@
     "PlotForge/tests/selftest.js",
     "PlotForge/tests",
     "PlotForge/src/units.js",
-    "PlotForge/src/state.js",
-    "PlotForge/src/render.js",
     "PlotForge/README.md",
     "PlotForge/PLAN.md",
     "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",

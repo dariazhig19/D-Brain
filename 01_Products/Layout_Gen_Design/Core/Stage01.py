@@ -418,7 +418,10 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
                           sw - (x + w + b_off), sl - (y + h + b_off))
             d_pref = ((x + w / 2 - prefer_near[0]) ** 2 + (y + h / 2 - prefer_near[1]) ** 2
                       if prefer_near is not None else 0.0)
-            return (abs(gap - CT_BOUNDARY_GAP), d_pref)
+            dev = abs(gap - CT_BOUNDARY_GAP)
+            if gap < 0:
+                dev += 100.0  # buffer pokes OUTSIDE the plot — strongly avoid
+            return (dev, d_pref)
 
         valid.sort(key=_ct_key)
         return random.choice(valid[:max(1, len(valid) // 10)])

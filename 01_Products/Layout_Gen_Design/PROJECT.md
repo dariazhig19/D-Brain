@@ -310,7 +310,7 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 
 - Uses `_try_magnet_place` — magnetizes to previously placed blocks at pair-appropriate gap distances.
 - Tries both orientations (w×h and h×w).
-- `prefer_near` → top-10% closest valid positions, then random choice.
+- **Tetris packing score:** every valid candidate is scored `0.5·d_prefer + 2·gap2 − 2·min(boundary_depth, 24)` where `d_prefer` = center distance to `prefer_near` (clustering, e.g. toward the PB), `gap2` = sum of edge-to-edge gaps to the **two nearest** placed blocks (0 when pocketed against two blocks like a tetris piece), and `boundary_depth` = the shallowest corner's distance inside the plot polygon. Lower is better; the block is chosen randomly among the **top 3** for seed variety. This packs floats (Cooling Tower, WT/WWT, …) tightly against the existing cluster and keeps them off the boundary, replacing the old top-10%-closest random pick.
 - **Boundary Check — [Polygon change]:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary. In polygon mode, this check is done against the **polygon boundary** (including diagonal sides, hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
   - Default (tol = BOUNDARY_TOLERANCE = 10): clearance = **0 m** (buffer edge touches boundary but does not exit).
   - Strict (tol = 0): clearance = **9 m** (buffer stays fully inside, matching perimeter road CL distance).
@@ -543,6 +543,8 @@ Each block that needs a road connection receives **two** independent access road
 > [!NOTE]
 > **Flare exclusion.** The Flare is excluded from this access road system — it receives only its 6 m plant-facing access road via Group B (§10.1.C).
 
+**Stay inside the plot.** Routing-grid cells whose center lies more than 1 m outside the temporary boundary are **blocked**, so A\* cannot cheat along the outside of a slanted edge (which used to be cheaper than paying buffer penalties inside, and left disconnected fragments after the Part-3 trim). Roads therefore take the cheapest **inside** corridor — e.g. a gap between two blocks — and the Part-3 trim only cleans up residual edge contact.
+
 **Footprint clearance (hard) vs road buffer (soft guide).** No access road — Part 1 or Part 2 — may ever be drawn on or right against a block footprint. Three layers enforce this:
 - **Hard grid skirt (2 m):** the routing grid blocks every footprint cell plus a 2 m skirt (`mark_building(inflate_m=2.0)`), so A\* cannot route onto any cell within 2 m of a block. Combined with the graded buffer below, routes in practice stay well clear. The last-resort L-path (used only if A\* fails) prefers the leg that avoids footprints.
 - **Graded road buffer (soft guide):** the buffer penalty is **graded** — 500 at the footprint, falling linearly to 0 at the buffer edge (8 m / 16 m). The buffer acts as a *guide*, not a wall — A\* is pushed away from footprints and naturally runs along the buffer edge line (where `P_buf` and the Part 2 rectangle `R` sit), instead of hugging the block at 1–2 cells as the old flat penalty allowed.
@@ -556,7 +558,7 @@ Each block that needs a road connection receives **two** independent access road
 **Geometry polish (Part 1 & Part 2).** After the arrival straightening, each road is polished before being added to the network:
 - **Orthogonal only:** any diagonal segment is split into an L (`orthogonalize_path`) — the corner is chosen to continue the previous segment's axis, guarded against footprints and racks.
 - **Minimal zigzag (L over Z):** a small perpendicular step (≤ 4 m) beside a long leg is collapsed (`collapse_jogs`) by sliding the neighbouring leg sideways onto the straight line. Path endpoints (the loop junction and the network connection) never move; every slide is footprint/rack-guarded.
-- **No buffer-center stub:** if Part 1 leaves `P_buf` **perpendicular** to the block side (pointing away from the block) and turns within 20 m, that stub is not drawn — it would read as a dead spur aiming at the block's buffer center. The turn point becomes the **loop junction**: Part 1 starts there, and Part 2 is re-headed to start there too via an orthogonal connector (typically making Part 1 + Part 2 one straight line through the junction). **Two-point case:** when the *entire* Part 1 is that stub (two points — `P_buf` straight onto an existing road), Part 1 is dropped from the output completely, and the stub's network-end point is the loop junction where Part 2 starts.
+- **No buffer-center stub:** if Part 1 leaves `P_buf` **perpendicular** to the block side (pointing away from the block) and then turns — at any stub length — that stub is not drawn — it would read as a dead spur aiming at the block's buffer center. The turn point becomes the **loop junction**: Part 1 starts there, and Part 2 is re-headed to start there too via an orthogonal connector (typically making Part 1 + Part 2 one straight line through the junction). **Two-point case:** when the *entire* Part 1 is that stub (two points — `P_buf` straight onto an existing road), Part 1 is dropped from the output completely, and the stub's network-end point is the loop junction where Part 2 starts.
 
 #### §3.7.A Part 1 — Midpoint Connection
 

@@ -367,16 +367,11 @@ def _boundary_offset_candidates(name, w, h, placed, sw, sl, plot, gap,  # → §
                 continue
             if _overlaps_any(name, placed, x, y, w, h):
                 continue
-            # The WHOLE buffer must stay inside the plot (near corners it can
-            # poke out through the ADJACENT slanted edge even though this
-            # edge's distance is exact). The gap preference itself is applied
-            # by the caller's scoring — here we only require containment.
-            bx0, by0 = x - b_off, y - b_off
-            bx1, by1 = x + w + b_off, y + h + b_off
-            bd = min(plot.signed_dist_to_boundary(px, py)
-                     for px, py in ((bx0, by0), (bx1, by0), (bx0, by1), (bx1, by1)))
-            if bd < 0.0:
-                continue
+            # NOTE: the full buffer may still poke out through an ADJACENT
+            # edge near plot corners — deliberately NOT filtered here. In
+            # tight plots no candidate may have the whole buffer inside; the
+            # caller's scoring (|gap − 4| with a penalty for gap < 0) then
+            # picks the least-violating position closest to the 4 m target.
             cands.append((x, y))
     return cands
 

@@ -43,7 +43,7 @@ def _line_intersection(p1, d1, p2, d2):
 class Plot:
     """A convex polygon plot boundary (3–6 vertices)."""
 
-    def __init__(self, vertices):
+    def __init__(self, vertices, original_plot=None):
         verts = [(float(x), float(y)) for x, y in vertices]
         if len(verts) < 3:
             raise ValueError(f"Plot needs >= 3 vertices, got {len(verts)}")
@@ -51,6 +51,7 @@ class Plot:
         if len(verts) > 3 and _pt_eq(verts[0], verts[-1]):
             verts = verts[:-1]
         self.vertices = self._ensure_ccw(verts)
+        self.original_plot = original_plot
         self._build_edges()
 
     # ── Constructors ─────────────────────────────────────────────────────
@@ -221,9 +222,9 @@ class Plot:
         return min(range(len(self.edges)),
                    key=lambda i: abs(self._edge_signed_dist(self.edges[i], x, y)))
 
-    # ── Geometry transforms ──────────────────────────────────────────────
     def translate(self, dx, dy):
-        return Plot([(x + dx, y + dy) for x, y in self.vertices])
+        orig_trans = self.original_plot.translate(dx, dy) if getattr(self, "original_plot", None) is not None else None
+        return Plot([(x + dx, y + dy) for x, y in self.vertices], original_plot=orig_trans)
 
     def inset(self, d):
         """Return the convex polygon with every edge shifted inward by ``d`` metres.
@@ -245,7 +246,7 @@ class Plot:
             pt = _line_intersection(prev[0], prev[1], cur[0], cur[1])
             if pt is not None:
                 new_verts.append(pt)
-        return Plot(new_verts)
+        return Plot(new_verts, original_plot=self)
 
     # ── Rasterisation (grid / perimeter clamp) ───────────────────────────
     def cell_inside_mask(self, ncols, nrows, cell_size, origin=(0.0, 0.0)):

@@ -279,6 +279,12 @@ def export_to_dxf(layout, site_width, site_length, plot=None):
         msp.add_lwpolyline(l_ring, close=False, dxfattribs={"layer": "ROAD"})
         msp.add_lwpolyline(r_ring, close=False, dxfattribs={"layer": "ROAD"})
 
+    if "access_roads" in layout and layout["access_roads"]:
+        for path in layout["access_roads"]:
+            l_acc, r_acc = offset_polyline(path, d=4.0, closed=False)
+            msp.add_lwpolyline(l_acc, close=False, dxfattribs={"layer": "ROAD"})
+            msp.add_lwpolyline(r_acc, close=False, dxfattribs={"layer": "ROAD"})
+
     # ── 3. Building Groups ──────────────────────────────────────────────────
     for group in layout["groups"]:
         x, y = group["x"], group["y"]

@@ -228,6 +228,30 @@ def load_plot_dxf(path, scale=None, to_origin=True):
             f"to a named layer (e.g. an empty 'Gate House' layer suggests it was "
             f"drawn on layer 0).")
 
+    # ── Inset plot polygon for temporary boundary ────────────────────────
+    if result["plot_polygon"]:
+        from Core.Plot import Plot
+        try:
+            p_orig = Plot(result["plot_polygon"])
+            p_inset = p_orig.inset(5.0)
+            result["plot_polygon_original"] = result["plot_polygon"]
+            result["plot_polygon"] = list(p_inset.vertices)
+            # The engine assumes the ACTIVE plot (now the inset) is origin-
+            # normalised — plot.bbox == (0, 0, sw, sl). Insetting moved the
+            # bbox inward to ~(setback, setback), so re-normalise: shift the
+            # inset back to the origin and move the original boundary, gate,
+            # boom and anchors by the same amount so everything stays aligned.
+            # The original boundary then sits ~setback metres outside the inset
+            # (slightly negative coords), which is correct for display.
+            _ixs = [pt[0] for pt in result["plot_polygon"]]
+            _iys = [pt[1] for pt in result["plot_polygon"]]
+            _iox, _ioy = min(_ixs), min(_iys)
+            if abs(_iox) > 1e-6 or abs(_ioy) > 1e-6:
+                _apply_shift(result, -_iox, -_ioy)
+        except Exception as ex:
+            result["warnings"].append(f"Failed to inset plot boundary: {ex}")
+            result["plot_polygon_original"] = result["plot_polygon"]
+
     return result
 
 
@@ -279,6 +303,8 @@ def _apply_scale(result, s):
 def _apply_shift(result, dx, dy):
     if result["plot_polygon"]:
         result["plot_polygon"] = [(p[0] + dx, p[1] + dy) for p in result["plot_polygon"]]
+    if result.get("plot_polygon_original"):
+        result["plot_polygon_original"] = [(p[0] + dx, p[1] + dy) for p in result["plot_polygon_original"]]
     if result["gate_point"]:
         gp = result["gate_point"]
         result["gate_point"] = (gp[0] + dx, gp[1] + dy)

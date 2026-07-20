@@ -433,182 +433,7 @@ def compute_unsnapped_buffers(placed):
 
 
 def compute_buffer_union_contour(computed_buffers, sw, sl):
-    # Include all blocks to ensure the perimeter road doesn't cut through them
-    filtered_buffers = {name: b for name, b in computed_buffers.items() if not name.startswith("_") or name == "_gate_death_zone"}
-    
-    TOL = 0.1
-    if not filtered_buffers: return [], {}
-    
-    # 1. Base grid bounds
-    min_x = min(b[0] for b in filtered_buffers.values())
-    min_y = min(b[1] for b in filtered_buffers.values())
-    max_x = max(b[0] + b[2] for b in filtered_buffers.values())
-    max_y = max(b[1] + b[3] for b in filtered_buffers.values())
-    
-    RES = 0.5
-    K_m = 100 # 100m closing radius -> bridges gaps up to 200m to ensure NO isolated blocks
-    K = int(K_m / RES)
-    
-    # Pad grid by K + 5 cells to prevent morphological edge effects
-    min_x -= (K_m + 5)
-    min_y -= (K_m + 5)
-    max_x += (K_m + 5)
-    max_y += (K_m + 5)
-    
-    w_cells = int((max_x - min_x) / RES)
-    h_cells = int((max_y - min_y) / RES)
-    grid = [[0]*w_cells for _ in range(h_cells)]
-    
-    # 2. Paint blocks
-    for name, (bx, by, bw, bh) in filtered_buffers.items():
-        ix0, iy0 = int((bx - min_x) / RES), int((by - min_y) / RES)
-        ix1, iy1 = int((bx + bw - min_x) / RES), int((by + bh - min_y) / RES)
-        for y in range(max(0,iy0), min(h_cells,iy1)):
-            for x in range(max(0,ix0), min(w_cells,ix1)):
-                grid[y][x] = 1
-                
-    # 3. Morphological Closing (Dilate -> Erode)
-    # Dilate
-    d_grid = [[0]*w_cells for _ in range(h_cells)]
-    for y in range(h_cells):
-        count = 0
-        for x in range(w_cells):
-            if grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: d_grid[y][x] = 1
-        count = 0
-        for x in range(w_cells-1, -1, -1):
-            if grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: d_grid[y][x] = 1
-            
-    d2_grid = [[0]*w_cells for _ in range(h_cells)]
-    for x in range(w_cells):
-        count = 0
-        for y in range(h_cells):
-            if d_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: d2_grid[y][x] = 1
-        count = 0
-        for y in range(h_cells-1, -1, -1):
-            if d_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: d2_grid[y][x] = 1
-            
-    # Erode (Dilate the 0s)
-    e_grid = [[1]*w_cells for _ in range(h_cells)]
-    for y in range(h_cells):
-        count = 0
-        for x in range(w_cells):
-            if not d2_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: e_grid[y][x] = 0
-        count = 0
-        for x in range(w_cells-1, -1, -1):
-            if not d2_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: e_grid[y][x] = 0
-            
-    e2_grid = [[1]*w_cells for _ in range(h_cells)]
-    for x in range(w_cells):
-        count = 0
-        for y in range(h_cells):
-            if not e_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: e2_grid[y][x] = 0
-        count = 0
-        for y in range(h_cells-1, -1, -1):
-            if not e_grid[y][x]: count = K + 1
-            elif count > 0: count -= 1
-            if count > 0: e2_grid[y][x] = 0
-
-    # Create a routing dent for Gate House and Gate Death Zone
-    for name, b in computed_buffers.items():
-        if name == "_gate_death_zone":
-            cx0, cy0, cw, ch = b
-            # b already has 8m buffer.
-            x0, y0 = int((cx0 - min_x)/RES), int((cy0 - min_y)/RES)
-            x1, y1 = int((cx0 + cw - min_x)/RES), int((cy0 + ch - min_y)/RES)
-            for y in range(max(0, y0), min(h_cells, y1)):
-                for x in range(max(0, x0), min(w_cells, x1)):
-                    e2_grid[y][x] = 0
-        elif name == "Gate House":
-            cx0, cy0, cw, ch = b
-            # Expand by another 8m to ensure 16m buffer (keeps road 8m away from 8m corners)
-            cx0 -= 8; cy0 -= 8; cw += 16; ch += 16
-            x0, y0 = int((cx0 - min_x)/RES), int((cy0 - min_y)/RES)
-            x1, y1 = int((cx0 + cw - min_x)/RES), int((cy0 + ch - min_y)/RES)
-            for y in range(max(0, y0), min(h_cells, y1)):
-                for x in range(max(0, x0), min(w_cells, x1)):
-                    e2_grid[y][x] = 0
-    # Clamp to plot bounds to prevent road from going outside the plot!
-    min_gx = int((0 - min_x) / RES)
-    max_gx = int((sw - min_x) / RES)
-    min_gy = int((0 - min_y) / RES)
-    max_gy = int((sl - min_y) / RES)
-    for y in range(h_cells):
-        for x in range(w_cells):
-            if x < min_gx or x > max_gx or y < min_gy or y > max_gy:
-                e2_grid[y][x] = 0
-                    
-    # 4. Contour Tracing (Flood fill from outside)
-    visited = set()
-    # To avoid recursion limit, use a stack
-    stack = [(0, 0)]
-    visited.add((0, 0))
-    while stack:
-        cx, cy = stack.pop()
-        for nx, ny in [(cx+1,cy), (cx-1,cy), (cx,cy+1), (cx,cy-1)]:
-            if 0 <= nx < w_cells and 0 <= ny < h_cells:
-                if e2_grid[ny][nx] == 0 and (nx, ny) not in visited:
-                    visited.add((nx, ny))
-                    stack.append((nx, ny))
-                    
-    edges = set()
-    def is_outside(cx, cy):
-        if cx < 0 or cx >= w_cells or cy < 0 or cy >= h_cells: return True
-        return (cx, cy) in visited
-
-    for y in range(h_cells):
-        for x in range(w_cells):
-            if not is_outside(x, y):
-                if is_outside(x, y-1): edges.add(((x, y), (x+1, y)))
-                if is_outside(x, y+1): edges.add(((x, y+1), (x+1, y+1)))
-                if is_outside(x-1, y): edges.add(((x, y), (x, y+1)))
-                if is_outside(x+1, y): edges.add(((x+1, y), (x+1, y+1)))
-                
-    real_edges = []
-    for ((x1, y1), (x2, y2)) in edges:
-        rx1, ry1 = min_x + x1*RES, min_y + y1*RES
-        rx2, ry2 = min_x + x2*RES, min_y + y2*RES
-        real_edges.append(((rx1, ry1), (rx2, ry2)))
-        
-    merged = []
-    h_edges = [(min(e[0][0],e[1][0]), max(e[0][0],e[1][0]), e[0][1]) for e in real_edges if abs(e[0][1]-e[1][1]) < TOL]
-    h_edges.sort(key=lambda x: (x[2], x[0]))
-    if h_edges:
-        cur_x0, cur_x1, cur_y = h_edges[0]
-        for x0, x1, y in h_edges[1:]:
-            if abs(y - cur_y) < TOL and x0 <= cur_x1 + TOL:
-                cur_x1 = max(cur_x1, x1)
-            else:
-                merged.append(((cur_x0, cur_y), (cur_x1, cur_y)))
-                cur_x0, cur_x1, cur_y = x0, x1, y
-        merged.append(((cur_x0, cur_y), (cur_x1, cur_y)))
-        
-    v_edges = [(min(e[0][1],e[1][1]), max(e[0][1],e[1][1]), e[0][0]) for e in real_edges if abs(e[0][0]-e[1][0]) < TOL]
-    v_edges.sort(key=lambda y: (y[2], y[0]))
-    if v_edges:
-        cur_y0, cur_y1, cur_x = v_edges[0]
-        for y0, y1, x in v_edges[1:]:
-            if abs(x - cur_x) < TOL and y0 <= cur_y1 + TOL:
-                cur_y1 = max(cur_y1, y1)
-            else:
-                merged.append(((cur_x, cur_y0), (cur_x, cur_y1)))
-                cur_y0, cur_y1, cur_x = y0, y1, x
-        merged.append(((cur_x, cur_y0), (cur_x, cur_y1)))
-        
-    return merged, {"N":[], "S":[], "E":[], "W":[]}
+    return [], {}
 
 
 # ── Rack — Step A: buffer rectangles per "need rack" block ───────────────
@@ -1841,59 +1666,111 @@ def _seg_aabb_intersect(p1, p2, rx, ry, rw, rh):  # → §3.4.D (used by build_r
         return False
     return True
 
-def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):  # → §3.7.C · §3.8.B
-    """A-2 Algorithm for finding 8m road access lines for Group A blocks."""
-    GROUP_A_BLOCKS = {"GIS", "RAW Water Tank", "Cooling Tower", "WT/WWT", "Warehouse", "Admin Building"}
-    
-    def get_corners_and_lines(bounds):
-        x, y, w, h = bounds
-        return [
-            ("BL", (x, y), [((x, y), (x+w, y)), ((x, y), (x, y+h))]),
-            ("BR", (x+w, y), [((x, y), (x+w, y)), ((x+w, y), (x+w, y+h))]),
-            ("TL", (x, y+h), [((x, y+h), (x+w, y+h)), ((x, y), (x, y+h))]),
-            ("TR", (x+w, y+h), [((x, y+h), (x+w, y+h)), ((x+w, y), (x+w, y+h))])
-        ]
+def generate_group_a_access(computed_buffers, placed, site_w, site_l, gate_cx, gate_cy):
+    return []
 
-    def dist_to_boundary(cx, cy):
-        return min(cx, site_w - cx, cy, site_l - cy)
-        
-    def dist_sq(cx, cy, tx, ty):
-        return (cx - tx)**2 + (cy - ty)**2
+def point_to_segment_distance(p, a, b):
+    px, py = p
+    ax, ay = a
+    bx, by = b
+    dx = bx - ax
+    dy = by - ay
+    if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+        return math.hypot(px - ax, py - ay)
+    t = ((px - ax) * dx + (py - ay) * dy) / (dx*dx + dy*dy)
+    t = max(0.0, min(1.0, t))
+    proj_x = ax + t * dx
+    proj_y = ay + t * dy
+    return math.hypot(px - proj_x, py - proj_y)
 
-    segments = []
-    
-    for name, buffer_bounds in computed_buffers.items():
-        if name not in GROUP_A_BLOCKS:
+def find_closest_point_on_road(p_buf, road_segments):
+    min_d = float('inf')
+    closest_pt = p_buf
+    for seg in road_segments:
+        a, b = seg
+        px, py = p_buf
+        ax, ay = a
+        bx, by = b
+        dx = bx - ax
+        dy = by - ay
+        if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+            d = math.hypot(px - ax, py - ay)
+            pt = a
+        else:
+            t = ((px - ax) * dx + (py - ay) * dy) / (dx*dx + dy*dy)
+            t = max(0.0, min(1.0, t))
+            pt = (ax + t * dx, ay + t * dy)
+            d = math.hypot(px - pt[0], py - pt[1])
+        if d < min_d:
+            min_d = d
+            closest_pt = pt
+    return closest_pt
+
+def unblock_segments_on_grid(grid, segments):
+    for seg in segments:
+        p1, p2 = seg
+        x1, y1 = p1
+        x2, y2 = p2
+        dist = math.hypot(x2 - x1, y2 - y1)
+        if dist < 0.1:
+            i, j = grid.world_to_cell(x1, y1)
+            if grid.in_bounds(i, j):
+                grid.blocked[i, j] = False
             continue
-            
-        corners = get_corners_and_lines(buffer_bounds)
-        
-        if name == "Admin Building":
-            best_corner = min(corners, key=lambda c: dist_sq(c[1][0], c[1][1], gate_cx, gate_cy))
-            segments.extend(best_corner[2])
-        elif name == "RAW Water Tank":
-            min_dist = min(dist_to_boundary(c[1][0], c[1][1]) for c in corners)
-            boundary_corners = [c for c in corners if dist_to_boundary(c[1][0], c[1][1]) <= min_dist + 0.1]
-            demi = placed.get("Demi Water Tank")
-            if demi:
-                demi_cx = demi[0] + demi[2]/2
-                demi_cy = demi[1] + demi[3]/2
-                best_corner = max(boundary_corners, key=lambda c: dist_sq(c[1][0], c[1][1], demi_cx, demi_cy))
-            else:
-                best_corner = boundary_corners[0]
-            segments.extend(best_corner[2])
-        elif name == "WT/WWT":
-            best_corner = min(corners, key=lambda c: dist_to_boundary(c[1][0], c[1][1]))
-            segments.extend(best_corner[2])
-        elif name in ("GIS", "Cooling Tower", "Warehouse"):
-            corners_sorted = sorted(corners, key=lambda c: dist_to_boundary(c[1][0], c[1][1]))
-            best_corner = corners_sorted[0]
-            segments.extend(best_corner[2])
-            opp_map = {"BL": "TR", "TR": "BL", "BR": "TL", "TL": "BR"}
-            opp_corner = next(c for c in corners if c[0] == opp_map[best_corner[0]])
-            segments.extend(opp_corner[2])
+        steps = int(math.ceil(dist / (grid.cell_size / 2)))
+        for s in range(steps + 1):
+            t = s / steps
+            cx = x1 + t * (x2 - x1)
+            cy = y1 + t * (y2 - y1)
+            i, j = grid.world_to_cell(cx, cy)
+            if grid.in_bounds(i, j):
+                grid.blocked[i, j] = False
 
-    return segments
+def is_path_clear(grid, path):
+    for i in range(len(path) - 1):
+        p1, p2 = path[i], path[i+1]
+        x1, y1 = p1
+        x2, y2 = p2
+        dist = math.hypot(x2 - x1, y2 - y1)
+        if dist < 0.1:
+            continue
+        steps = int(math.ceil(dist / (grid.cell_size / 2)))
+        for s in range(steps + 1):
+            t = s / steps
+            cx = x1 + t * (x2 - x1)
+            cy = y1 + t * (y2 - y1)
+            ci, cj = grid.world_to_cell(cx, cy)
+            if not grid.is_free(ci, cj):
+                return False
+    return True
+
+def is_path_clear_of_buffers(grid, path, penalty_map):
+    if not is_path_clear(grid, path):
+        return False
+    for i in range(len(path) - 1):
+        p1, p2 = path[i], path[i+1]
+        x1, y1 = p1
+        x2, y2 = p2
+        dist = math.hypot(x2 - x1, y2 - y1)
+        if dist < 0.1:
+            continue
+        steps = int(math.ceil(dist / (grid.cell_size / 2)))
+        for s in range(steps + 1):
+            t = s / steps
+            cx = x1 + t * (x2 - x1)
+            cy = y1 + t * (y2 - y1)
+            ci, cj = grid.world_to_cell(cx, cy)
+            if grid.in_bounds(ci, cj) and penalty_map[ci, cj] > 0.0:
+                return False
+    return True
+
+def get_side_buffer_offset(block, side_midpoint, rack_segments):
+    if block["name"] not in RACK_BLOCKS:
+        return 8.0
+    for seg in rack_segments:
+        if point_to_segment_distance(side_midpoint, seg[0], seg[1]) < 25.0:
+            return 16.0
+    return 8.0
 
 def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):  # → §3.4.D
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
@@ -1974,175 +1851,14 @@ def compute_gate(sw, sl, side, ratio):
 
 
 # ── Main generator ────────────────────────────────────────────────────────
-def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None, pb_cx=0):  # → §3.7.D (Priority 1..3)
-    if ref_segs is None:
-        ref_segs = []
-        
-    ref_horiz = []
-    ref_vert = []
-    for (x1, y1), (x2, y2) in ref_segs:
-        if abs(y1 - y2) < 0.1:
-            ref_horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
-        elif abs(x1 - x2) < 0.1:
-            ref_vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
+def build_pb_ring_road(pb_x, pb_y, pb_w, pb_h, offset=PB_RING_OFFSET):
+    """Closed polyline of PB ring road centerline."""
+    x1, y1 = pb_x - offset, pb_y - offset
+    x2, y2 = pb_x + pb_w + offset, pb_y + pb_h + offset
+    return [(x1,y1),(x2,y1),(x2,y2),(x1,y2),(x1,y1)]
 
-    horiz = []
-    vert = []
-    for (x1, y1), (x2, y2) in segs:
-        if abs(y1 - y2) < 0.1:
-            horiz.append([(min(x1, x2), y1), (max(x1, x2), y2)])
-        elif abs(x1 - x2) < 0.1:
-            vert.append([(x1, min(y1, y2)), (x2, max(y1, y2))])
-            
-    def get_outward_dir(l, is_horiz):
-        val = l[0][1] if is_horiz else l[0][0]
-        for name, b in computed_buffers.items():
-            if is_horiz:
-                if abs(val - min(sl, b[3])) < 0.1: return 1  # Top
-                if abs(val - max(0, b[1])) < 0.1: return -1  # Bottom
-            else:
-                if abs(val - min(sw, b[2])) < 0.1: return 1  # Right
-                if abs(val - max(0, b[0])) < 0.1: return -1  # Left
-        return 1 if val >= (sl/2 if is_horiz else sw/2) else -1
-
-    # Priority 1 & 2: Snap to PB network and filter out from Priority 3
-    def snap_to_ref(lines, refs, is_horiz):
-        kept_for_p3 = []
-        snapped_final = []
-        
-        for l in lines:
-            snapped = False
-            outward = get_outward_dir(l, is_horiz)
-            for r in refs:
-                # Exception: If reference line is in the Gate Death Zone, do not snap to it
-                if gdz is not None:
-                    gx, gy, gw, gh = gdz
-                    rmid_x = (r[0][0] + r[1][0]) / 2
-                    rmid_y = (r[0][1] + r[1][1]) / 2
-                    if gx <= rmid_x <= gx + gw and gy <= rmid_y <= gy + gh:
-                        continue
-                        
-                if is_horiz:
-                    if 0 <= abs(l[0][1] - r[0][1]) <= tol:
-                        # Ensure we only snap outward
-                        if outward == 1 and r[0][1] < l[0][1]: continue
-                        if outward == -1 and r[0][1] > l[0][1]: continue
-                        
-                        overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
-                        if overlap > -0.1:
-                            l = [(l[0][0], r[0][1]), (l[1][0], r[0][1])]
-                            snapped = True
-                            break
-                else:
-                    if 0 <= abs(l[0][0] - r[0][0]) <= tol:
-                        # Ensure we only snap outward
-                        if outward == 1 and r[0][0] < l[0][0]: continue
-                        if outward == -1 and r[0][0] > l[0][0]: continue
-                        
-                        overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
-                        if overlap > -0.1:
-                            l = [(r[0][0], l[0][1]), (r[0][0], l[1][1])]
-                            snapped = True
-                            break
-            if snapped:
-                snapped_final.append(l)
-            else:
-                kept_for_p3.append(l)
-        return kept_for_p3, snapped_final
-        
-    horiz, horiz_snapped = snap_to_ref(horiz, ref_horiz, True)
-    vert, vert_snapped = snap_to_ref(vert, ref_vert, False)
-            
-    # Priority 3: Simplified sweep with Left/Right separation and Buffer Guard.
-    def is_inside_buffer(p_min, p_max, val, is_horiz):
-        for name, b in computed_buffers.items():
-            bx_min, by_min, bx_max, by_max = b
-            if is_horiz:
-                if by_min + 0.1 < val < by_max - 0.1:
-                    if min(p_max, bx_max) > max(p_min, bx_min) + 0.1:
-                        return True
-            else:
-                if bx_min + 0.1 < val < bx_max - 0.1:
-                    if min(p_max, by_max) > max(p_min, by_min) + 0.1:
-                        return True
-        return False
-
-    # 1. Horizontal Sweep
-    left_horiz = [l for l in horiz if (l[0][0] + l[1][0]) / 2 < pb_cx]
-    right_horiz = [l for l in horiz if (l[0][0] + l[1][0]) / 2 >= pb_cx]
-    
-    def sweep_horizontal_group(group):
-        group.sort(key=lambda l: l[0][1], reverse=True) # Sort by highest Y
-        for i in range(len(group)):
-            for j in range(i + 1, len(group)):
-                l1, l2 = group[i], group[j]
-                target_y = l1[0][1]
-                if 0 <= target_y - l2[0][1] <= tol:
-                    # Apply buffer guard check
-                    if not is_inside_buffer(l2[0][0], l2[1][0], target_y, is_horiz=True):
-                        group[j] = [(l2[0][0], target_y), (l2[1][0], target_y)]
-                        
-    sweep_horizontal_group(left_horiz)
-    sweep_horizontal_group(right_horiz)
-    horiz = left_horiz + right_horiz
-
-    # 2. Vertical Sweep
-    left_vert = [l for l in vert if l[0][0] < pb_cx]
-    right_vert = [l for l in vert if l[0][0] >= pb_cx]
-    
-    def sweep_vertical_group(group):
-        group.sort(key=lambda l: l[0][0]) # Sort by lowest X
-        for i in range(len(group)):
-            for j in range(i + 1, len(group)):
-                l1, l2 = group[i], group[j]
-                target_x = l1[0][0]
-                if 0 <= l2[0][0] - target_x <= tol:
-                    # Apply buffer guard check
-                    if not is_inside_buffer(l2[0][1], l2[1][1], target_x, is_horiz=False):
-                        group[j] = [(target_x, l2[0][1]), (target_x, l2[1][1])]
-                        
-    sweep_vertical_group(left_vert)
-    sweep_vertical_group(right_vert)
-    vert = left_vert + right_vert
-        
-    # Merge collinear overlapping again after sweeps
-    h_merged = []
-    for l in horiz:
-        if not h_merged:
-            h_merged.append(l)
-            continue
-        merged = False
-        for i, r in enumerate(h_merged):
-            if abs(l[0][1] - r[0][1]) < 0.1:
-                overlap = min(l[1][0], r[1][0]) - max(l[0][0], r[0][0])
-                if overlap > -0.1:
-                    h_merged[i] = [(min(l[0][0], r[0][0]), l[0][1]), (max(l[1][0], r[1][0]), l[0][1])]
-                    merged = True
-                    break
-        if not merged:
-            h_merged.append(l)
-            
-    v_merged = []
-    for l in vert:
-        if not v_merged:
-            v_merged.append(l)
-            continue
-        merged = False
-        for i, r in enumerate(v_merged):
-            if abs(l[0][0] - r[0][0]) < 0.1:
-                overlap = min(l[1][1], r[1][1]) - max(l[0][1], r[0][1])
-                if overlap > -0.1:
-                    v_merged[i] = [(l[0][0], min(l[0][1], r[0][1])), (l[0][0], max(l[1][1], r[1][1]))]
-                    merged = True
-                    break
-        if not merged:
-            v_merged.append(l)
-            
-    # Add back the lines that snapped to the PB network
-    h_merged.extend(horiz_snapped)
-    v_merged.extend(vert_snapped)
-            
-    return h_merged + v_merged
+def cleanup_parallel_segments(segs, sw, sl, computed_buffers, ref_segs=None, tol=17.0, gdz=None, pb_cx=0):
+    return []
 
 def generate_sketch(  # → §3.1 Master Placement Sequence
     site_w, site_l, wind_dir,
@@ -3498,18 +3214,32 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         # PB↔CT spine connection — snap them collinear.
         rack_segments = _remove_tiny_jogs(rack_segments)
 
-        # Polygon migration (Phase 6): blocks + ring road + gate road + the full
-        # pipe-rack network. Perimeter / access roads (Phases 7-8) still use
-        # rectangle/edge logic, so they are skipped — but Phase 9 RECENTER runs
-        # here on the polygon.
-        if blocks_only:
-            # -----------------------------------------------------------------
-            # Step 12 — Recenter  [→ §3.8]  (Phase 9: move the whole POLYGON)
-            # Content (blocks/roads/racks) stays put; the plot polygon + gate
-            # slide by `delta` so the plot center lands on the content bbox
-            # center. Before: a rectangle slid. Now: every polygon corner moves.
-            # -----------------------------------------------------------------
-            def _content_pts():
+        # -----------------------------------------------------------------
+        # Step 10.9 — Recenter (pre-roads)  [→ §3.8]
+        # Recenter the placed layout (blocks + racks + ring road + gate) by
+        # sliding the plot polygon onto the NON-ROAD content bbox center,
+        # BEFORE access roads are generated. This is §3.8's recenter logic with
+        # access-road geometry dropped from the bbox (none exists yet). Blocks,
+        # racks, ring road and ring spur keep their coordinates — the plot frame
+        # (and the gate, which belongs to the plot) moves around them. Access
+        # roads are then placed around the already-centered layout and connect
+        # to the recentered gate spur, so they never need recentering afterward.
+        # -----------------------------------------------------------------
+        PRE_RECENTER_ENABLED = True
+        _pre_recenter_done = False
+        recenter_delta = (0.0, 0.0)
+        plot_polygon_before = list(plot.vertices) if plot is not None else None
+        # Real CAD boundary BEFORE recenter (the inset's original_plot) — for
+        # the dashboard's "before recenter" overlay, which shows the REAL plot.
+        plot_polygon_original_before = (list(plot.original_plot.vertices)
+                                        if plot is not None and getattr(plot, "original_plot", None) is not None
+                                        else None)
+        plot_bounds_before = ((plot.bbox[0], plot.bbox[1], plot.size[0], plot.size[1])
+                              if plot is not None else (0.0, 0.0, sw, sl))
+        gate_pt_before = gate_pt
+
+        if PRE_RECENTER_ENABLED and plot is not None:
+            def _pre_content_pts():
                 for b in blocks:
                     yield (b["x"], b["y"])
                     yield (b["x"] + b["width"], b["y"] + b["height"])
@@ -3523,251 +3253,1378 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
                             yield (s[0][0], s[0][1])
                             yield (s[1][0], s[1][1])
 
-            # Plot center = polygon bbox center (== (sw/2, sl/2) for the
-            # origin-normalised plot, but computed directly so it stays correct
-            # if the plot isn't normalised).
-            if plot is not None:
-                _pminx, _pminy, _pmaxx, _pmaxy = plot.bbox
-                _plot_cx, _plot_cy = (_pminx + _pmaxx) / 2.0, (_pminy + _pmaxy) / 2.0
-            else:
-                _plot_cx, _plot_cy = sw / 2.0, sl / 2.0
-
-            _cpts = list(_content_pts())
-            if plot is not None:
-                recenter_delta = (0.0, 0.0)
-            elif _cpts:
+            _cpts = list(_pre_content_pts())
+            if _cpts:
+                # Plot center = AREA CENTROID, not bbox center: with slanted
+                # edges the polygon's mass sits away from the bbox middle, and
+                # centering on the bbox systematically biases the layout toward
+                # the cut-off side.
+                _plot_cx, _plot_cy = plot.centroid
                 _minx = min(p[0] for p in _cpts); _maxx = max(p[0] for p in _cpts)
                 _miny = min(p[1] for p in _cpts); _maxy = max(p[1] for p in _cpts)
                 _ccx, _ccy = (_minx + _maxx) / 2.0, (_miny + _maxy) / 2.0
-                recenter_delta = (_ccx - _plot_cx, _ccy - _plot_cy)
-            else:
-                recenter_delta = (0.0, 0.0)
-            _dx, _dy = recenter_delta
+                _fdx, _fdy = (_ccx - _plot_cx, _ccy - _plot_cy)
 
-            plot_polygon_before = list(plot.vertices) if plot is not None else None
-            _plot_rec = plot.translate(_dx, _dy) if plot is not None else None
-            plot_polygon_out = list(_plot_rec.vertices) if _plot_rec is not None else None
+                _dx, _dy = 0.0, 0.0
+                if abs(_fdx) > 0.01 or abs(_fdy) > 0.01:
+                    # Containment clamp (same as §3.8): scale delta to the
+                    # largest fraction that keeps every content point at least
+                    # as deep inside the plot as it started (0.5 m slack for
+                    # grid points on the boundary). PER-POINT requirement — a
+                    # single point that already pokes past the boundary must
+                    # not license every other point to sink that far too.
+                    # The gate spur's final L to the gate is REBUILT after the
+                    # move (§3.8 step 6) and its points sit on the boundary by
+                    # definition — exclude them from the clamp.
+                    _gate_tail = set()
+                    if (gate_road_out and len(gate_road_out) >= 2 and gate_pt is not None
+                            and abs(gate_road_out[-1][0] - gate_pt[0]) < 0.5
+                            and abs(gate_road_out[-1][1] - gate_pt[1]) < 0.5):
+                        _gate_tail = {(round(gate_road_out[-1][0], 3), round(gate_road_out[-1][1], 3)),
+                                      (round(gate_road_out[-2][0], 3), round(gate_road_out[-2][1], 3))}
+                    _clamp_pts = [q for q in _cpts
+                                  if (round(q[0], 3), round(q[1], 3)) not in _gate_tail] or _cpts
+                    _req = [min(plot.signed_dist_to_boundary(q[0], q[1]), 0.5) for q in _clamp_pts]
 
-            # The gate moves only PERPENDICULAR to its boundary edge so it stays on
-            # the moved edge line without sliding ALONG it (which would stretch the
-            # exit road and detach it from the fixed gate house). For a diagonal
-            # edge this is the true perpendicular component of `delta`.
-            gate_pt_before = gate_pt
-            gate_pt_rec = gate_pt
-            if plot is not None and gate_pt is not None:
-                _e = plot.edges[plot.nearest_edge(gate_pt[0], gate_pt[1])]
-                _ux, _uy = _e["dir"]
-                _along = _dx * _ux + _dy * _uy
-                gate_pt_rec = (gate_pt[0] + _dx - _along * _ux,
-                               gate_pt[1] + _dy - _along * _uy)
+                    def _worst_margin(vx, vy, t):
+                        return min(plot.signed_dist_to_boundary(q[0] - t * vx, q[1] - t * vy) - r
+                                   for q, r in zip(_clamp_pts, _req))
 
-            # Rebuild the gate spur's final L so it reaches the recentered gate;
-            # the boom crossing (exit_helper → bb_mid → other_corner) stays fixed.
-            def _same_pt(a, b):
-                return abs(a[0] - b[0]) < 0.5 and abs(a[1] - b[1]) < 0.5
-            gate_spur_rec = list(gate_road_out) if gate_road_out else gate_road_out
-            if (gate_road_out and len(gate_road_out) >= 3 and gate_pt is not None
-                    and _same_pt(gate_road_out[-1], gate_pt)):
-                oc = gate_road_out[-3]
-                l_old = gate_road_out[-2]
-                ng = gate_pt_rec
-                if abs(l_old[1] - oc[1]) < 0.5:      # boom L shares other_corner's y
-                    l_new = (ng[0], oc[1])
-                else:                                 # shares other_corner's x
-                    l_new = (oc[0], ng[1])
-                gate_spur_rec = list(gate_road_out[:-2]) + [l_new, ng]
-            elif (gate_road_out and gate_pt is not None
-                  and _same_pt(gate_road_out[0], gate_pt)):
-                gate_spur_rec = [gate_pt_rec] + list(gate_road_out[1:])
+                    def _max_t(vx, vy):
+                        if abs(vx) < 1e-9 and abs(vy) < 1e-9:
+                            return 0.0
+                        if _worst_margin(vx, vy, 1.0) >= -1e-6:
+                            return 1.0
+                        _lo, _hi = 0.0, 1.0
+                        for _ in range(20):
+                            _mid = (_lo + _hi) / 2.0
+                            if _worst_margin(vx, vy, _mid) >= -1e-6:
+                                _lo = _mid
+                            else:
+                                _hi = _mid
+                        return _lo
 
-            # Death zone between the fixed bb_mid and the recentered gate.
-            gate_death_zone_rec = gate_death_zone
-            if gate_death_zone is not None and bb_mid is not None and gate_pt_rec is not None:
-                _gx0, _gx1 = min(bb_mid[0], gate_pt_rec[0]), max(bb_mid[0], gate_pt_rec[0])
-                _gy0, _gy1 = min(bb_mid[1], gate_pt_rec[1]), max(bb_mid[1], gate_pt_rec[1])
-                if _gx1 - _gx0 < 1: _gx0 -= 1; _gx1 += 1
-                if _gy1 - _gy0 < 1: _gy0 -= 1; _gy1 += 1
-                gate_death_zone_rec = (_gx0, _gy0, _gx1 - _gx0, _gy1 - _gy0)
+                    # Clamp each axis INDEPENDENTLY: a pinch in y (e.g. a block
+                    # on the bottom edge) must not also cut the x slide, and
+                    # vice versa. Then re-verify the combined vector once —
+                    # slanted edges respond to diagonal moves, so the two
+                    # axis-safe moves together may still need a final scale.
+                    _cdx = _fdx * _max_t(_fdx, 0.0)
+                    _cdy = _fdy * _max_t(0.0, _fdy)
+                    _t_j = _max_t(_cdx, _cdy)
+                    _dx, _dy = _cdx * _t_j, _cdy * _t_j
+                    # Damping: apply only half of the (clamped) slide. The full
+                    # clamped delta parks the pinned content (e.g. a CAD-anchored
+                    # block near the boundary) exactly ON the temporary boundary;
+                    # halving splits the remaining margin between both sides.
+                    RECENTER_DAMPING = 0.5
+                    _dx *= RECENTER_DAMPING
+                    _dy *= RECENTER_DAMPING
 
-            _last_debug["failed_at"] = None
-            _last_debug["failed_section"] = None
-            _last_debug["boundary_tol_used"] = _pass_tol
-            _last_debug["boundary_pass_label"] = _pass_label
-            _last_debug["recenter_delta"] = recenter_delta
-            return {
-                "blocks":          blocks,
-                "boom_barrier":    boom_out,
-                "ring_road":       ring_road,
-                "gate_spur":       gate_spur_rec,
-                "ring_spur":       ring_spur_out,
-                "gate_death_zone": gate_death_zone_rec,
-                "gate_point":      gate_pt_rec,
-                "gate_point_before": gate_pt_before,
-                "pb_center":       (pb_cx, pb_cy),
-                "rack_buffers":    rack_buffers,
-                "rack_segments":   rack_segments,
-                "spine_centerlines": spine_centerlines,
-                "pb_buffer_hits":  pb_buffer_hits,
-                "main_rack_output": main_rack_output,
-                "water_cluster_segments": water_cluster_segments,
-                "pruned_rack_segments": pruned_rack_segments,
-                "water_triangle":  water_triangle,
-                "rack_candidates": candidate_points,
-                "active_rack_cases": active_cases,
-                "plot_polygon":    plot_polygon_out,
-                "plot_polygon_before": plot_polygon_before,
-                "plot_bounds":     (_dx, _dy, sw, sl),
-                "plot_bounds_before": (0.0, 0.0, sw, sl),
-                "recenter_delta":  recenter_delta,
-                "blocks_only":     True,
-                "cell_size":       CELL_SIZE,
-                "boundary_tol_used":   _pass_tol,
-                "boundary_pass_label": _pass_label,
-            }
+                if abs(_dx) > 0.01 or abs(_dy) > 0.01:
+                    recenter_delta = (_dx, _dy)
+                    # Slide the plot polygon.
+                    plot = plot.translate(_dx, _dy)
+                    # Move the gate perpendicular to its edge only (keeps it on
+                    # the moved boundary without sliding along the edge).
+                    if gate_pt is not None:
+                        _e = plot.edges[plot.nearest_edge(gate_pt[0], gate_pt[1])]
+                        _ux, _uy = _e["dir"]
+                        _along = _dx * _ux + _dy * _uy
+                        gate_pt = (gate_pt[0] + _dx - _along * _ux,
+                                   gate_pt[1] + _dy - _along * _uy)
 
-        computed_buffers = compute_unsnapped_buffers(placed)
-        perimeter_segments_raw = []
-        group_a_segments_raw = generate_group_a_access(computed_buffers, placed, sw, sl, gate_pt[0], gate_pt[1])
-        all_segments_raw = group_a_segments_raw
+                    def _same_pt(a, b):
+                        return abs(a[0] - b[0]) < 0.5 and abs(a[1] - b[1]) < 0.5
+
+                    # Rebuild the gate spur's final L so it reaches the moved gate.
+                    if (gate_road_out and len(gate_road_out) >= 3 and gate_pt_before is not None
+                            and _same_pt(gate_road_out[-1], gate_pt_before)):
+                        oc = gate_road_out[-3]
+                        l_old = gate_road_out[-2]
+                        ng = gate_pt
+                        if abs(l_old[1] - oc[1]) < 0.5:
+                            l_new = (ng[0], oc[1])
+                        else:
+                            l_new = (oc[0], ng[1])
+                        gate_road_out = list(gate_road_out[:-2]) + [l_new, ng]
+                    elif (gate_road_out and gate_pt_before is not None
+                          and _same_pt(gate_road_out[0], gate_pt_before)):
+                        gate_road_out = [gate_pt] + list(gate_road_out[1:])
+
+                    # Recompute the gate death zone between the fixed boom mid
+                    # and the moved gate.
+                    if gate_death_zone is not None and bb_mid is not None and gate_pt is not None:
+                        _gx0, _gx1 = min(bb_mid[0], gate_pt[0]), max(bb_mid[0], gate_pt[0])
+                        _gy0, _gy1 = min(bb_mid[1], gate_pt[1]), max(bb_mid[1], gate_pt[1])
+                        if _gx1 - _gx0 < 1: _gx0 -= 1; _gx1 += 1
+                        if _gy1 - _gy0 < 1: _gy0 -= 1; _gy1 += 1
+                        gate_death_zone = (_gx0, _gy0, _gx1 - _gx0, _gy1 - _gy0)
+
+                    _pre_recenter_done = True
+
+        # -----------------------------------------------------------------
+        # Step 11 — Clean opposite side road connection logic
+        # -----------------------------------------------------------------
+        def dist_to_road(p, road_segs):
+            min_d = float('inf')
+            for seg in road_segs:
+                a, b = seg
+                d = point_to_segment_distance(p, a, b)
+                if d < min_d:
+                    min_d = d
+            return min_d
+
+        CONNECT_BLOCKS = {"Cooling Tower", "Admin Building", "GIS", "WT/WWT", "Warehouse"}
+        access_roads = []
+        access_roads_blocks = []
+        access_roads_parts = []
         
-        pb_network = []
+        road_segments = []
         if ring_road:
             for i in range(len(ring_road) - 1):
-                pb_network.append((ring_road[i], ring_road[i+1]))
-            pb_network.append((ring_road[-1], ring_road[0]))
-        if gate_spur:
-            for i in range(len(gate_spur) - 1):
-                pb_network.append((gate_spur[i], gate_spur[i+1]))
-        if ring_spur:
-            for i in range(len(ring_spur) - 1):
-                pb_network.append((ring_spur[i], ring_spur[i+1]))
-                
-        all_segments_cleaned = cleanup_parallel_segments(all_segments_raw, sw, sl, computed_buffers, ref_segs=pb_network, tol=17.0, gdz=gate_death_zone, pb_cx=pb_cx)
+                road_segments.append((ring_road[i], ring_road[i+1]))
+            road_segments.append((ring_road[-1], ring_road[0]))
+        # Use gate_road_out and ring_spur_out if present, otherwise fallback to gate_spur and ring_spur
+        live_gate_spur = gate_road_out if gate_road_out else gate_spur
+        live_ring_spur = ring_spur_out if ring_spur_out else ring_spur
+        if live_ring_spur:
+            for i in range(len(live_ring_spur) - 1):
+                road_segments.append((live_ring_spur[i], live_ring_spur[i+1]))
+        gate_spur_segments = []
+        if live_gate_spur:
+            for i in range(len(live_gate_spur) - 1):
+                gate_spur_segments.append((live_gate_spur[i], live_gate_spur[i+1]))
 
-        outer_loop, outer_loop_pts = compute_buffer_union_contour(computed_buffers, sw, sl)
-        boom_barrier = []
-        gh = next((b for b in blocks if b["name"] == "Gate House"), None)
-        if gh is not None:
-            bx, by, bw, bh = gh["x"], gh["y"], gh["width"], gh["height"]
-            cx, cy = bx + bw / 2, by + bh / 2
-            if bb_edge == "N":   boom_barrier = [(cx, by + bh), (cx, by + bh + 16)]
-            elif bb_edge == "S": boom_barrier = [(cx, by), (cx, by - 16)]
-            elif bb_edge == "E": boom_barrier = [(bx + bw, cy), (bx + bw + 16, cy)]
-            elif bb_edge == "W": boom_barrier = [(bx, cy), (bx - 16, cy)]
+        # Forbidden Zone calculation based on distance < 100m between gate spur and ring road
+        forbidden_zone_bbox = None
+        if ring_road and bb_mid is not None and gate_pt is not None:
+            rxs = [p[0] for p in ring_road]
+            rys = [p[1] for p in ring_road]
+            ring_y_max = max(rys)
+            ring_y_min = min(rys)
+            ring_x_max = max(rxs)
+            ring_x_left = min(rxs)
+            
+            # Identify the start/end points of the boom barrier
+            if boom_out:
+                bb_pts = list(boom_out)
+            else:
+                if bb_edge_eff in ("N", "S"):
+                    bb_pts = [(bb_mid[0] - 8, bb_mid[1]), (bb_mid[0] + 8, bb_mid[1])]
+                else:
+                    bb_pts = [(bb_mid[0], bb_mid[1] - 8), (bb_mid[0], bb_mid[1] + 8)]
+            
+            if gate_side == "N":
+                ref_coord = ring_y_max
+                # Use the boom barrier endpoint that is farthest to the ring road (max Y)
+                bb_y = max(p[1] for p in bb_pts)
+                spur_coord = min(bb_y, gate_pt[1])
+                dist = spur_coord - ref_coord
+                if dist > 0 and dist < 100.0:
+                    # Choose farthest point to boom midpoint on the X axis among all points
+                    all_pts = bb_pts + list(ring_road) + [gate_pt]
+                    far_pt = max(all_pts, key=lambda p: abs(p[0] - bb_mid[0]))
+                    x_far = far_pt[0]
+                    x_min = min(bb_mid[0], x_far)
+                    x_max = max(bb_mid[0], x_far)
+                    y_min = ref_coord
+                    y_max = spur_coord
+                    forbidden_zone_bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
+            elif gate_side == "S":
+                ref_coord = ring_y_min
+                # Use the boom barrier endpoint that is farthest to the ring road (min Y)
+                bb_y = min(p[1] for p in bb_pts)
+                spur_coord = max(bb_y, gate_pt[1])
+                dist = ref_coord - spur_coord
+                if dist > 0 and dist < 100.0:
+                    # Choose farthest point to boom midpoint on the X axis among all points
+                    all_pts = bb_pts + list(ring_road) + [gate_pt]
+                    far_pt = max(all_pts, key=lambda p: abs(p[0] - bb_mid[0]))
+                    x_far = far_pt[0]
+                    x_min = min(bb_mid[0], x_far)
+                    x_max = max(bb_mid[0], x_far)
+                    y_min = spur_coord
+                    y_max = ref_coord
+                    forbidden_zone_bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
+            elif gate_side == "E":
+                ref_coord = ring_x_max
+                # Use the boom barrier endpoint that is farthest to the ring road (max X)
+                bb_x = max(p[0] for p in bb_pts)
+                spur_coord = min(bb_x, gate_pt[0])
+                dist = spur_coord - ref_coord
+                if dist > 0 and dist < 100.0:
+                    # Choose farthest point to boom midpoint on the Y axis among all points
+                    all_pts = bb_pts + list(ring_road) + [gate_pt]
+                    far_pt = max(all_pts, key=lambda p: abs(p[1] - bb_mid[1]))
+                    y_far = far_pt[1]
+                    y_min = min(bb_mid[1], y_far)
+                    y_max = max(bb_mid[1], y_far)
+                    x_min = ref_coord
+                    x_max = spur_coord
+                    forbidden_zone_bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
+            elif gate_side == "W":
+                ref_coord = ring_x_left
+                # Use the boom barrier endpoint that is farthest to the ring road (min X)
+                bb_x = min(p[0] for p in bb_pts)
+                spur_coord = max(bb_x, gate_pt[0])
+                dist = ref_coord - spur_coord
+                if dist > 0 and dist < 100.0:
+                    # Choose farthest point to boom midpoint on the Y axis among all points
+                    all_pts = bb_pts + list(ring_road) + [gate_pt]
+                    far_pt = max(all_pts, key=lambda p: abs(p[1] - bb_mid[1]))
+                    y_far = far_pt[1]
+                    y_min = min(bb_mid[1], y_far)
+                    y_max = max(bb_mid[1], y_far)
+                    x_min = spur_coord
+                    x_max = ref_coord
+                    forbidden_zone_bbox = (x_min, y_min, x_max - x_min, y_max - y_min)
 
-        # ---------------------------------------------------------------------
-        # Step 12 — Recenter  [→ §3.8]
-        # Content (blocks/roads/racks) is left untouched; the PLOT rectangle and
-        # the gate point are moved so the plot center lands on the content's
-        # bounding-box center.
-        # ---------------------------------------------------------------------
-        def _bbox_points():
+        # Dynamic exclusion of blocks overlapping the forbidden zone
+        final_connect_blocks = set(CONNECT_BLOCKS)
+        if forbidden_zone_bbox is not None:
+            f_x, f_y, f_w, f_h = forbidden_zone_bbox
             for b in blocks:
-                yield (b["x"], b["y"])
-                yield (b["x"] + b["width"], b["y"] + b["height"])
-            # Point polylines: lists of (x, y). ALL elements are included,
-            # the exit road (gate_spur) too.
-            for poly in (ring_road, gate_spur, ring_spur, boom_barrier):
-                if poly:
-                    for p in poly:
-                        yield (p[0], p[1])
-            # Segment lists: each entry is ((x, y), (x, y)).
-            for segs in (all_segments_cleaned, rack_segments, outer_loop):
-                if segs:
-                    for s in segs:
-                        yield (s[0][0], s[0][1])
-                        yield (s[1][0], s[1][1])
+                if b["name"] in final_connect_blocks:
+                    bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+                    # Match tolerance (5.0m) of is_block_in_forbidden_zone to catch blocks right at the edge
+                    overlap_x = not (bx + bw + 5.0 <= f_x or f_x + f_w + 5.0 <= bx)
+                    overlap_y = not (by + bh + 5.0 <= f_y or f_y + f_h + 5.0 <= by)
+                    if overlap_x and overlap_y:
+                        final_connect_blocks.remove(b["name"])
+        CONNECT_BLOCKS = final_connect_blocks
+                
+        import numpy as np
+        # Hard clearance: block the footprint cells plus a 2 m skirt so no
+        # access road can ever be routed on or right against a block footprint.
+        # The road buffers below stay a SOFT, graded guide (§3.7).
+        grid_roads = Grid(sw, sl, cell_size=CELL_SIZE)
+        for b in blocks:
+            grid_roads.mark_building(b, inflate_m=2.0)
 
-        pts = list(_bbox_points())
-        if pts:
-            min_x = min(p[0] for p in pts); max_x = max(p[0] for p in pts)
-            min_y = min(p[1] for p in pts); max_y = max(p[1] for p in pts)
-            content_cx, content_cy = (min_x + max_x) / 2.0, (min_y + max_y) / 2.0
-            delta = (content_cx - sw / 2.0, content_cy - sl / 2.0)
+        # if plot is not None:
+        #     inside_mask = plot.cell_inside_mask(grid_roads.ncols, grid_roads.nrows, grid_roads.cell_size)
+        #     for i in range(grid_roads.ncols):
+        #         for j in range(grid_roads.nrows):
+        #             if not inside_mask[i][j]:
+        #                 grid_roads.blocked[i, j] = True
+
+        # Block grid cells within the forbidden zone
+        if forbidden_zone_bbox is not None:
+            f_x, f_y, f_w, f_h = forbidden_zone_bbox
+            i0, j0 = grid_roads.world_to_cell(f_x, f_y)
+            i1, j1 = grid_roads.world_to_cell(f_x + f_w, f_y + f_h)
+            for i in range(i0, i1 + 1):
+                for j in range(j0, j1 + 1):
+                    if grid_roads.in_bounds(i, j):
+                        grid_roads.blocked[i, j] = True
+
+        unblock_segments_on_grid(grid_roads, road_segments)
+        unblock_segments_on_grid(grid_roads, gate_spur_segments)
+        
+        # Graded buffer penalty: 500 right at the footprint, falling linearly
+        # to 0 at the road-buffer edge. The buffer is a GUIDE, not a wall —
+        # A* is pushed away from footprints and prefers running along the
+        # buffer edge line (where P_buf and the Part 2 rectangle R sit)
+        # instead of hugging the block at 1-2 cells like a flat penalty allows.
+        buffer_penalty = np.zeros((grid_roads.ncols, grid_roads.nrows), dtype=float)
+        for b in blocks:
+            b_offset = 16.0 if b["name"] in RACK_BLOCKS else 8.0
+            x0 = b["x"] - b_offset
+            y0 = b["y"] - b_offset
+            x1 = b["x"] + b["width"] + b_offset
+            y1 = b["y"] + b["height"] + b_offset
+
+            i0, j0 = grid_roads.world_to_cell(x0, y0)
+            i1, j1 = grid_roads.world_to_cell(x1, y1)
+            for i in range(i0, i1 + 1):
+                for j in range(j0, j1 + 1):
+                    if grid_roads.in_bounds(i, j) and not grid_roads.blocked[i, j]:
+                        cx, cy = grid_roads.cell_to_world(i, j)
+                        ddx = max(b["x"] - cx, 0.0, cx - (b["x"] + b["width"]))
+                        ddy = max(b["y"] - cy, 0.0, cy - (b["y"] + b["height"]))
+                        d_foot = math.hypot(ddx, ddy)
+                        pen = 500.0 * max(0.0, 1.0 - d_foot / b_offset)
+                        if pen > buffer_penalty[i, j]:
+                            buffer_penalty[i, j] = pen
+
+        # Rack clearance: roads may CROSS a rack (perpendicular), but must not
+        # run PARALLEL alongside one within RACK_ROAD_CLEAR (8 m) of its
+        # centerline. Direction-aware A* penalties: horizontal moves are walled
+        # near HORIZONTAL racks, vertical moves near VERTICAL racks — so
+        # crossing a rack band perpendicular costs nothing, while running
+        # along it is a flat wall (A* leaves the band and runs right at the
+        # 8 m line instead of alongside the rack).
+        RACK_ROAD_CLEAR = 8.0
+
+        def _seg_pt_dist(px, py, ax, ay, bx, by):
+            dx, dy = bx - ax, by - ay
+            l2 = dx * dx + dy * dy
+            if l2 < 1e-9:
+                return math.hypot(px - ax, py - ay)
+            t = ((px - ax) * dx + (py - ay) * dy) / l2
+            t = max(0.0, min(1.0, t))
+            return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+
+        rack_penalty_h = np.zeros((grid_roads.ncols, grid_roads.nrows), dtype=float)
+        rack_penalty_v = np.zeros((grid_roads.ncols, grid_roads.nrows), dtype=float)
+        for seg in rack_segments:
+            (rax, ray), (rbx, rby) = seg
+            rack_horizontal = abs(rby - ray) <= abs(rbx - rax)
+            target = rack_penalty_h if rack_horizontal else rack_penalty_v
+            rx0 = min(rax, rbx) - RACK_ROAD_CLEAR; rx1 = max(rax, rbx) + RACK_ROAD_CLEAR
+            ry0 = min(ray, rby) - RACK_ROAD_CLEAR; ry1 = max(ray, rby) + RACK_ROAD_CLEAR
+            i0, j0 = grid_roads.world_to_cell(rx0, ry0)
+            i1, j1 = grid_roads.world_to_cell(rx1, ry1)
+            for i in range(i0, i1 + 1):
+                for j in range(j0, j1 + 1):
+                    if grid_roads.in_bounds(i, j) and not grid_roads.blocked[i, j]:
+                        cx, cy = grid_roads.cell_to_world(i, j)
+                        d = _seg_pt_dist(cx, cy, rax, ray, rbx, rby)
+                        if d < RACK_ROAD_CLEAR - 0.1:
+                            pen = 3000.0 + (RACK_ROAD_CLEAR - d)
+                            if pen > target[i, j]:
+                                target[i, j] = pen
+
+        for seg in road_segments + gate_spur_segments:
+            p1, p2 = seg
+            x1, y1 = p1
+            x2, y2 = p2
+            dist = math.hypot(x2 - x1, y2 - y1)
+            if dist < 0.1:
+                i, j = grid_roads.world_to_cell(x1, y1)
+                if grid_roads.in_bounds(i, j):
+                    buffer_penalty[i, j] = 0.0
+                    rack_penalty_h[i, j] = 0.0
+                    rack_penalty_v[i, j] = 0.0
+                continue
+            steps = int(math.ceil(dist / (grid_roads.cell_size / 2)))
+            for s in range(steps + 1):
+                t = s / steps
+                cx = x1 + t * (x2 - x1)
+                cy = y1 + t * (y2 - y1)
+                i, j = grid_roads.world_to_cell(cx, cy)
+                if grid_roads.in_bounds(i, j):
+                    buffer_penalty[i, j] = 0.0
+                    rack_penalty_h[i, j] = 0.0
+                    rack_penalty_v[i, j] = 0.0
+
+        road_segments_p1 = list(road_segments)
+        road_segments_all = list(road_segments)
+
+        road_cells_p1 = set()
+        for seg in road_segments_p1:
+            p1, p2 = seg
+            x1, y1 = p1
+            x2, y2 = p2
+            dist = math.hypot(x2 - x1, y2 - y1)
+            if dist < 0.1:
+                i, j = grid_roads.world_to_cell(x1, y1)
+                if grid_roads.in_bounds(i, j):
+                    road_cells_p1.add((i, j))
+                continue
+            steps = int(math.ceil(dist / (grid_roads.cell_size / 2)))
+            for s in range(steps + 1):
+                t = s / steps
+                cx = x1 + t * (x2 - x1)
+                cy = y1 + t * (y2 - y1)
+                i, j = grid_roads.world_to_cell(cx, cy)
+                if grid_roads.in_bounds(i, j):
+                    road_cells_p1.add((i, j))
+
+        road_cells_all = set(road_cells_p1)
+
+        def _path_runs_along_rack(path):
+            return any(segment_near_rack(path[k], path[k + 1])
+                       for k in range(len(path) - 1))
+
+        def route_from_point(P_start, segments, cells):
+            P_goal = find_closest_point_on_road(P_start, segments)
+            l_path1 = [P_start, (P_goal[0], P_start[1]), P_goal]
+            l_path2 = [P_start, (P_start[0], P_goal[1]), P_goal]
+
+            if is_path_clear_of_buffers(grid_roads, l_path1, buffer_penalty) and not _path_runs_along_rack(l_path1):
+                return l_path1
+            if is_path_clear_of_buffers(grid_roads, l_path2, buffer_penalty) and not _path_runs_along_rack(l_path2):
+                return l_path2
+
+            c_start = grid_roads.world_to_cell(*P_start)
+            if not grid_roads.in_bounds(*c_start):
+                return l_path1
+
+            was_blocked = grid_roads.blocked[c_start]
+            grid_roads.blocked[c_start] = False
+
+            def astar_cell_cost(cell, next_cell):
+                # Direction-aware rack wall: horizontal moves are penalised
+                # near horizontal racks, vertical moves near vertical racks —
+                # crossing a rack perpendicular stays free.
+                pen = buffer_penalty[next_cell[0], next_cell[1]]
+                if next_cell[0] != cell[0]:
+                    pen += rack_penalty_h[next_cell[0], next_cell[1]]
+                elif next_cell[1] != cell[1]:
+                    pen += rack_penalty_v[next_cell[0], next_cell[1]]
+                return pen
+
+            astar_path = astar(grid_roads, c_start, cells, width_cells=0, allow_diagonal=False, turn_penalty=50.0, cell_cost_fn=astar_cell_cost)
+            grid_roads.blocked[c_start] = was_blocked
+            
+            if astar_path:
+                return [grid_roads.cell_to_world(*c) for c in astar_path]
+            # Last resort (A* failed): prefer an L-path that at least does not
+            # cross a block footprint (+2 m skirt)
+            if not is_path_clear(grid_roads, l_path1) and is_path_clear(grid_roads, l_path2):
+                return l_path2
+            return l_path1
+
+        def add_path_to_road_network(path, segments, cells):
+            for idx in range(len(path) - 1):
+                p1, p2 = path[idx], path[idx+1]
+                segments.append((p1, p2))
+                x1, y1 = p1
+                x2, y2 = p2
+                dist = math.hypot(x2 - x1, y2 - y1)
+                if dist < 0.1:
+                    cell = grid_roads.world_to_cell(x1, y1)
+                    if grid_roads.in_bounds(*cell):
+                        cells.add(cell)
+                        buffer_penalty[cell[0], cell[1]] = 0.0
+                        rack_penalty_h[cell[0], cell[1]] = 0.0
+                        rack_penalty_v[cell[0], cell[1]] = 0.0
+                    continue
+                steps = int(math.ceil(dist / (grid_roads.cell_size / 2)))
+                for s in range(steps + 1):
+                    t = s / steps
+                    cx = x1 + t * (x2 - x1)
+                    cy = y1 + t * (y2 - y1)
+                    cell = grid_roads.world_to_cell(cx, cy)
+                    if grid_roads.in_bounds(*cell):
+                        cells.add(cell)
+                        buffer_penalty[cell[0], cell[1]] = 0.0
+                        rack_penalty_h[cell[0], cell[1]] = 0.0
+                        rack_penalty_v[cell[0], cell[1]] = 0.0
+
+        def is_block_in_forbidden_zone(b, f_zone):
+            if f_zone is None:
+                return False
+            f_x, f_y, f_w, f_h = f_zone
+            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+            # Tolerance to catch blocks right at the edge
+            overlap_x = not (bx + bw + 5.0 <= f_x or f_x + f_w + 5.0 <= bx)
+            overlap_y = not (by + bh + 5.0 <= f_y or f_y + f_h + 5.0 <= by)
+            return overlap_x and overlap_y
+
+        def align_terminal_to_network(p, road_segments):
+            if not p or not road_segments:
+                return p
+            px, py = p
+            min_d = float('inf')
+            closest_pt = p
+            for s0, s1 in road_segments:
+                x1, y1 = s0
+                x2, y2 = s1
+                dx, dy = x2 - x1, y2 - y1
+                l2 = dx*dx + dy*dy
+                if l2 < 1e-9:
+                    d = math.hypot(px - x1, py - y1)
+                    if d < min_d:
+                        min_d = d
+                        closest_pt = (x1, y1)
+                    continue
+                t = ((px - x1) * dx + (py - y1) * dy) / l2
+                t = max(0.0, min(1.0, t))
+                c_x = x1 + t * dx
+                c_y = y1 + t * dy
+                d = math.hypot(px - c_x, py - c_y)
+                if d < min_d:
+                    min_d = d
+                    closest_pt = (c_x, c_y)
+            return closest_pt
+
+        def straighten_arrival(path, target_segments, tol):
+            # §3.7.B step 7 — make the arrival run straight and turn only once,
+            # at the network. Mutates `path` in place (access_roads holds it).
+            # A slide is committed ONLY if the new tail keeps clear of every
+            # block footprint (>= 4 m); otherwise the orthogonal stub is kept,
+            # because footprint clearance outranks the single-turn cosmetic.
+            foot_clear = 4.0
+
+            def _leg_clears(a, b):
+                sx0, sx1 = min(a[0], b[0]), max(a[0], b[0])
+                sy0, sy1 = min(a[1], b[1]), max(a[1], b[1])
+                for b2 in blocks:
+                    bx0, by0 = b2["x"] - foot_clear, b2["y"] - foot_clear
+                    bx1 = b2["x"] + b2["width"] + foot_clear
+                    by1 = b2["y"] + b2["height"] + foot_clear
+                    if sx1 >= bx0 and sx0 <= bx1 and sy1 >= by0 and sy0 <= by1:
+                        return False
+                # A slide must also not push the leg within 8 m of a rack CL.
+                if segment_near_rack(a, b):
+                    return False
+                return True
+
+            def _tail_clears(cand):
+                # Only the last two segments change in a slide — check those.
+                lo = max(0, len(cand) - 3)
+                return all(_leg_clears(cand[i], cand[i + 1]) for i in range(lo, len(cand) - 1))
+
+            # (a) Stub pattern: a long leg parallel to the target road line a
+            #     few cells away, ending in a tiny stub onto the connection
+            #     point. Slide the offset leg onto the connection point's line.
+            if len(path) >= 4:
+                pD, pC, pB = path[-1], path[-2], path[-3]
+                stub = math.hypot(pD[0] - pC[0], pD[1] - pC[1])
+                if 0.1 < stub <= tol:
+                    stub_horizontal = abs(pD[1] - pC[1]) <= abs(pD[0] - pC[0])
+                    cand = None
+                    if stub_horizontal and abs(pC[0] - pB[0]) < 0.1:
+                        # vertical leg offset from x=pD.x — slide onto pD's line
+                        cand = path[:-3] + [(pD[0], pB[1]), pD]
+                    elif not stub_horizontal and abs(pC[1] - pB[1]) < 0.1:
+                        # horizontal leg offset from y=pD.y — slide onto pD's line
+                        cand = path[:-3] + [(pB[0], pD[1]), pD]
+                    if cand is not None and _tail_clears(cand):
+                        path[:] = cand
+            # (b) Offset-terminal pattern: the final leg runs parallel to a
+            #     network road line (ring road edge, ring spur leg, an earlier
+            #     access road, ...) a cell or two beside it, its terminal
+            #     ending next to that line (A* cell rounding, no stub drawn).
+            #     Projecting to the single nearest network point misses this
+            #     (near a corner the nearest segment is the perpendicular one),
+            #     so search for the parallel target line explicitly and slide
+            #     the whole leg sideways onto it.
+            if len(path) >= 3 and target_segments:
+                cell_tol = 2.0 * grid_roads.cell_size
+                pC, pB = path[-1], path[-2]
+                if abs(pC[0] - pB[0]) < 0.1:  # vertical leg
+                    best = None
+                    for s0, s1 in target_segments:
+                        if abs(s0[0] - s1[0]) >= 0.1:
+                            continue  # target not vertical
+                        d_side = abs(s0[0] - pC[0])
+                        if not (0.1 < d_side <= cell_tol):
+                            continue
+                        smin, smax = min(s0[1], s1[1]), max(s0[1], s1[1])
+                        if smin - cell_tol <= pC[1] <= smax + cell_tol:
+                            if best is None or d_side < best[0]:
+                                best = (d_side, s0[0], smin, smax)
+                    if best:
+                        _, tx, smin, smax = best
+                        ty = min(max(pC[1], smin), smax)  # land on the segment
+                        cand = path[:-2] + [(snap(tx), pB[1]), (snap(tx), snap(ty))]
+                        if _tail_clears(cand):
+                            path[:] = cand
+                elif abs(pC[1] - pB[1]) < 0.1:  # horizontal leg
+                    best = None
+                    for s0, s1 in target_segments:
+                        if abs(s0[1] - s1[1]) >= 0.1:
+                            continue  # target not horizontal
+                        d_side = abs(s0[1] - pC[1])
+                        if not (0.1 < d_side <= cell_tol):
+                            continue
+                        smin, smax = min(s0[0], s1[0]), max(s0[0], s1[0])
+                        if smin - cell_tol <= pC[0] <= smax + cell_tol:
+                            if best is None or d_side < best[0]:
+                                best = (d_side, s0[1], smin, smax)
+                    if best:
+                        _, ty, smin, smax = best
+                        tx = min(max(pC[0], smin), smax)  # land on the segment
+                        cand = path[:-2] + [(pB[0], snap(ty)), (snap(tx), snap(ty))]
+                        if _tail_clears(cand):
+                            path[:] = cand
+            # Dedup in case a slide collapsed two points together
+            if path:
+                dedup = [path[0]]
+                for p in path[1:]:
+                    if math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.1:
+                        dedup.append(p)
+                if len(dedup) >= 2:
+                    path[:] = dedup
+
+        def _path_cleanup(path):
+            # dedup + collinear simplify, in place; endpoints preserved
+            if len(path) < 2:
+                return
+            dd = [path[0]]
+            for q in path[1:]:
+                if math.hypot(q[0] - dd[-1][0], q[1] - dd[-1][1]) > 0.1:
+                    dd.append(q)
+            out = [dd[0]]
+            for j in range(1, len(dd) - 1):
+                ux, uy = dd[j][0] - out[-1][0], dd[j][1] - out[-1][1]
+                vx, vy = dd[j + 1][0] - dd[j][0], dd[j + 1][1] - dd[j][1]
+                if abs(ux * vy - uy * vx) > 1e-6:
+                    out.append(dd[j])
+            if len(dd) >= 2:
+                out.append(dd[-1])
+            if len(out) >= 2:
+                path[:] = out
+
+        def orthogonalize_path(path):
+            # §3.7 — roads must be ORTHOGONAL. Split any diagonal segment into
+            # an L, preferring the corner that continues the previous
+            # segment's axis and keeps clear of footprints/racks.
+            i = 0
+            while i < len(path) - 1:
+                a, b = path[i], path[i + 1]
+                if abs(b[0] - a[0]) > 0.1 and abs(b[1] - a[1]) > 0.1:
+                    c_h = (b[0], a[1])  # horizontal leg first
+                    c_v = (a[0], b[1])  # vertical leg first
+                    if i > 0 and abs(a[1] - path[i - 1][1]) < 0.1:
+                        cands = [c_h, c_v]  # previous leg horizontal
+                    elif i > 0:
+                        cands = [c_v, c_h]
+                    else:
+                        cands = [c_h, c_v]
+                    chosen = None
+                    for c in cands:
+                        if (not segment_hits_footprint(a, c) and not segment_hits_footprint(c, b)
+                                and not segment_near_rack(a, c) and not segment_near_rack(c, b)):
+                            chosen = c
+                            break
+                    path.insert(i + 1, chosen if chosen is not None else cands[0])
+                    i += 2
+                else:
+                    i += 1
+            _path_cleanup(path)
+
+        def collapse_jogs(path, tol=4.0):
+            # §3.7 — remove small zigzags (prefer plain L shapes): a short
+            # perpendicular step (<= tol) next to a long leg slides the
+            # neighbouring leg sideways onto the straight line. Path endpoints
+            # (the loop junction and the network connection) never move.
+            def _clear(a, b):
+                return not segment_hits_footprint(a, b) and not segment_near_rack(a, b)
+
+            changed = True
+            while changed and len(path) >= 3:
+                changed = False
+                # tiny FIRST step: [A,B,C,...] with |AB| <= tol and AB ⊥ BC —
+                # slide the BC leg onto A's axis (B removed, C projected).
+                a, b, c = path[0], path[1], path[2]
+                l1 = math.hypot(b[0] - a[0], b[1] - a[1])
+                s1_vert = abs(b[0] - a[0]) < 0.1
+                s2_vert = abs(c[0] - b[0]) < 0.1
+                if l1 <= tol and s1_vert != s2_vert and len(path) >= 4:
+                    # (len >= 4: c must not be the network endpoint)
+                    c_new = (c[0], a[1]) if s1_vert else (a[0], c[1])
+                    nxt = path[3]
+                    ok = _clear(a, c_new) and _clear(c_new, nxt)
+                    if ok:
+                        path[1:3] = [c_new]
+                        _path_cleanup(path)
+                        changed = True
+                        continue
+                # tiny MIDDLE step: legs u — j (<= tol, ⊥) — u (same axis,
+                # same sense): slide the shorter u-leg onto the other's line.
+                for i in range(0, len(path) - 3):
+                    p0, p1, p2, p3 = path[i], path[i + 1], path[i + 2], path[i + 3]
+                    u1x, u1y = p1[0] - p0[0], p1[1] - p0[1]
+                    jx, jy = p2[0] - p1[0], p2[1] - p1[1]
+                    u2x, u2y = p3[0] - p2[0], p3[1] - p2[1]
+                    jl = math.hypot(jx, jy)
+                    u1_vert = abs(u1x) < 0.1 and abs(u1y) > 0.1
+                    u2_vert = abs(u2x) < 0.1 and abs(u2y) > 0.1
+                    u1_horz = abs(u1y) < 0.1 and abs(u1x) > 0.1
+                    u2_horz = abs(u2y) < 0.1 and abs(u2x) > 0.1
+                    same_axis = (u1_vert and u2_vert) or (u1_horz and u2_horz)
+                    same_sense = (u1x * u2x + u1y * u2y) > 0
+                    if not (0.1 < jl <= tol and same_axis and same_sense):
+                        continue
+                    l_u1 = math.hypot(u1x, u1y)
+                    l_u2 = math.hypot(u2x, u2y)
+                    # slide the shorter leg; never move path[0] / path[-1]
+                    if l_u1 <= l_u2 and i > 0:
+                        # move p0,p1 onto the p2-p3 line
+                        if u1_vert:
+                            n0, n1 = (p2[0], p0[1]), (p2[0], p1[1])
+                        else:
+                            n0, n1 = (p0[0], p2[1]), (p1[0], p2[1])
+                        prev = path[i - 1]
+                        if _clear(prev, n0) and _clear(n0, n1) and _clear(n1, p3):
+                            path[i] = n0
+                            path[i + 1] = n1
+                            path[i + 2:i + 3] = []
+                            _path_cleanup(path)
+                            changed = True
+                            break
+                    elif l_u2 < l_u1 and i + 3 <= len(path) - 2:
+                        # move p2,p3 onto the p0-p1 line
+                        if u2_vert:
+                            n2, n3 = (p1[0], p2[1]), (p1[0], p3[1])
+                        else:
+                            n2, n3 = (p2[0], p1[1]), (p3[0], p1[1])
+                        nxt = path[i + 4]
+                        if _clear(p1, n2) and _clear(n2, n3) and _clear(n3, nxt):
+                            path[i + 2] = n2
+                            path[i + 3] = n3
+                            _path_cleanup(path)
+                            changed = True
+                            break
+
+        def clip_point_to_plot(p, plot):
+            return p
+
+        def find_segment_intersection(s1, s2):
+            (x1, y1), (x2, y2) = s1
+            (x3, y3), (x4, y4) = s2
+            TOL = 0.5
+            h1 = abs(y1 - y2) < TOL
+            h2 = abs(y3 - y4) < TOL
+            if h1 and h2:
+                if abs(y1 - y3) > TOL:
+                    return None
+                min_x = max(min(x1, x2), min(x3, x4))
+                max_x = min(max(x1, x2), max(x3, x4))
+                if min_x <= max_x + TOL:
+                    return (min_x, y1)
+                return None
+            if not h1 and not h2:
+                if abs(x1 - x3) > TOL:
+                    return None
+                min_y = max(min(y1, y2), min(y3, y4))
+                max_y = min(max(y1, y2), max(y3, y4))
+                if min_y <= max_y + TOL:
+                    return (x1, min_y)
+                return None
+            if h1 and not h2:
+                hy = y1
+                min_hx, max_hx = min(x1, x2), max(x1, x2)
+                vx = x3
+                min_vy, max_vy = min(y3, y4), max(y3, y4)
+                if min_hx - TOL <= vx <= max_hx + TOL and min_vy - TOL <= hy <= max_vy + TOL:
+                    return (vx, hy)
+                return None
+            if not h1 and h2:
+                vx = x1
+                min_vy, max_vy = min(y1, y2), max(y1, y2)
+                hy = y3
+                min_hx, max_hx = min(x3, x4), max(x3, x4)
+                if min_hx - TOL <= vx <= max_hx + TOL and min_vy - TOL <= hy <= max_vy + TOL:
+                    return (vx, hy)
+                return None
+            return None
+
+        def check_overlap(path1, path2, threshold=12.0, epsilon=5.0):
+            if not path1 or not path2:
+                return False
+            def dist_to_segment(p, s0, s1):
+                px, py = p
+                x1, y1 = s0
+                x2, y2 = s1
+                dx = x2 - x1
+                dy = y2 - y1
+                if dx == 0 and dy == 0:
+                    return math.hypot(px - x1, py - y1)
+                t = ((px - x1) * dx + (py - y1) * dy) / (dx*dx + dy*dy)
+                t = max(0.0, min(1.0, t))
+                return math.hypot(px - (x1 + t * dx), py - (y1 + t * dy))
+            def dist_to_path(p, path):
+                min_d = float('inf')
+                for i in range(len(path) - 1):
+                    d = dist_to_segment(p, path[i], path[i+1])
+                    if d < min_d:
+                        min_d = d
+                return min_d
+            overlap_len = 0.0
+            curr_dist_from_start = 0.0
+            for idx in range(len(path2) - 1):
+                p_start = path2[idx]
+                p_end = path2[idx+1]
+                seg_len = math.hypot(p_end[0] - p_start[0], p_end[1] - p_start[1])
+                if seg_len < 0.1:
+                    continue
+                steps = int(math.ceil(seg_len / 1.0))
+                for s in range(steps):
+                    t = s / steps
+                    curr_p = (p_start[0] + t * (p_end[0] - p_start[0]), p_start[1] + t * (p_end[1] - p_start[1]))
+                    dist_start = curr_dist_from_start + t * seg_len
+                    if dist_start > 10.0:
+                        if dist_to_path(curr_p, path1) < threshold:
+                            overlap_len += seg_len / steps
+                curr_dist_from_start += seg_len
+            return overlap_len > epsilon
+
+        FOOT_CLEAR = 4.0  # min distance access roads keep from any footprint
+
+        def segment_hits_footprint(p1, p2, clear=FOOT_CLEAR):
+            # Axis-aligned segment vs footprint AABB (+clearance). Exact for
+            # orthogonal segments, conservative for the rare diagonal one.
+            sx0, sx1 = min(p1[0], p2[0]), max(p1[0], p2[0])
+            sy0, sy1 = min(p1[1], p2[1]), max(p1[1], p2[1])
+            for b2 in blocks:
+                bx0 = b2["x"] - clear
+                by0 = b2["y"] - clear
+                bx1 = b2["x"] + b2["width"] + clear
+                by1 = b2["y"] + b2["height"] + clear
+                if sx1 >= bx0 and sx0 <= bx1 and sy1 >= by0 and sy0 <= by1:
+                    return True
+            return False
+
+        def segment_near_rack(p1, p2, clear=RACK_ROAD_CLEAR):
+            # True if the axis-aligned road segment p1-p2 runs PARALLEL to a
+            # rack centerline within `clear` (8 m) with a real overlap. Roads
+            # may CROSS racks (perpendicular) — only running alongside is
+            # forbidden.
+            road_horizontal = abs(p2[1] - p1[1]) <= abs(p2[0] - p1[0])
+            for (rax, ray), (rbx, rby) in rack_segments:
+                rack_horizontal = abs(rby - ray) <= abs(rbx - rax)
+                if rack_horizontal != road_horizontal:
+                    continue  # perpendicular → crossing allowed
+                if road_horizontal:
+                    if abs(ray - p1[1]) >= clear - 0.1:
+                        continue
+                    lo = max(min(p1[0], p2[0]), min(rax, rbx))
+                    hi = min(max(p1[0], p2[0]), max(rax, rbx))
+                else:
+                    if abs(rax - p1[0]) >= clear - 0.1:
+                        continue
+                    lo = max(min(p1[1], p2[1]), min(ray, rby))
+                    hi = min(max(p1[1], p2[1]), max(ray, rby))
+                if hi - lo > 2.0:  # parallel side-by-side run longer than 2 m
+                    return True
+            return False
+
+        def build_candidate_path(seq, P_buf, road_segments_all, path1_conn_pt):
+            path_pts = [P_buf]
+            clipped_P_buf = clip_point_to_plot(P_buf, plot)
+            curr_pt = clipped_P_buf
+            for target_corner in seq:
+                clipped_corner = clip_point_to_plot(target_corner, plot)
+                # Never trace across a block footprint, or within 8 m of a rack
+                # centerline (can happen when a neighbouring block/rack sits on
+                # this block's R rectangle, or a corner was clipped to the plot
+                # boundary) — reject the whole candidate; fallback_connection
+                # will route around via A* (which is rack-aware via penalties).
+                if segment_hits_footprint(curr_pt, clipped_corner) or segment_near_rack(curr_pt, clipped_corner):
+                    return None
+                segment = (curr_pt, clipped_corner)
+                intersections = []
+                for road_seg in road_segments_all:
+                    pt_int = find_segment_intersection(segment, road_seg)
+                    if pt_int:
+                        if path1_conn_pt is None or math.hypot(pt_int[0] - path1_conn_pt[0], pt_int[1] - path1_conn_pt[1]) >= 15.0:
+                            d = math.hypot(pt_int[0] - curr_pt[0], pt_int[1] - curr_pt[1])
+                            intersections.append((d, pt_int))
+                if intersections:
+                    intersections.sort(key=lambda x: x[0])
+                    chosen_int = intersections[0][1]
+                    return path_pts + [chosen_int]
+                path_pts.append(clipped_corner)
+                curr_pt = clipped_corner
+            return None
+
+        def fallback_connection(seq, P_buf, road_segments_all, road_cells_all, path1_conn_pt):
+            best_path = None
+            best_len = float('inf')
+            clipped_P_buf = clip_point_to_plot(P_buf, plot)
+            for idx, pt in enumerate([clipped_P_buf] + [clip_point_to_plot(c, plot) for c in seq]):
+                path_along_R = [clipped_P_buf] + [clip_point_to_plot(c, plot) for c in seq[:idx]]
+                if pt not in path_along_R:
+                    path_along_R.append(pt)
+                # The walk along R up to this corner must not cross a footprint
+                # or run within 8 m of a rack centerline.
+                if any(segment_hits_footprint(path_along_R[k], path_along_R[k + 1])
+                       or segment_near_rack(path_along_R[k], path_along_R[k + 1])
+                       for k in range(len(path_along_R) - 1)):
+                    continue
+                a_star_path = route_from_point(pt, road_segments_all, road_cells_all)
+                if a_star_path and len(a_star_path) > 1:
+                    conn_pt = a_star_path[-1]
+                    if path1_conn_pt is None or math.hypot(conn_pt[0] - path1_conn_pt[0], conn_pt[1] - path1_conn_pt[1]) >= 15.0:
+                        full_path = path_along_R + a_star_path[1:]
+                        path_len = sum(math.hypot(full_path[i+1][0] - full_path[i][0], full_path[i+1][1] - full_path[i][1]) for i in range(len(full_path)-1))
+                        if path_len < best_len:
+                            best_len = path_len
+                            best_path = full_path
+            return best_path
+            
+        for b in blocks:
+            b_name = b["name"]
+            if b_name not in CONNECT_BLOCKS:
+                continue
+                
+            bx, by, bw, bh = b["x"], b["y"], b["width"], b["height"]
+            
+            sides = {
+                "N": ((bx + bw/2, by + bh), (0, 1)),
+                "S": ((bx + bw/2, by), (0, -1)),
+                "E": ((bx + bw, by + bh/2), (1, 0)),
+                "W": ((bx, by + bh/2), (-1, 0))
+            }
+            
+            # Improved Side Detection:
+            # 1. Determine which sides have their buffer midpoint (P_buf) safely inside the plot
+            valid_sides = {}
+            for side_name, (midpt, sdir) in sides.items():
+                B_offset_cand = get_side_buffer_offset(b, midpt, rack_segments)
+                P_buf_cand = (midpt[0] + B_offset_cand * sdir[0], midpt[1] + B_offset_cand * sdir[1])
+                # Check if P_buf_cand is inside the plot boundary (disabled since roads can ignore boundary)
+                inside = True
+                if inside:
+                    valid_sides[side_name] = (midpt, sdir, P_buf_cand, B_offset_cand)
+
+            # 2. Find the closest side to the core road network (road_segments) to determine orientation
+            min_d = float('inf')
+            close_side = "N"
+            for side_name, (midpt, _) in sides.items():
+                d = dist_to_road(midpt, road_segments) # Use core road_segments, not road_segments_p1
+                if d < min_d:
+                    min_d = d
+                    close_side = side_name
+
+            opp_map = {"N": "S", "S": "N", "E": "W", "W": "E"}
+            opposite_side = opp_map[close_side]
+            
+            # If the ideal opposite side is invalid/blocked, fall back to the closest valid side to the core road network
+            if opposite_side not in valid_sides:
+                best_valid_side = None
+                best_valid_dist = float('inf')
+                for vside, (vmid, _, _, _) in valid_sides.items():
+                    d = dist_to_road(vmid, road_segments)
+                    if d < best_valid_dist:
+                        best_valid_dist = d
+                        best_valid_side = vside
+                if best_valid_side is not None:
+                    opposite_side = best_valid_side
+            
+            P_opp, opp_dir = sides[opposite_side]
+            if opposite_side in valid_sides:
+                B_offset = valid_sides[opposite_side][3]
+            else:
+                B_offset = get_side_buffer_offset(b, P_opp, rack_segments)
+            
+            if opposite_side == "N":
+                C1 = (bx, by + bh + B_offset)
+                C2 = (bx + bw, by + bh + B_offset)
+            elif opposite_side == "S":
+                C1 = (bx, by - B_offset)
+                C2 = (bx + bw, by - B_offset)
+            elif opposite_side == "E":
+                C1 = (bx + bw + B_offset, by)
+                C2 = (bx + bw + B_offset, by + bh)
+            else:
+                C1 = (bx - B_offset, by)
+                C2 = (bx - B_offset, by + bh)
+                
+            P_buf = (P_opp[0] + B_offset * opp_dir[0], P_opp[1] + B_offset * opp_dir[1])
+            
+            # Path 1: Route from midpoint P_buf targeting road_cells_p1
+            path1 = route_from_point(P_buf, road_segments_p1, road_cells_p1)
+            
+            # 1) Always strip path1[0] from Part 1 output.
+            #    route_from_point always starts at P_buf's grid cell — we never want
+            #    to draw the implicit block-buffer stub as a visible road segment.
+            path1_spur_omitted = False
+            path1_network_start_pt = None
+            if path1 and len(path1) >= 2:
+                path1_spur_omitted = True
+                path1_network_start_pt = path1[0]  # shared start for Part 2 (= P_buf grid cell)
+                path1 = path1[1:]
+            
+            def process_and_add_path(path, part_name="part1", align_end_to_segs=None):
+                if not path:
+                    return None
+                # Deduplicate adjacent points (pre-snap)
+                dedup = [path[0]]
+                for p in path[1:]:
+                    if math.hypot(p[0] - dedup[-1][0], p[1] - dedup[-1][1]) > 0.1:
+                        dedup.append(p)
+                path = dedup
+                
+                # Simplify collinear
+                simplified = [path[0]]
+                for idx in range(1, len(path)-1):
+                    p0 = simplified[-1]
+                    p1 = path[idx]
+                    p2 = path[idx+1]
+                    if not ((abs(p0[0] - p1[0]) < 0.1 and abs(p1[0] - p2[0]) < 0.1) or 
+                            (abs(p0[1] - p1[1]) < 0.1 and abs(p1[1] - p2[1]) < 0.1)):
+                        simplified.append(p1)
+                simplified.append(path[-1])
+                
+                # Project last point onto the road network to close the terminal gap
+                if align_end_to_segs and len(simplified) >= 2:
+                    end_pt = simplified[-1]
+                    prev_pt = simplified[-2]
+                    aligned_end = align_terminal_to_network(end_pt, align_end_to_segs)
+                    d_align = math.hypot(aligned_end[0] - end_pt[0], aligned_end[1] - end_pt[1])
+                    if 0.1 < d_align < 16.0:  # only snap small gaps
+                        # Moving the terminal PERPENDICULAR to the incoming leg
+                        # would turn the last segment diagonal. Insert an
+                        # orthogonal corner instead, then drop onto the network
+                        # (straighten_arrival collapses the resulting short stub).
+                        leg_horizontal = (abs(end_pt[1] - prev_pt[1]) < 0.1 and
+                                          abs(end_pt[0] - prev_pt[0]) > 0.1)
+                        leg_vertical = (abs(end_pt[0] - prev_pt[0]) < 0.1 and
+                                        abs(end_pt[1] - prev_pt[1]) > 0.1)
+                        if leg_horizontal and abs(aligned_end[1] - end_pt[1]) > 0.1:
+                            simplified[-1] = (aligned_end[0], end_pt[1])  # corner
+                            simplified.append(aligned_end)
+                        elif leg_vertical and abs(aligned_end[0] - end_pt[0]) > 0.1:
+                            simplified[-1] = (end_pt[0], aligned_end[1])  # corner
+                            simplified.append(aligned_end)
+                        else:
+                            simplified[-1] = aligned_end
+                
+                # Snap to grid
+                simplified_snapped = [(snap(x), snap(y)) for x, y in simplified]
+                
+                # Post-snap dedup: snap can collapse pre-snap distinct points to the same grid cell
+                dedup2 = [simplified_snapped[0]]
+                for p in simplified_snapped[1:]:
+                    if math.hypot(p[0] - dedup2[-1][0], p[1] - dedup2[-1][1]) > 0.1:
+                        dedup2.append(p)
+                simplified_snapped = dedup2
+                
+                if len(simplified_snapped) >= 2:
+                    access_roads.append(simplified_snapped)
+                    access_roads_blocks.append(b_name)
+                    access_roads_parts.append(part_name)
+                    return simplified_snapped
+                return None
+
+            path1_snapped = process_and_add_path(path1, part_name="part1")
+            
+            # If the block is NOT inside the forbidden zone, also generate Path 2
+            path2_snapped = None
+            if not is_block_in_forbidden_zone(b, forbidden_zone_bbox):
+                # Retrieve connection point
+                path1_conn_pt = path1_snapped[-1] if path1_snapped else None
+                if path1_conn_pt is None and path1 and len(path1) >= 1:
+                    path1_conn_pt = path1[-1]
+                
+                # Corners of R
+                R_left = bx - B_offset
+                R_right = bx + bw + B_offset
+                R_bottom = by - B_offset
+                R_top = by + bh + B_offset
+                
+                V_se = (R_right, R_bottom)
+                V_ne = (R_right, R_top)
+                V_nw = (R_left, R_top)
+                V_sw = (R_left, R_bottom)
+                
+                if opposite_side == "E":
+                    seq_ccw = [V_ne, V_nw, V_sw, V_se, V_ne]
+                    seq_cw  = [V_se, V_sw, V_nw, V_ne, V_se]
+                elif opposite_side == "W":
+                    seq_ccw = [V_sw, V_se, V_ne, V_nw, V_sw]
+                    seq_cw  = [V_nw, V_ne, V_se, V_sw, V_nw]
+                elif opposite_side == "N":
+                    seq_ccw = [V_nw, V_sw, V_se, V_ne, V_nw]
+                    seq_cw  = [V_ne, V_se, V_sw, V_nw, V_ne]
+                else:  # "S"
+                    seq_ccw = [V_se, V_ne, V_nw, V_sw, V_se]
+                    seq_cw  = [V_sw, V_nw, V_ne, V_se, V_sw]
+                    
+                path_ccw = build_candidate_path(seq_ccw, P_buf, road_segments_all, path1_conn_pt)
+                if not path_ccw:
+                    path_ccw = fallback_connection(seq_ccw, P_buf, road_segments_all, road_cells_all, path1_conn_pt)
+                    
+                path_cw = build_candidate_path(seq_cw, P_buf, road_segments_all, path1_conn_pt)
+                if not path_cw:
+                    path_cw = fallback_connection(seq_cw, P_buf, road_segments_all, road_cells_all, path1_conn_pt)
+                    
+                # Evaluate candidates against No-Retrace rule
+                ccw_ok = path_ccw and not check_overlap(path1_snapped, path_ccw, threshold=12.0, epsilon=5.0)
+                cw_ok = path_cw and not check_overlap(path1_snapped, path_cw, threshold=12.0, epsilon=5.0)
+                
+                selected_path = None
+                if ccw_ok and cw_ok:
+                    # Choose shorter one
+                    len_ccw = sum(math.hypot(path_ccw[i+1][0] - path_ccw[i][0], path_ccw[i+1][1] - path_ccw[i][1]) for i in range(len(path_ccw)-1))
+                    len_cw = sum(math.hypot(path_cw[i+1][0] - path_cw[i][0], path_cw[i+1][1] - path_cw[i][1]) for i in range(len(path_cw)-1))
+                    selected_path = path_ccw if len_ccw < len_cw else path_cw
+                elif ccw_ok:
+                    selected_path = path_ccw
+                elif cw_ok:
+                    selected_path = path_cw
+                else:
+                    # Fallback to shorter one
+                    if path_ccw and path_cw:
+                        len_ccw = sum(math.hypot(path_ccw[i+1][0] - path_ccw[i][0], path_ccw[i+1][1] - path_ccw[i][1]) for i in range(len(path_ccw)-1))
+                        len_cw = sum(math.hypot(path_cw[i+1][0] - path_cw[i][0], path_cw[i+1][1] - path_cw[i][1]) for i in range(len(path_cw)-1))
+                        selected_path = path_ccw if len_ccw < len_cw else path_cw
+                    elif path_ccw:
+                        selected_path = path_ccw
+                    elif path_cw:
+                        selected_path = path_cw
+                        
+                # Process Part 2 — project its last point onto the ring road to close any terminal gap
+                if selected_path:
+                    path2_snapped = process_and_add_path(selected_path, part_name="part2", align_end_to_segs=road_segments_p1)
+
+                # Loop closure at the start: Part 1 and Part 2 must share their
+                # start point (P_buf) and leave it as ONE straight line. The
+                # spur strip removes path1[0], which is invisible in the normal
+                # case (Part 1 resumes right at P_buf's grid cell) but detaches
+                # the loop when Part 1's first hop heads away from the block
+                # (e.g. hugging a slanted plot edge).
+                if path1_snapped and path2_snapped and len(path2_snapped) >= 2:
+                    shared_start = path2_snapped[0]  # = snapped P_buf
+                    gap = math.hypot(shared_start[0] - path1_snapped[0][0],
+                                     shared_start[1] - path1_snapped[0][1])
+                    if 0.1 < gap < 16.0:
+                        path1_snapped.insert(0, shared_start)  # in-place: access_roads holds this list
+
+                    # Straighten Part 1's departure: A* can hug the outside of
+                    # the block buffer, leaving a small parallel jog next to
+                    # Part 2's line. Collapse the jog onto the line of Part 2's
+                    # first segment so both parts run straight through the
+                    # shared point.
+                    starts_shared = math.hypot(shared_start[0] - path1_snapped[0][0],
+                                               shared_start[1] - path1_snapped[0][1]) < 0.1
+                    if starts_shared and len(path1_snapped) >= 2:
+                        sx, sy = shared_start
+                        nx, ny = path2_snapped[1]
+                        vertical = abs(nx - sx) <= abs(ny - sy)  # Part 2 leaves along x=sx
+                        jog_tol = float(B_offset)
+                        k = 0
+                        for p_idx in range(1, len(path1_snapped)):
+                            px, py = path1_snapped[p_idx]
+                            dev = abs(px - sx) if vertical else abs(py - sy)
+                            if dev <= jog_tol:
+                                k = p_idx
+                            else:
+                                break
+                        if k >= 1:
+                            kx, ky = path1_snapped[k]
+                            straight_pt = (sx, ky) if vertical else (kx, sy)
+                            new_p1 = [shared_start, straight_pt] + path1_snapped[k + 1:]
+                            # If the straightening moved the terminal, re-project
+                            # it onto the network (same rule as §3.7.B step 7)
+                            if k == len(path1_snapped) - 1:
+                                aligned = align_terminal_to_network(new_p1[-1], road_segments_p1)
+                                d_align = math.hypot(aligned[0] - new_p1[-1][0], aligned[1] - new_p1[-1][1])
+                                if 0.1 < d_align < 16.0:
+                                    new_p1[-1] = (snap(aligned[0]), snap(aligned[1]))
+                            dedup_p1 = [new_p1[0]]
+                            for p in new_p1[1:]:
+                                if math.hypot(p[0] - dedup_p1[-1][0], p[1] - dedup_p1[-1][1]) > 0.1:
+                                    dedup_p1.append(p)
+                            if len(dedup_p1) >= 2:
+                                path1_snapped[:] = dedup_p1  # in-place: access_roads holds this list
+
+            # Straighten arrivals so each part runs straight and turns only
+            # once, at the network (§3.7.B step 7). Part 1 aligns against the
+            # Part-1 network; Part 2 against the combined network plus this
+            # block's own Part 1 (its terminal may legitimately land on either).
+            if path1_snapped:
+                straighten_arrival(path1_snapped, road_segments_p1, float(B_offset))
+            if path2_snapped:
+                p2_targets = list(road_segments_all)
+                if path1_snapped and len(path1_snapped) >= 2:
+                    p2_targets += [(path1_snapped[i], path1_snapped[i + 1])
+                                   for i in range(len(path1_snapped) - 1)]
+                straighten_arrival(path2_snapped, p2_targets, float(B_offset))
+
+            # Polish (§3.7): no diagonal segments, minimal zigzag (L shapes)
+            for _pp in (path1_snapped, path2_snapped):
+                if _pp:
+                    orthogonalize_path(_pp)
+                    collapse_jogs(_pp)
+
+            # §3.7 buffer-center rule: don't draw the perpendicular stub from
+            # P_buf (the block's road-buffer center). If Part 1 leaves P_buf
+            # ALONG opp_dir (perpendicular to the block side, pointing away
+            # from the block) and then turns, drop that stub — the turn point
+            # becomes the loop junction, and Part 2 is re-headed to start
+            # there with an orthogonal connector.
+            if (path1_snapped and path2_snapped and len(path1_snapped) >= 2
+                    and len(path2_snapped) >= 2):
+                _a0, _a1 = path1_snapped[0], path1_snapped[1]
+                _ldx, _ldy = _a1[0] - _a0[0], _a1[1] - _a0[1]
+                _stub_len = math.hypot(_ldx, _ldy)
+                _along_opp = ((abs(opp_dir[0]) > 0 and abs(_ldy) < 0.1 and abs(_ldx) > 0.1) or
+                              (abs(opp_dir[1]) > 0 and abs(_ldx) < 0.1 and abs(_ldy) > 0.1))
+                _shared = (abs(_a0[0] - path2_snapped[0][0]) < 0.1 and
+                           abs(_a0[1] - path2_snapped[0][1]) < 0.1)
+                if _along_opp and _shared and _stub_len <= 20.0:
+                    _junction = _a1
+                    _q2 = path2_snapped[1]
+                    if abs(opp_dir[0]) > 0:
+                        _corner = (_junction[0], _q2[1])
+                    else:
+                        _corner = (_q2[0], _junction[1])
+                    _new_head = [_junction]
+                    if (math.hypot(_corner[0] - _junction[0], _corner[1] - _junction[1]) > 0.1
+                            and math.hypot(_corner[0] - _q2[0], _corner[1] - _q2[1]) > 0.1):
+                        _new_head.append(_corner)
+                    _chk = _new_head + [_q2]
+                    _head_ok = all(not segment_hits_footprint(_chk[_k], _chk[_k + 1])
+                                   and not segment_near_rack(_chk[_k], _chk[_k + 1])
+                                   for _k in range(len(_chk) - 1))
+                    if _head_ok:
+                        if len(path1_snapped) == 2:
+                            # The ENTIRE Part 1 is the perpendicular stub
+                            # (P_buf straight onto an existing road): draw
+                            # nothing for Part 1 — its network end is the
+                            # loop junction where Part 2 now starts.
+                            for _ri in range(len(access_roads)):
+                                if access_roads[_ri] is path1_snapped:
+                                    del access_roads[_ri]
+                                    del access_roads_blocks[_ri]
+                                    del access_roads_parts[_ri]
+                                    break
+                            path1_snapped = None
+                        else:
+                            del path1_snapped[0]
+                            _path_cleanup(path1_snapped)
+                        path2_snapped[:1] = _new_head
+                        _path_cleanup(path2_snapped)
+
+            # Update networks
+            if path1_snapped:
+                add_path_to_road_network(path1_snapped, road_segments_p1, road_cells_p1)
+                add_path_to_road_network(path1_snapped, road_segments_all, road_cells_all)
+            if path2_snapped:
+                add_path_to_road_network(path2_snapped, road_segments_all, road_cells_all)
+
+        # -----------------------------------------------------------------
+        # Step 11.5 — §3.7.E Part 3: trim at the temporary plot boundary
+        # Roads are routed ignoring the boundary, so A* can excurse past a
+        # slanted edge (e.g. a Part 2 loop around a block near the top edge).
+        # Cleanup: cut every access-road centerline at the temporary (inset)
+        # plot boundary and drop the outside portions. A road that crosses out
+        # and back in splits into separate pieces; pieces shorter than 4 m are
+        # discarded.
+        # -----------------------------------------------------------------
+        if plot is not None and access_roads:
+            # Depth-based clipping (NOT edge-crossing based): a road can run
+            # parallel to an edge slightly outside it and past a corner without
+            # ever crossing an edge line — sample each segment ~every 1 m,
+            # keep the runs where the signed depth >= -EDGE_TOL, and cut at
+            # linearly interpolated boundary crossings.
+            EDGE_TOL = 0.3  # grid-snapped roads may sit ~0.1-0.2 m outside the line
+
+            def _lerp_pt(a, b, t):
+                return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+
+            _troads, _tblocks, _tparts = [], [], []
+            for _road, _rb, _rp in zip(access_roads, access_roads_blocks, access_roads_parts):
+                pieces = []
+                curr = []
+                for _i in range(len(_road) - 1):
+                    _a, _b = _road[_i], _road[_i + 1]
+                    _L = math.hypot(_b[0] - _a[0], _b[1] - _a[1])
+                    _n = max(1, int(math.ceil(_L)))
+                    _d_prev = plot.signed_dist_to_boundary(*_lerp_pt(_a, _b, 0.0))
+                    for _k in range(1, _n + 1):
+                        _t0, _t1 = (_k - 1) / _n, _k / _n
+                        _d_now = plot.signed_dist_to_boundary(*_lerp_pt(_a, _b, _t1))
+                        _in0 = _d_prev >= -EDGE_TOL
+                        _in1 = _d_now >= -EDGE_TOL
+                        if _in0 and _in1:
+                            if not curr:
+                                curr = [_lerp_pt(_a, _b, _t0)]
+                            curr.append(_lerp_pt(_a, _b, _t1))
+                        elif _in0 != _in1:
+                            _den = _d_prev - _d_now
+                            _tc = (_t0 + ((_d_prev + EDGE_TOL) / _den) * (_t1 - _t0)
+                                   if abs(_den) > 1e-9 else _t0)
+                            _tc = min(max(_tc, _t0), _t1)
+                            _pcut = _lerp_pt(_a, _b, _tc)
+                            if _in0:   # leaving the plot — close the piece
+                                if not curr:
+                                    curr = [_lerp_pt(_a, _b, _t0)]
+                                curr.append(_pcut)
+                                pieces.append(curr)
+                                curr = []
+                            else:      # entering the plot — open a piece
+                                curr = [_pcut, _lerp_pt(_a, _b, _t1)]
+                        _d_prev = _d_now
+                if curr:
+                    pieces.append(curr)
+                for _pc in pieces:
+                    # dedup + collinear simplify (sampling makes many 1 m points)
+                    _dd = [_pc[0]]
+                    for _q in _pc[1:]:
+                        if math.hypot(_q[0] - _dd[-1][0], _q[1] - _dd[-1][1]) > 0.1:
+                            _dd.append(_q)
+                    # cross-product collinear removal (keep only real corners)
+                    _out = [_dd[0]]
+                    for _j in range(1, len(_dd) - 1):
+                        _ux, _uy = _dd[_j][0] - _out[-1][0], _dd[_j][1] - _out[-1][1]
+                        _vx, _vy = _dd[_j + 1][0] - _dd[_j][0], _dd[_j + 1][1] - _dd[_j][1]
+                        if abs(_ux * _vy - _uy * _vx) > 1e-6:
+                            _out.append(_dd[_j])
+                    if len(_dd) >= 2:
+                        _out.append(_dd[-1])
+                    _plen = sum(math.hypot(_out[_j + 1][0] - _out[_j][0], _out[_j + 1][1] - _out[_j][1])
+                                for _j in range(len(_out) - 1))
+                    if len(_out) >= 2 and _plen >= 4.0:
+                        _troads.append(_out)
+                        _tblocks.append(_rb)
+                        _tparts.append(_rp)
+            access_roads = _troads
+            access_roads_blocks = _tblocks
+            access_roads_parts = _tparts
+
+        # -----------------------------------------------------------------
+        # Step 12 — Recenter output  [→ §3.8]
+        # The recenter itself now runs pre-roads (Step 10.9). Here we simply
+        # emit the current plot/gate/spur/death-zone — already recentered if
+        # Step 10.9 applied, otherwise untouched. The `*_before` snapshots and
+        # `recenter_delta` were captured/set by Step 10.9.
+        # -----------------------------------------------------------------
+        _dx, _dy = recenter_delta
+        if plot is not None:
+            plot_bounds = (plot.bbox[0], plot.bbox[1], plot.size[0], plot.size[1])
+            plot_polygon_out = list(plot.vertices)
         else:
-            delta = (0.0, 0.0)
-        plot_bounds = (delta[0], delta[1], sw, sl)
-        # The gate moves only PERPENDICULAR to its edge: it stays on the moved
-        # boundary line without sliding ALONG the edge (the along-edge component
-        # would stretch the exit road sideways and detach it from the gate house
-        # / its spur). N/S gate -> shift y only; E/W gate -> shift x only.
-        if gate_side in ("N", "S"):
-            gate_pt_recentered = (gate_pt[0], gate_pt[1] + delta[1])
-        else:
-            gate_pt_recentered = (gate_pt[0] + delta[0], gate_pt[1])
+            plot_bounds = (0.0, 0.0, sw, sl)
+            plot_polygon_out = None
+        gate_pt_rec = gate_pt
+        gate_spur_rec = list(gate_road_out) if gate_road_out else gate_spur
+        gate_death_zone_rec = gate_death_zone
 
-        # The exit line (gate spur's gate-ward leg) and the gate death zone are
-        # tied to the gate, so they follow it to the recentered position. The
-        # boom crossing (exit_helper → bb_mid → other_corner) stays put; only the
-        # final L to the gate is rebuilt, and the death zone is recomputed from
-        # the fixed bb_mid to the recentered gate.
-        ng = gate_pt_recentered
-        gate_spur_out = gate_spur
-        gate_death_zone_out = gate_death_zone
-
-        def _same_pt(a, b):
-            return abs(a[0] - b[0]) < 0.5 and abs(a[1] - b[1]) < 0.5
-
-        if gate_spur and len(gate_spur) >= 3 and _same_pt(gate_spur[-1], gate_pt):
-            # Main-branch spur: [..., other_corner, L_corner, gate].
-            oc = gate_spur[-3]
-            l_old = gate_spur[-2]
-            if abs(l_old[1] - oc[1]) < 0.5:          # N/S boom: L shares other_corner's y
-                l_new = (ng[0], oc[1])
-            else:                                     # E/W boom: L shares other_corner's x
-                l_new = (oc[0], ng[1])
-            gate_spur_out = list(gate_spur[:-2]) + [l_new, ng]
-        elif gate_spur and _same_pt(gate_spur[0], gate_pt):
-            # Fallback spur: [gate, perimeter_pt].
-            gate_spur_out = [ng] + list(gate_spur[1:])
-
-        if gate_death_zone is not None and bb_mid is not None:
-            dx0, dx1 = min(bb_mid[0], ng[0]), max(bb_mid[0], ng[0])
-            dy0, dy1 = min(bb_mid[1], ng[1]), max(bb_mid[1], ng[1])
-            if dx1 - dx0 < 1: dx0 -= 1; dx1 += 1
-            if dy1 - dy0 < 1: dy0 -= 1; dy1 += 1
-            gate_death_zone_out = (dx0, dy0, dx1 - dx0, dy1 - dy0)
-
-        # ---------------------------------------------------------------------
-        # Final Assembly
-        # ---------------------------------------------------------------------
         _last_debug["failed_at"] = None
         _last_debug["failed_section"] = None
         _last_debug["boundary_tol_used"] = _pass_tol
         _last_debug["boundary_pass_label"] = _pass_label
+        _last_debug["recenter_delta"] = recenter_delta
+
         return {
             "blocks":          blocks,
-            "boom_barrier":    boom_barrier,
+            "boom_barrier":    boom_out if boom_out else [],
             "ring_road":       ring_road,
-            "perimeter_segments_raw": perimeter_segments_raw,
-            "group_a_segments_raw": group_a_segments_raw,
-            "all_segments_cleaned": all_segments_cleaned,
-            "outer_loop":   outer_loop,
-            "outer_loop_pts":  outer_loop_pts,
-            "gate_spur":       gate_spur_out,
-            "ring_spur":       ring_spur,
+            "gate_spur":       gate_spur_rec,
+            "ring_spur":       ring_spur_out if ring_spur_out else ring_spur,
+            "gate_death_zone": gate_death_zone_rec,
+            "gate_point":      gate_pt_rec,
+            "gate_point_before": gate_pt_before,
+            "pb_center":       (pb_cx, pb_cy),
             "rack_buffers":    rack_buffers,
             "rack_segments":   rack_segments,
-            "pruned_rack_segments": pruned_rack_segments,
-            "rack_candidates": candidate_points,
-            "active_rack_cases": active_cases,
-            "water_triangle":  water_triangle,
             "spine_centerlines": spine_centerlines,
             "pb_buffer_hits":  pb_buffer_hits,
             "main_rack_output": main_rack_output,
             "water_cluster_segments": water_cluster_segments,
-            "gate_point":      gate_pt_recentered,
-            "gate_point_before": gate_pt,
+            "pruned_rack_segments": pruned_rack_segments,
+            "water_triangle":  water_triangle,
+            "rack_candidates": candidate_points,
+            "active_rack_cases": active_cases,
+            "plot_polygon":    plot_polygon_out,
+            "plot_polygon_original": list(plot.original_plot.vertices) if getattr(plot, "original_plot", None) is not None else None,
+            "plot_polygon_before": plot_polygon_before,
+            "plot_polygon_original_before": plot_polygon_original_before,
             "plot_bounds":     plot_bounds,
-            "plot_bounds_before": (0.0, 0.0, sw, sl),
-            "recenter_delta":  delta,
-            "gate_death_zone": gate_death_zone_out,
-            "pb_center":       (pb_cx, pb_cy),
+            "plot_bounds_before": plot_bounds_before,
+            "recenter_delta":  recenter_delta,
+            "blocks_only":     True,
             "cell_size":       CELL_SIZE,
-            "block_buffer":    BLOCK_BUFFER,
-            "pb_ring_offset":  PB_RING_OFFSET,
-            "perimeter_cl":    PERIMETER_CL_DIST,
-            "computed_buffers_debug": computed_buffers,
+            "boundary_tol_used":   _pass_tol,
+            "boundary_pass_label": _pass_label,
+            "access_roads":    access_roads,
+            "access_roads_blocks": access_roads_blocks,
+            "access_roads_parts": access_roads_parts,
+            "perimeter_segments_raw": [],
+            "group_a_segments_raw": [],
+            "all_segments_cleaned": [],
+            "outer_loop":      [],
+            "outer_loop_pts":  [],
+            "computed_buffers_debug": computed_buffers if 'computed_buffers' in locals() else {},
         }
         # Inner loop (max_pool) exhausted without finding a layout for this pass.
         # Fall through to the next pass (relaxed tolerance).

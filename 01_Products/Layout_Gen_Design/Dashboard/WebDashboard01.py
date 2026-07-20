@@ -32,7 +32,10 @@ evaluate_all_v2 = Core.Rules.evaluate_all_v2
 export_to_dxf = Core.Exporter.export_to_dxf
 
 @st.cache_data
-def cached_load_plot_dxf(path, mtime):
+def cached_load_plot_dxf(path, mtime, loader_mtime):
+    # loader_mtime keys the cache on CADImport.py's file time as well, so
+    # editing the loader auto-invalidates stale imports (st.cache_data only
+    # watches THIS function's code and its arguments, not callees).
     return Core.CADImport.load_plot_dxf(path)
 
 def draw_orthogonal_line(ax, p1, p2, width, color, alpha=0.95, zorder=1.5, label="", cap_p1=True, cap_p2=True):
@@ -355,7 +358,8 @@ if load_dxf and dxf_path:
     if os.path.exists(dxf_path):
         try:
             mtime = os.path.getmtime(dxf_path)
-            plot_import = cached_load_plot_dxf(dxf_path, mtime)
+            _loader_mtime = os.path.getmtime(Core.CADImport.__file__)
+            plot_import = cached_load_plot_dxf(dxf_path, mtime, _loader_mtime)
             st.session_state["plot_import"] = plot_import
         except Exception as ex:  # noqa: BLE001
             st.sidebar.error(f"Could not read DXF: {ex}")
@@ -366,6 +370,8 @@ if load_dxf and dxf_path:
 if plot_import and plot_import.get("plot_polygon"):
     poly = plot_import["plot_polygon"]
     p = Plot(poly)
+    if "plot_polygon_original" in plot_import:
+        p.original_plot = Plot(plot_import["plot_polygon_original"])
     st.sidebar.success(f"DXF loaded — {len(poly)}-sided plot, bbox {p.size[0]:.0f}×{p.size[1]:.0f} m")
     if plot_import.get("warnings"):
         with st.sidebar.expander("DXF warnings"):
@@ -392,18 +398,21 @@ with st.sidebar.expander("Rectangle fallback (no DXF)", expanded=plot_import is 
 st.sidebar.divider()
 
 if True:  # Phase 06 — Sketch roads
-    st.title("Stage 01")
-    
-    st.caption("Placing blocks · ring road + spurs · rack network")
+    st.title("Phase 06 — Block + Road Sketch")
+    st.markdown("Reference: [Phase 06 Plan](file:///x:/CST%EB%B3%B8%EB%B6%80%20%28%EA%B5%AC%20%EA%B8%B0%EC%88%A0%EC%A7%80%EC%9B%90%EB%B6%80%20%ED%8F%B4%EB%8D%94%29/15.%20%EB%8B%A4%EB%A6%AC%EC%95%84/D-Brain/00_Input/Phase_06_Plan.md)")
+    st.caption("Steps 1.1–1.5: blocks · ring road + spurs · rack network")
 
-    st.sidebar.header("Stage 01 Settings")
+    st.sidebar.header("Phase 06 Settings")
     show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
+    show_temp_boundary = st.sidebar.checkbox("Show Temporary Plot Boundary (setback)", value=False)
     show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=False)
     show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
+    show_access_p1    = st.sidebar.checkbox("Show Access Roads Part 1 (midpoint connection)", value=True)
+    show_access_p2    = st.sidebar.checkbox("Show Access Roads Part 2 (perimeter connection)", value=True)
     show_rack_b1      = st.sidebar.checkbox("§3.6.B — Rack spines", value=True)
-    show_spine_debug  = st.sidebar.checkbox("§3.6.B — Show Spine Debug Visualizer", value=False)
+    show_spine_debug  = st.sidebar.checkbox("Show Spine Debug Visualizer", value=False)
     show_before_recenter = st.sidebar.checkbox("§3.8 — Plot + gate before recenter", value=False)
     show_legend   = st.sidebar.checkbox("Legend", value=False)
     fix_seed      = st.sidebar.checkbox("Fix seed", value=True)
@@ -421,6 +430,8 @@ if True:  # Phase 06 — Sketch roads
         gen_log = []
         if _has_poly:
             p = Plot(plot_import["plot_polygon"])
+            if "plot_polygon_original" in plot_import:
+                p.original_plot = Plot(plot_import["plot_polygon_original"])
             params = p.size
 
             # Run ONE generate_sketch in a worker thread so a hung/looping seed
@@ -570,7 +581,8 @@ if True:  # Phase 06 — Sketch roads
         st.markdown(f"### {len(sketches)} layouts · wind {wind_dir}")
 
         def _thumb(sk):
-            poly = sk.get("plot_polygon")
+            # Thumbnails show the REAL plot boundary (fall back to the inset)
+            poly = sk.get("plot_polygon_original") or sk.get("plot_polygon")
             fig, ax = plt.subplots(figsize=(5.2, 3.4), dpi=90)
             if poly:
                 vx = [v[0] for v in poly] + [poly[0][0]]
@@ -599,6 +611,11 @@ if True:  # Phase 06 — Sketch roads
                                        fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
             elif gs:
                 draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d',
+                                       fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+
+            access_roads = sk.get("access_roads") or []
+            for path in access_roads:
+                draw_road_with_fillets(ax, path, width=8, color='#7f8c8d',
                                        fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
 
             gpt = sk.get("gate_point")
@@ -660,23 +677,36 @@ if True:  # Phase 06 — Sketch roads
                 st.warning(f"🟡 Pass 3 — relaxed (up to {tol_used:.0f} m past the boundary)")
 
         fig, ax = plt.subplots(figsize=(13, 8), dpi=110)
-        # §3.8 Recenter — plot polygon BEFORE recenter, faded dashed (Phase 9).
-        poly_before = sketch.get("plot_polygon_before")
-        if show_before_recenter and poly_before and poly_before != poly:
+        # §3.8 Recenter — REAL CAD plot BEFORE recenter, faded dashed overlay
+        # (falls back to the inset-before if the original wasn't carried).
+        poly_before = (sketch.get("plot_polygon_original_before")
+                       or sketch.get("plot_polygon_before"))
+        if show_before_recenter and poly_before:
             bvx = [v[0] for v in poly_before] + [poly_before[0][0]]
             bvy = [v[1] for v in poly_before] + [poly_before[0][1]]
             ax.plot(bvx, bvy, color='#b0b0b0', lw=1.0, ls='--', alpha=0.7, zorder=0.5,
-                    label='Plot (before recenter)')
+                    label='Real plot (before recenter)')
             gpb = sketch.get("gate_point_before")
             if gpb:
                 ax.plot(*gpb, "o", color='#b0b0b0', markersize=7, alpha=0.7, zorder=0.6)
-        if poly:
-            vx = [v[0] for v in poly] + [poly[0][0]]
-            vy = [v[1] for v in poly] + [poly[0][1]]
-            ax.fill(vx, vy, color="#f0f8ff", zorder=0)
-            ax.plot(vx, vy, color="black", lw=1.2, zorder=1, label="Plot boundary")
-            allx = [v[0] for v in poly] + ([v[0] for v in poly_before] if poly_before else [])
-            ally = [v[1] for v in poly] + ([v[1] for v in poly_before] if poly_before else [])
+        # Boundary: the REAL (original) plot AFTER recenter is the main
+        # solid-black boundary; the 5 m setback (inset — the boundary the
+        # engine actually placed against) is an optional dashed-blue overlay
+        # toggled by "Show Temporary Plot Boundary". Fall back to the inset if
+        # no original was carried through (e.g. a manually-entered polygon).
+        poly_orig = sketch.get("plot_polygon_original") or poly
+        if poly_orig:
+            ovx = [v[0] for v in poly_orig] + [poly_orig[0][0]]
+            ovy = [v[1] for v in poly_orig] + [poly_orig[0][1]]
+            ax.fill(ovx, ovy, color="#f0f8ff", zorder=0)
+            ax.plot(ovx, ovy, color="black", lw=1.2, zorder=1, label="Plot boundary")
+            if show_temp_boundary and poly and poly is not poly_orig:
+                tvx = [v[0] for v in poly] + [poly[0][0]]
+                tvy = [v[1] for v in poly] + [poly[0][1]]
+                ax.plot(tvx, tvy, color="blue", lw=1.1, ls="--", zorder=1.1,
+                        label="Temporary boundary (5 m setback)")
+            allx = [v[0] for v in poly_orig] + ([v[0] for v in poly_before] if poly_before else [])
+            ally = [v[1] for v in poly_orig] + ([v[1] for v in poly_before] if poly_before else [])
             sw_b, sl_b = max(allx), max(ally)
         else:
             sw_b, sl_b = st.session_state.get("params06", (site_width, site_length))
@@ -709,6 +739,23 @@ if True:  # Phase 06 — Sketch roads
                 draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d',
                                        fillet_radius=14.0, alpha=0.95, zorder=1.5,
                                        label='§3.4.B Gate Road', is_closed=False)
+
+        if show_a1_ring:
+            access_roads = sketch.get("access_roads") or []
+            access_parts = sketch.get("access_roads_parts") or []
+            legended_ar = set()
+            for i, path in enumerate(access_roads):
+                part = access_parts[i] if i < len(access_parts) else "part1"
+                if part == "part1" and not show_access_p1:
+                    continue
+                if part == "part2" and not show_access_p2:
+                    continue
+                color = '#7f8c8d' if part == "part1" else '#34495e'
+                lbl = 'Access Road (Part 1)' if part == "part1" else 'Access Road (Part 2 — Perimeter)'
+                draw_road_with_fillets(ax, path, width=8, color=color,
+                                       fillet_radius=14.0, alpha=0.95, zorder=1.5,
+                                       label=lbl if lbl not in legended_ar else "", is_closed=False)
+                legended_ar.add(lbl)
 
         # Pipe rack network (§3.6) — 6 m orange centerlines.
         if show_rack_b1:
@@ -861,6 +908,7 @@ if True:  # Phase 06 — Sketch roads
                     "ring_road": sketch.get("ring_road"),
                     "gate_spur": sketch.get("gate_spur"),
                     "ring_spur": sketch.get("ring_spur"),
+                    "access_roads": sketch.get("access_roads"),
                 }
                 dxf_stream = export_to_dxf(layout_for_export, sw_b, sl_b, plot=poly)
                 filename = f"PowerPlan_Layout_{pick:02d}_{int(scoring['total_penalty'])}pts.dxf"
@@ -905,6 +953,16 @@ if True:  # Phase 06 — Sketch roads
         dbg_lines.append(f"rack_segments = {len(racks)}")
         for i, seg in enumerate(racks):
             dbg_lines.append(f"  rack[{i}] = {_fmt_pts(seg)}")
+        ar = sketch.get("access_roads") or []
+        ar_blocks = sketch.get("access_roads_blocks") or []
+        ar_parts = sketch.get("access_roads_parts") or []
+        dbg_lines.append(f"access_roads = {len(ar)}")
+        for i, path in enumerate(ar):
+            bname = ar_blocks[i] if i < len(ar_blocks) else ""
+            part_val = ar_parts[i] if i < len(ar_parts) else "part1"
+            part_lbl = "Part 1" if part_val == "part1" else "Part 2"
+            suffix = f" ({bname} - {part_lbl})" if bname else f" ({part_lbl})"
+            dbg_lines.append(f"  access[{i}]{suffix} = {_fmt_pts(path)}")
         dbg_lines.append("blocks:")
         for b in blocks:
             dbg_lines.append(f"  {b['name']:16} x={b['x']:.0f} y={b['y']:.0f} w={b['width']:.0f} h={b['height']:.0f} rot={b.get('rotated', False)}")
@@ -929,14 +987,32 @@ if True:  # Phase 06 — Sketch roads
     # Plot BEFORE recenter (original frame) — drawn faded/dashed for comparison.
     bx0, by0, bw, bh = sketch.get("plot_bounds_before", (0, 0, sw, sl))
     bx1, by1 = bx0 + bw, by0 + bh
-    if show_before_recenter and (bx0, by0) != (px0, py0):
-        ax.plot([bx0,bx1,bx1,bx0,bx0], [by0,by0,by1,by1,by0],
-                color='#b0b0b0', lw=1.0, linestyle='--', alpha=0.7, zorder=0.5,
-                label='Plot (before recenter)')
+    plot_poly_before = sketch.get("plot_polygon_before")
+    if show_before_recenter:
+        if plot_poly_before:
+            xs_bef, ys_bef = zip(*plot_poly_before)
+            ax.plot(list(xs_bef) + [xs_bef[0]], list(ys_bef) + [ys_bef[0]],
+                    color='#b0b0b0', lw=1.0, linestyle='--', alpha=0.7, zorder=0.5,
+                    label='Plot (before recenter)')
+        elif (bx0, by0) != (px0, py0):
+            ax.plot([bx0,bx1,bx1,bx0,bx0], [by0,by0,by1,by1,by0],
+                    color='#b0b0b0', lw=1.0, linestyle='--', alpha=0.7, zorder=0.5,
+                    label='Plot (before recenter)')
 
     # Site fill + boundary (after recenter)
-    ax.fill([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='#f0f8ff', zorder=0)
-    ax.plot([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='black', lw=1.2, zorder=1)
+    plot_poly_orig = sketch.get("plot_polygon_original")
+    plot_poly_temp = sketch.get("plot_polygon")
+    if plot_poly_orig:
+        xs_orig, ys_orig = zip(*plot_poly_orig)
+        ax.fill(list(xs_orig) + [xs_orig[0]], list(ys_orig) + [ys_orig[0]], color='#f0f8ff', zorder=0)
+        ax.plot(list(xs_orig) + [xs_orig[0]], list(ys_orig) + [ys_orig[0]], color='black', lw=1.5, zorder=1, label='Plot Boundary (original)')
+        if show_temp_boundary and plot_poly_temp:
+            xs_temp, ys_temp = zip(*plot_poly_temp)
+            ax.plot(list(xs_temp) + [xs_temp[0]], list(ys_temp) + [ys_temp[0]], color='blue', lw=1.2, linestyle='--', zorder=1.1, label='Temporary Plot Boundary (inset)')
+    else:
+        # Fallback to rectangle plot
+        ax.fill([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='#f0f8ff', zorder=0)
+        ax.plot([px0,px1,px1,px0,px0], [py0,py0,py1,py1,py0], color='black', lw=1.2, zorder=1)
 
     # 2m grid
     if show_grid:
@@ -965,6 +1041,21 @@ if True:  # Phase 06 — Sketch roads
                 draw_road_with_fillets(ax, gs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
             if rs:
                 draw_road_with_fillets(ax, rs, width=8, color='#7f8c8d', fillet_radius=14.0, alpha=0.95, zorder=1.5, is_closed=False)
+
+        access_roads = sketch.get("access_roads") or []
+        access_parts = sketch.get("access_roads_parts") or []
+        legended_ar = set()
+        for i, path in enumerate(access_roads):
+            part = access_parts[i] if i < len(access_parts) else "part1"
+            if part == "part1" and not show_access_p1:
+                continue
+            if part == "part2" and not show_access_p2:
+                continue
+            color = '#7f8c8d' if part == "part1" else '#34495e'
+            lbl = 'Access Road (Part 1)' if part == "part1" else 'Access Road (Part 2 — Perimeter)'
+            draw_road_with_fillets(ax, path, width=8, color=color, fillet_radius=14.0, alpha=0.95, zorder=1.5,
+                                   label=lbl if lbl not in legended_ar else "", is_closed=False)
+            legended_ar.add(lbl)
 
 
     # Default buffer halos per block — magnetic snap boundaries  [→ §3.5.B gap rules]

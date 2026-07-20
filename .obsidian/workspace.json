@@ -73,7 +73,7 @@
                   },
                   "pinned": true,
                   "icon": "terminal",
-                  "title": "Terminal: cmd"
+                  "title": "Terminal: C:\\Windows\\System32\\conhost.exe"
                 }
               }
             ]
@@ -252,7 +252,7 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "783316305ef77321",
+  "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
     "01_Products/Layout_Gen_Design/Data/saved0fa6368.tmp",
     "01_Products/Layout_Gen_Design/Data/save65744282.tmp",

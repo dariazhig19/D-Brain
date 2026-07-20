@@ -310,7 +310,7 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 
 - Uses `_try_magnet_place` — magnetizes to previously placed blocks at pair-appropriate gap distances.
 - Tries both orientations (w×h and h×w).
-- **Tetris packing score:** every valid candidate is scored `0.5·d_prefer + 2·gap2 − 2·min(boundary_depth, 24)` where `d_prefer` = center distance to `prefer_near` (clustering, e.g. toward the PB), `gap2` = sum of edge-to-edge gaps to the **two nearest** placed blocks (0 when pocketed against two blocks like a tetris piece), and `boundary_depth` = the shallowest corner's distance inside the plot polygon. Lower is better; the block is chosen randomly among the **top 3** for seed variety. This packs floats (Cooling Tower, WT/WWT, …) tightly against the existing cluster and keeps them off the boundary, replacing the old top-10%-closest random pick.
+- `prefer_near` → top-10% closest valid positions, then random choice.
 - **Boundary Check — [Polygon change]:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary. In polygon mode, this check is done against the **polygon boundary** (including diagonal sides, hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
   - Default (tol = BOUNDARY_TOLERANCE = 10): clearance = **0 m** (buffer edge touches boundary but does not exit).
   - Strict (tol = 0): clearance = **9 m** (buffer stays fully inside, matching perimeter road CL distance).
@@ -542,8 +542,6 @@ Each block that needs a road connection receives **two** independent access road
 
 > [!NOTE]
 > **Flare exclusion.** The Flare is excluded from this access road system — it receives only its 6 m plant-facing access road via Group B (§10.1.C).
-
-**Stay inside the plot.** Routing-grid cells whose center lies more than 1 m outside the temporary boundary are **blocked**, so A\* cannot cheat along the outside of a slanted edge (which used to be cheaper than paying buffer penalties inside, and left disconnected fragments after the Part-3 trim). Roads therefore take the cheapest **inside** corridor — e.g. a gap between two blocks — and the Part-3 trim only cleans up residual edge contact.
 
 **Footprint clearance (hard) vs road buffer (soft guide).** No access road — Part 1 or Part 2 — may ever be drawn on or right against a block footprint. Three layers enforce this:
 - **Hard grid skirt (2 m):** the routing grid blocks every footprint cell plus a 2 m skirt (`mark_building(inflate_m=2.0)`), so A\* cannot route onto any cell within 2 m of a block. Combined with the graded buffer below, routes in practice stay well clear. The last-resort L-path (used only if A\* fails) prefers the leg that avoids footprints.

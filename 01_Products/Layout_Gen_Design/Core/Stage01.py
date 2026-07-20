@@ -339,13 +339,6 @@ def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
     return cands
 
 
-def _edge_gap(x, y, w, h, tx, ty, tw, th):  # → §3.5 tetris packing
-    """Edge-to-edge gap between two rects (0 when touching/overlapping)."""
-    dx = max(tx - (x + w), x - (tx + tw), 0.0)
-    dy = max(ty - (y + h), y - (ty + th), 0.0)
-    return math.hypot(dx, dy)
-
-
 def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
                             step=8, boundary_tol=BOUNDARY_TOLERANCE, plot=None):
     """Generate (x, y) candidates by scanning a coarse grid over the whole plot
@@ -407,31 +400,12 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
 
     if not valid:
         return None
-
-    # §3.5 tetris packing: score every candidate — pack tight against the
-    # already-placed blocks (small edge gaps, ideally pocketed against TWO of
-    # them like a tetris piece), stay away from the plot boundary, and keep
-    # the existing clustering toward `prefer_near`. Lower score = better;
-    # pick randomly among the top few for seed variety.
-    real_rects = [tuple(v) for tn, v in placed.items() if not tn.startswith("_")]
-
-    def _pack_score(v):
-        x, y, w, h = v
-        vcx, vcy = x + w / 2, y + h / 2
-        d_pref = (math.hypot(vcx - prefer_near[0], vcy - prefer_near[1])
-                  if prefer_near is not None else 0.0)
-        gaps = sorted(_edge_gap(x, y, w, h, *t) for t in real_rects)
-        gap2 = sum(gaps[:2]) if gaps else 0.0
-        if plot is not None:
-            b_depth = min(plot.signed_dist_to_boundary(px, py)
-                          for px, py in ((x, y), (x + w, y), (x, y + h), (x + w, y + h)))
-        else:
-            b_depth = min(x, y, sw - (x + w), sl - (y + h))
-        b_depth = min(b_depth, 24.0)  # deeper than 24 m earns nothing extra
-        return 0.5 * d_pref + 2.0 * gap2 - 2.0 * b_depth
-
-    valid.sort(key=_pack_score)
-    return random.choice(valid[:3])
+    if prefer_near is not None:
+        cx, cy = prefer_near
+        valid.sort(key=lambda v: (v[0] + v[2] / 2 - cx) ** 2
+                                + (v[1] + v[3] / 2 - cy) ** 2)
+        valid = valid[:max(1, len(valid) // 10)]
+    return random.choice(valid)
 
 
 # ── Fire road geometry ─────────────────────────────────────────────────────
@@ -3528,19 +3502,12 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         for b in blocks:
             grid_roads.mark_building(b, inflate_m=2.0)
 
-        # Keep A* INSIDE the plot: cells whose center is clearly outside the
-        # temporary boundary (> 1 m out) are blocked. Without this, a route
-        # can cheat along the outside of a slanted edge (cheaper than paying
-        # buffer penalties inside) and the Part-3 boundary trim then leaves
-        # disconnected fragments — e.g. a corridor between two blocks exists
-        # inside but the road ran outside instead.
-        if plot is not None:
-            for i in range(grid_roads.ncols):
-                for j in range(grid_roads.nrows):
-                    if not grid_roads.blocked[i, j]:
-                        cx, cy = grid_roads.cell_to_world(i, j)
-                        if not plot.contains_point(cx, cy, tol=1.0):
-                            grid_roads.blocked[i, j] = True
+        # if plot is not None:
+        #     inside_mask = plot.cell_inside_mask(grid_roads.ncols, grid_roads.nrows, grid_roads.cell_size)
+        #     for i in range(grid_roads.ncols):
+        #         for j in range(grid_roads.nrows):
+        #             if not inside_mask[i][j]:
+        #                 grid_roads.blocked[i, j] = True
 
         # Block grid cells within the forbidden zone
         if forbidden_zone_bbox is not None:

@@ -339,6 +339,38 @@ def _magnet_candidates(name, w, h, placed, sw, sl,  # → §3.5
     return cands
 
 
+def _boundary_offset_candidates(name, w, h, placed, sw, sl, plot, gap,  # → §3.5
+                                boundary_tol=BOUNDARY_TOLERANCE):
+    """Candidates whose ROAD BUFFER outer edge sits exactly `gap` metres
+    inside the plot boundary, sampled every ~8 m along each polygon edge.
+    Used for blocks that prefer hugging the boundary (Cooling Tower)."""
+    if plot is None:
+        return []
+    b_off = 16.0 if name in RACK_BLOCKS else 8.0
+    d = b_off + gap
+    cands = []
+    for e in plot.edges:
+        (ex1, ey1), (ex2, ey2) = e["p1"], e["p2"]
+        nx, ny = e["normal"]  # inward
+        elen = math.hypot(ex2 - ex1, ey2 - ey1)
+        steps = max(1, int(elen // 8))
+        for i in range(steps + 1):
+            t = i / steps
+            qx = ex1 + t * (ex2 - ex1)
+            qy = ey1 + t * (ey2 - ey1)
+            # place the rect's support corner (the one facing this edge)
+            # at distance d inward from the edge line
+            x = qx + nx * d - (0.0 if nx >= 0 else w)
+            y = qy + ny * d - (0.0 if ny >= 0 else h)
+            x, y = snap_xy(x, y)
+            if not _within_relaxed_bounds(x, y, w, h, sw, sl, tol=boundary_tol, plot=plot):
+                continue
+            if _overlaps_any(name, placed, x, y, w, h):
+                continue
+            cands.append((x, y))
+    return cands
+
+
 def _empty_space_candidates(name, w, h, placed, sw, sl,  # → §3.5
                             step=8, boundary_tol=BOUNDARY_TOLERANCE, plot=None):
     """Generate (x, y) candidates by scanning a coarse grid over the whole plot
@@ -378,6 +410,17 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
                                        boundary_tol=boundary_tol, plot=plot):
             if filter_fn is None or filter_fn(x, y, w, h):
                 valid.append((x, y, w, h))
+
+    # §3.5 CT boundary preference: also OFFER positions along the plot
+    # boundary with the road buffer exactly 4 m inside it — the magnet scan
+    # alone rarely produces such candidates, so without this the preference
+    # has nothing to select.
+    if name == "Cooling Tower" and plot is not None:
+        for w, h in orientations:
+            for x, y in _boundary_offset_candidates(name, w, h, placed, sw, sl, plot, 4.0,
+                                                    boundary_tol=boundary_tol):
+                if filter_fn is None or filter_fn(x, y, w, h):
+                    valid.append((x, y, w, h))
 
     # Fallback to any valid magnet target if the specified target fails
     if magnet_target is not None and not valid:

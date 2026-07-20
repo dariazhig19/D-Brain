@@ -34,7 +34,7 @@ export_to_dxf = Core.Exporter.export_to_dxf
 @st.cache_data
 def cached_load_plot_dxf(path, mtime, loader_mtime):
     # loader_mtime keys the cache on CADImport.py's file time as well, so
-    # editing the loader auto-invalidates stale imports (st.cache_data only
+  
     # watches THIS function's code and its arguments, not callees).
     return Core.CADImport.load_plot_dxf(path)
 
@@ -750,7 +750,7 @@ if True:  # Phase 06 — Sketch roads
                     continue
                 if part == "part2" and not show_access_p2:
                     continue
-                color = '#7f8c8d' if part == "part1" else '#34495e'
+                color = '#7f8c8d'
                 lbl = 'Access Road (Part 1)' if part == "part1" else 'Access Road (Part 2 — Perimeter)'
                 draw_road_with_fillets(ax, path, width=8, color=color,
                                        fillet_radius=14.0, alpha=0.95, zorder=1.5,
@@ -1051,7 +1051,7 @@ if True:  # Phase 06 — Sketch roads
                 continue
             if part == "part2" and not show_access_p2:
                 continue
-            color = '#7f8c8d' if part == "part1" else '#34495e'
+            color = '#7f8c8d'
             lbl = 'Access Road (Part 1)' if part == "part1" else 'Access Road (Part 2 — Perimeter)'
             draw_road_with_fillets(ax, path, width=8, color=color, fillet_radius=14.0, alpha=0.95, zorder=1.5,
                                    label=lbl if lbl not in legended_ar else "", is_closed=False)

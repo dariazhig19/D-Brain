@@ -10,7 +10,7 @@
           {
             "id": "32a5ec67504d6b5f",
             "type": "tabs",
-            "dimension": 66.47286821705426,
+            "dimension": 66.66666666666667,
             "children": [
               {
                 "id": "b1cf4bd6b5fd7f7e",
@@ -31,7 +31,7 @@
           {
             "id": "7a8b1021d791ec54",
             "type": "tabs",
-            "dimension": 33.52713178294574,
+            "dimension": 33.333333333333336,
             "children": [
               {
                 "id": "d9df2daeee9f0ecb",
@@ -249,8 +249,9 @@
       "obsidian-local-images-plus:Local Images Plus  0.16.4\r\nLocalize attachments (plugin folder)": false
     }
   },
-  "active": "97507ae756d1fe13",
+  "active": "d9df2daeee9f0ecb",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/PROJECT.md",
     "PlotForge/tools/mcp_server.py",
     "PlotForge/tools/import_xlsx.py",
     "PlotForge/tools",
@@ -261,7 +262,6 @@
     "PlotForge/src/render.js",
     "PlotForge/src/grid.js",
     "PlotForge/src/geometry.js",
-    "PlotForge/src/export.js",
     "PlotForge/README.md",
     "PlotForge/PLAN.md",
     "01_Products/Layout_Gen_Design/_Archive/Docs/overview.canvas",

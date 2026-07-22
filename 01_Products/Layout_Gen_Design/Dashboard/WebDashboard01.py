@@ -916,7 +916,11 @@ if True:  # Phase 06 — Sketch roads
                     label="Download DXF",
                     data=dxf_stream,
                     file_name=filename,
-                    mime="image/vnd.dxf",  # registered MIME type -> Streamlit maps it to .dxf
+                    # octet-stream: browsers/Edge reliably save with `file_name`.
+                    # (image/vnd.dxf has no extension mapping in Windows'
+                    # mimetype registry — Streamlit's media URL then has no
+                    # .dxf suffix and Edge falls back to the raw media UUID.)
+                    mime="application/octet-stream",
                     use_container_width=True,
                     type="primary",
                 )

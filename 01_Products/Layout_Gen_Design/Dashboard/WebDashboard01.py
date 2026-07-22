@@ -659,8 +659,10 @@ if True:  # Phase 06 — Sketch roads
 
         st.divider()
         options = [f"Layout {idx+1} (Score: {get_sketch_score(sk):,.0f} pts)" for idx, sk in enumerate(sketches)]
-        pick_str = st.selectbox("Inspect layout # (full detail below)", options, index=0)
-        pick_idx = options.index(pick_str)
+        # key pins the choice across reruns (option labels change per
+        # generation, which otherwise resets the widget to Layout 1)
+        pick_str = st.selectbox("Inspect layout # (full detail below)", options, index=0, key="pick06")
+        pick_idx = options.index(pick_str) if pick_str in options else 0
         pick = pick_idx + 1
         sketch = sketches[pick_idx]
 
@@ -901,8 +903,8 @@ if True:  # Phase 06 — Sketch roads
 
         # ── DXF Export ─────────────────────────────────────────────────────────
         st.divider()
-        st.markdown("#### Export to CAD")
-        st.caption("Exports the selected layout as a **DXF file** containing all polygon boundaries, building outlines, road centerlines, and labels on separate named layers.")
+        st.markdown(f"#### Export to CAD — Layout {pick}")
+        st.caption(f"Exports **Layout {pick}** (the one selected in 'Inspect layout #' above) as a **DXF file** containing all polygon boundaries, building outlines, road centerlines, and labels on separate named layers.")
         _, export_col, _ = st.columns([2, 3, 2])
         with export_col:
             try:
@@ -931,7 +933,7 @@ if True:  # Phase 06 — Sketch roads
                 except Exception as _ex:  # noqa: BLE001
                     st.caption(f"(could not save DXF locally: {_ex})")
                 st.download_button(
-                    label="Download DXF",
+                    label=f"Download DXF (Layout {pick})",
                     data=dxf_stream,
                     file_name=filename,
                     # application/dxf is registered via mimetypes.add_type at

@@ -1839,11 +1839,11 @@ def is_path_clear_of_buffers(grid, path, penalty_map):
 
 def get_side_buffer_offset(block, side_midpoint, rack_segments):
     if block["name"] not in RACK_BLOCKS:
-        return 8.0
+        return float(ROAD_BUFFER)
     for seg in rack_segments:
         if point_to_segment_distance(side_midpoint, seg[0], seg[1]) < 25.0:
             return 16.0
-    return 8.0
+    return float(ROAD_BUFFER)
 
 def build_ring_spur(site_w, site_l, ring_road, blocks, gate_pt):  # → §3.4.D
     """Straight-line primary connector from PB Ring Road to Perimeter Fire Road.
@@ -3602,7 +3602,7 @@ def generate_sketch(  # → §3.1 Master Placement Sequence
         # instead of hugging the block at 1-2 cells like a flat penalty allows.
         buffer_penalty = np.zeros((grid_roads.ncols, grid_roads.nrows), dtype=float)
         for b in blocks:
-            b_offset = 16.0 if b["name"] in RACK_BLOCKS else 8.0
+            b_offset = 16.0 if b["name"] in RACK_BLOCKS else float(ROAD_BUFFER)
             x0 = b["x"] - b_offset
             y0 = b["y"] - b_offset
             x1 = b["x"] + b["width"] + b_offset

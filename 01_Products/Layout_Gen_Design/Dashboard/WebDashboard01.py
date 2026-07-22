@@ -406,7 +406,7 @@ if True:  # Phase 06 — Sketch roads
     show_grid     = st.sidebar.checkbox("§2 — 2m Grid", value=False)
     show_temp_boundary = st.sidebar.checkbox("Show Temporary Plot Boundary (setback)", value=False)
     show_buffer       = st.sidebar.checkbox(f"§3.5.B — Block buffers ({ROAD_BUFFER}m / 16m)", value=False)
-    show_rack_no_rack = st.sidebar.checkbox("§3.6.A — Rack baseline (no-rack: 8m / 16m)", value=False)
+    show_rack_no_rack = st.sidebar.checkbox(f"§3.6.A — Rack baseline (no-rack: {ROAD_BUFFER}m / 16m)", value=False)
     show_rack_w_rack  = st.sidebar.checkbox("§3.6.A — Rack w-rack (8m / 16m / 24m / 30m)", value=False)
     show_a1_ring      = st.sidebar.checkbox("§3.4 — Ring Road + Spurs", value=True)
     show_access_p1    = st.sidebar.checkbox("Show Access Roads Part 1 (midpoint connection)", value=True)

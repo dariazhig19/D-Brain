@@ -346,7 +346,7 @@ def _boundary_offset_candidates(name, w, h, placed, sw, sl, plot, gap,  # → §
     Used for blocks that prefer hugging the boundary (Cooling Tower)."""
     if plot is None:
         return []
-    b_off = 16.0 if name in RACK_BLOCKS else 8.0
+    b_off = 16.0 if name in RACK_BLOCKS else float(ROAD_BUFFER)
     d = b_off + gap
     cands = []
     for e in plot.edges:
@@ -452,7 +452,7 @@ def _try_magnet_place(sw, sl, name, placed, prefer_near=None, filter_fn=None, ma
         # §3.5 CT boundary preference: CT prefers sitting with its ROAD
         # BUFFER ~4 m from the (temporary) plot boundary; `prefer_near`
         # (closeness to PB) is only the tiebreak.
-        b_off = 16.0 if name in RACK_BLOCKS else 8.0
+        b_off = 16.0 if name in RACK_BLOCKS else float(ROAD_BUFFER)
         CT_BOUNDARY_GAP = 4.0
 
         def _ct_key(v):

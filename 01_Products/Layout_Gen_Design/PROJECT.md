@@ -183,7 +183,7 @@ Non-square blocks may be rotated 90°.
 | Constant             | Value    | Meaning                                      |
 |----------------------|----------|----------------------------------------------|
 | `CELL_SIZE`          | 2 m      | Metres per grid cell                         |
-| `ROAD_BUFFER`        | 8 m      | Min distance from block edge to road CL      |
+| `ROAD_BUFFER`        | 10 m     | Min distance from block edge to road CL (no-rack) |
 | `BLOCK_BUFFER`       | 16 m     | Min gap between two block edges (no rack)    |
 | `BOUNDARY_TOLERANCE` | 10 m     | Leeway for tight border fits                 |
 | `PB_RING_OFFSET`     | 16 m     | PB ring road CL from PB face *(see note)*    |
@@ -273,7 +273,7 @@ Every time you press **Generate Layouts**, some blocks shift a little so you get
 
 - Closed polyline at **16 m** from each PB face (`PB_RING_OFFSET`).
 - Visual rule: `PB edge ←10m gap— road outer edge ——4m—→ centerline`
-- **Virtual exclusion zone** placed in `placed["_pb_ring_zone"]`: inflated by `PB_RING_OFFSET + ROAD_BUFFER` from each PB face — keeps floated blocks ≥ 8 m from ring CL.
+- **Virtual exclusion zone** placed in `placed["_pb_ring_zone"]`: inflated by `PB_RING_OFFSET + ROAD_BUFFER` from each PB face — keeps floated blocks ≥ 10 m (`ROAD_BUFFER`) from ring CL.
 
 #### §3.4.B Gate Spur Construction
 
@@ -312,7 +312,7 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 - Tries both orientations (w×h and h×w).
 - `prefer_near` → top-10% closest valid positions, then random choice.
 - **Cooling Tower boundary preference:** CT prefers sitting with its **road buffer ~4 m inside the temporary plot boundary**; `prefer_near` (closeness to PB) is only the tiebreak. Extra candidates are generated along every plot edge with the buffer exactly 4 m inside (`_boundary_offset_candidates`), then all candidates are ranked by `|gap − 4|` (with a heavy penalty when the buffer pokes outside the plot) before the `prefer_near` tiebreak. When the plot is too tight for the full buffer envelope to sit inside at all (e.g. the leeward strip broken up by Flare + RAW + pair gaps), the scorer settles for the least-violating position closest to the target.
-- **Boundary Check — [Polygon change]:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 8 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary. In polygon mode, this check is done against the **polygon boundary** (including diagonal sides, hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
+- **Boundary Check — [Polygon change]:** Checks the block's **road buffer** (inflated by 16 m for rack blocks, 10 m for no-rack blocks) instead of its footprint. The road buffer outer edge must never exit the plot boundary. In polygon mode, this check is done against the **polygon boundary** (including diagonal sides, hard floor = 0 m clearance). Under relaxed bounds, the required clearance = max(0, 9 m − tol):
   - Default (tol = BOUNDARY_TOLERANCE = 10): clearance = **0 m** (buffer edge touches boundary but does not exit).
   - Strict (tol = 0): clearance = **9 m** (buffer stays fully inside, matching perimeter road CL distance).
 - **Fixed anchors are excluded from default magnet targets** (Gate House, GIS, RAW Water Tank). Exception: Demi Water Tank explicitly targets RAW Water Tank.
@@ -322,8 +322,8 @@ Orthogonal connector from PB Ring Road corner to `exit_helper`, then continues a
 | Pair type                  | Gap  | Rule                                        |
 |----------------------------|------|---------------------------------------------|
 | Rack block ↔ Rack block    | 32 m | 16 m + 16 m (`ROAD_W_RACK_OFFSET` each)     |
-| No-rack ↔ No-rack          | 16 m | 8 m + 8 m (`ROAD_BUFFER` each)              |
-| Mixed (rack ↔ no-rack)     | 24 m | 16 m + 8 m                                  |
+| No-rack ↔ No-rack          | 20 m | 10 m + 10 m (`ROAD_BUFFER` each)            |
+| Mixed (rack ↔ no-rack)     | 26 m | 16 m + 10 m                                 |
 
 **Rack blocks:** Power Block, Cooling Tower, WT/WWT, RAW Water Tank, Demi Water Tank, Flare.
 
@@ -546,7 +546,7 @@ Each block that needs a road connection receives **two** independent access road
 
 **Footprint clearance (hard) vs road buffer (soft guide).** No access road — Part 1 or Part 2 — may ever be drawn on or right against a block footprint. Three layers enforce this:
 - **Hard grid skirt (2 m):** the routing grid blocks every footprint cell plus a 2 m skirt (`mark_building(inflate_m=2.0)`), so A\* cannot route onto any cell within 2 m of a block. Combined with the graded buffer below, routes in practice stay well clear. The last-resort L-path (used only if A\* fails) prefers the leg that avoids footprints.
-- **Graded road buffer (soft guide):** the buffer penalty is **graded** — 500 at the footprint, falling linearly to 0 at the buffer edge (8 m / 16 m). The buffer acts as a *guide*, not a wall — A\* is pushed away from footprints and naturally runs along the buffer edge line (where `P_buf` and the Part 2 rectangle `R` sit), instead of hugging the block at 1–2 cells as the old flat penalty allowed.
+- **Graded road buffer (soft guide):** the buffer penalty is **graded** — 500 at the footprint, falling linearly to 0 at the buffer edge (10 m no-rack / 16 m rack). The buffer acts as a *guide*, not a wall — A\* is pushed away from footprints and naturally runs along the buffer edge line (where `P_buf` and the Part 2 rectangle `R` sit), instead of hugging the block at 1–2 cells as the old flat penalty allowed.
 - **Geometric clearance (4 m):** the untracked Part 2 candidates (`build_candidate_path` / `fallback_connection`'s walk along `R`) **reject** any segment that crosses a block footprint + 4 m clearance (possible when a neighbouring block sits on this block's `R`, or a corner was clipped to the plot boundary); rejection falls through to A\* routing. The same 4 m clearance guards the arrival-straightening slides (§3.7.B step 7).
 
 **Rack clearance (`RACK_ROAD_CLEAR` = 8 m).** Access roads may **cross** a rack (perpendicular), but must not run **parallel alongside** one within 8 m of its centerline. Enforced three ways:
@@ -752,7 +752,7 @@ All roads are **sketch roads** — centerlines only (lines). No physical width r
 
 ```python
 CELL_SIZE          = 2    # metres per grid cell
-ROAD_BUFFER        = 8    # road CL from non-rack block edge
+ROAD_BUFFER        = 10   # road CL from non-rack block edge
 BLOCK_BUFFER       = 16   # min block-to-block gap (no rack)
 BOUNDARY_TOLERANCE = 10   # relaxed bound for tight fits
 PB_RING_OFFSET     = 16   # PB ring road CL from PB face (engine value; plan text said 14)

@@ -15,7 +15,7 @@ from Core.Pathfind import astar
 
 # ── Constants ──────────────────────────────────────────────────────────
 CELL_SIZE         = 2    # metres per grid cell
-ROAD_BUFFER       = 8    # min distance from block edge to ANY road centerline (default, no rack adjacent)
+ROAD_BUFFER       = 10   # min distance from block edge to ANY road centerline (default, no rack adjacent)
 BLOCK_BUFFER      = 16   # min gap between two block edges (default, no rack between)
 BOUNDARY_TOLERANCE = 10  # unified boundary leeway: PB/anchor clamp margin AND floated-block spillage
 PB_RING_OFFSET    = 16   # ring CL from PB face — 16m for rack block road buffer

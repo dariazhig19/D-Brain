@@ -10,7 +10,7 @@
           {
             "id": "32a5ec67504d6b5f",
             "type": "tabs",
-            "dimension": 66.66666666666667,
+            "dimension": 80.62015503875969,
             "children": [
               {
                 "id": "b1cf4bd6b5fd7f7e",
@@ -31,7 +31,7 @@
           {
             "id": "7a8b1021d791ec54",
             "type": "tabs",
-            "dimension": 33.333333333333336,
+            "dimension": 19.379844961240313,
             "children": [
               {
                 "id": "d9df2daeee9f0ecb",
@@ -251,6 +251,7 @@
   },
   "active": "b1cf4bd6b5fd7f7e",
   "lastOpenFiles": [
+    "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.35156.dff96b470f30",
     "01_Products/Layout_Gen_Design/Data/Plot.dwl",
     "01_Products/Layout_Gen_Design/Data/Plot.dwl2",
     "01_Products/Layout_Gen_Design/Data/save9e9e316a.tmp",
@@ -261,7 +262,6 @@
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.12f24c6615ac",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.f5f834ee1696",
     "01_Products/Layout_Gen_Design/Core/Stage01.py.tmp.11188.8fa136d2301a",
-    "01_Products/Layout_Gen_Design/Core/__pycache__/Stage01.cpython-311.pyc.2386606194384",
     "01_Products/Layout_Gen_Design/PROJECT.md",
     "PlotForge/README.md",
     "PlotForge/PLAN.md",

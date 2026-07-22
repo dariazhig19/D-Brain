@@ -6,6 +6,11 @@ Run with:
 
 import streamlit as st
 import sys, os, random, time, threading, traceback
+import mimetypes
+# Deterministic .dxf mapping for st.download_button: Streamlit derives the
+# media-URL extension via mimetypes, which on Windows depends on the machine
+# registry — without this, browsers save the raw media UUID with no extension.
+mimetypes.add_type("application/dxf", ".dxf")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import matplotlib.pyplot as plt
@@ -929,11 +934,11 @@ if True:  # Phase 06 — Sketch roads
                     label="Download DXF",
                     data=dxf_stream,
                     file_name=filename,
-                    # octet-stream: browsers/Edge reliably save with `file_name`.
-                    # (image/vnd.dxf has no extension mapping in Windows'
-                    # mimetype registry — Streamlit's media URL then has no
-                    # .dxf suffix and Edge falls back to the raw media UUID.)
-                    mime="application/octet-stream",
+                    # application/dxf is registered via mimetypes.add_type at
+                    # the top of this file, so Streamlit's media URL reliably
+                    # ends in .dxf on every machine (image/vnd.dxf had NO
+                    # mapping in this machine's registry -> raw-UUID downloads).
+                    mime="application/dxf",
                     use_container_width=True,
                     type="primary",
                 )

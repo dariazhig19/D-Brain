@@ -912,6 +912,19 @@ if True:  # Phase 06 — Sketch roads
                 }
                 dxf_stream = export_to_dxf(layout_for_export, sw_b, sl_b, plot=poly)
                 filename = f"PowerPlan_Layout_{pick:02d}_{int(scoring['total_penalty'])}pts.dxf"
+                # Also save to disk with the proper name — browser-independent.
+                # (Edge sometimes saves Streamlit's media UUID instead of
+                # honoring file_name, producing extension-less downloads.)
+                try:
+                    _export_dir = os.path.join(
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Exports")
+                    os.makedirs(_export_dir, exist_ok=True)
+                    _export_path = os.path.join(_export_dir, filename)
+                    with open(_export_path, "w", encoding="utf-8") as _fh:
+                        _fh.write(dxf_stream)
+                    st.caption(f"💾 DXF saved to: `{_export_path}`")
+                except Exception as _ex:  # noqa: BLE001
+                    st.caption(f"(could not save DXF locally: {_ex})")
                 st.download_button(
                     label="Download DXF",
                     data=dxf_stream,
